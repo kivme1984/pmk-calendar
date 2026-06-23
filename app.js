@@ -109,6 +109,8 @@ function addRug(data = {}) {
   qs('.rug-width', card).value = data.width || '';
   qs('.rug-material', card).value = data.material || '';
   qs('.rug-pile', card).value = data.pile || '';
+  setRugChecked(card, '.rug-issues', data.issues || []);
+  setRugChecked(card, '.rug-services', data.services || []);
   qs('.remove-rug', card).addEventListener('click', () => {
     if (qsa('.rug-card').length <= 1) return showToast('В заявке должен остаться хотя бы один ковёр.', 'error');
     card.remove();
@@ -135,15 +137,31 @@ function collectRugs() {
     width: Number(qs('.rug-width', card).value || 0),
     material: qs('.rug-material', card).value,
     pile: qs('.rug-pile', card).value,
+    issues: collectCheckedFrom(card, '.rug-issues'),
+    services: collectCheckedFrom(card, '.rug-services'),
   }));
 }
 
-function collectChecked(groupId) {
-  return qsa(`#${groupId} input:checked`).map(el => el.value);
+function collectCheckedFrom(root, selector) {
+  return qsa(`${selector} input:checked`, root).map(el => el.value);
+}
+
+function setRugChecked(card, selector, values = []) {
+  qsa(`${selector} input`, card).forEach(input => input.checked = values.includes(input.value));
+}
+
+function normalizeRugs(data = {}) {
+  const sourceRugs = data.rugs?.length ? data.rugs : [{}];
+  return sourceRugs.map((rug, index) => ({
+    ...rug,
+    issues: Array.isArray(rug.issues) ? rug.issues : (index === 0 ? (data.issues || []) : []),
+    services: Array.isArray(rug.services) ? rug.services : (index === 0 ? (data.services || []) : []),
+  }));
 }
 
 function getFormData() {
   const visitType = qs('input[name="visitType"]:checked')?.value || 'pickup';
+  const rugs = collectRugs();
   return {
     version: 1,
     pmkId: qs('#eventId').dataset.pmkId || makeId(),
@@ -157,9 +175,9 @@ function getFormData() {
     visitDate: qs('#visitDate').value,
     startTime: qs('#startTime').value,
     endTime: qs('#endTime').value,
-    rugs: collectRugs(),
-    issues: collectChecked('issuesGroup'),
-    services: collectChecked('servicesGroup'),
+    rugs,
+    issues: [...new Set(rugs.flatMap(rug => rug.issues || []))],
+    services: [...new Set(rugs.flatMap(rug => rug.services || []))],
     estimatedPrice: Number(qs('#estimatedPrice').value || 0),
     discount: Number(qs('#discount').value || 0),
     callAhead: qs('#callAhead').checked,
@@ -181,9 +199,11 @@ function pluralRugs(number) {
 }
 
 function eventDescription(data) {
-  const rugs = data.rugs.map((rug, index) => {
+  const rugs = normalizeRugs(data).map((rug, index) => {
     const size = rug.length && rug.width ? `${rug.length} × ${rug.width} м (${(rug.length*rug.width).toFixed(2).replace('.00','')} м²)` : 'размер не указан';
-    return `${index + 1}. ${size}${rug.material ? `, ${rug.material}` : ''}${rug.pile ? `, ${rug.pile}` : ''}`;
+    const issues = rug.issues?.length ? `\n   Загрязнения: ${rug.issues.join(', ')}` : '';
+    const services = rug.services?.length ? `\n   Доп. услуги: ${rug.services.join(', ')}` : '';
+    return `${index + 1}. ${size}${rug.material ? `, ${rug.material}` : ''}${rug.pile ? `, ${rug.pile}` : ''}${issues}${services}`;
   }).join('\n');
   return [
     `Клиент: ${data.customerName || '—'}`,
@@ -197,9 +217,6 @@ function eventDescription(data) {
     '',
     'Ковры:',
     rugs || '—',
-    '',
-    `Загрязнения: ${data.issues.length ? data.issues.join(', ') : 'не указаны'}`,
-    `Доп. услуги: ${data.services.length ? data.services.join(', ') : 'нет'}`,
     '',
     `Предварительная стоимость: ${data.estimatedPrice ? formatMoney(data.estimatedPrice) : 'не указана'}`,
     `Скидка: ${data.discount || 0}%`,
@@ -430,7 +447,8 @@ async function deleteEvent(id) {
       await googleRequest(`/calendars/${calendarId}/events/${encodeURIComponent(id)}`, { method: 'DELETE' });
     }
     showToast('Заявка удалена.', 'success');
-    await refreshEvents();
+    resetForm();
+    setView('today');
   } catch (error) { showToast(error.message, 'error'); }
 }
 
@@ -564,8 +582,8 @@ function fillForm(data) {
   qs('#callAhead').checked = data.callAhead !== false;
   qs('#managerComment').value = data.managerComment || '';
   qs('#rugsContainer').innerHTML = '';
-  (data.rugs?.length ? data.rugs : [{}]).forEach(addRug);
-  ['issuesGroup','servicesGroup'].forEach(groupId => qsa(`#${groupId} input`).forEach(input => input.checked = (data[groupId === 'issuesGroup' ? 'issues' : 'services'] || []).includes(input.value)));
+  normalizeRugs(data).forEach(addRug);
+  qs('#deleteEventBtn').classList.remove('hidden');
   qs('#formTitle').textContent = 'Редактирование заявки';
   updateConnectionUI(); updatePreview();
 }
@@ -578,6 +596,7 @@ function resetForm(addDefaultRug = true) {
   qs('#startTime').value = '10:00'; qs('#endTime').value = '12:00'; qs('#discount').value = '0'; qs('#callAhead').checked = true;
   qs('#rugsContainer').innerHTML = '';
   if (addDefaultRug) addRug();
+  qs('#deleteEventBtn').classList.add('hidden');
   qs('#formTitle').textContent = 'Новая заявка';
   updateConnectionUI(); updatePreview();
 }
@@ -605,6 +624,11 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#refreshBtn').addEventListener('click', refreshEvents);
   qs('#addRugBtn').addEventListener('click', () => addRug());
   qs('#cancelEditBtn').addEventListener('click', () => { resetForm(); setView('today'); });
+  qs('#deleteEventBtn').addEventListener('click', () => {
+    const id = qs('#eventId').value;
+    if (!id) return showToast('Сначала откройте сохранённую заявку.', 'error');
+    deleteEvent(id);
+  });
   qs('#saveDraftBtn').addEventListener('click', () => saveRequest(getFormData(), true));
   qs('#requestForm').addEventListener('submit', async event => {
     event.preventDefault();
