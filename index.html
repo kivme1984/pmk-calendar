@@ -145,7 +145,15 @@
                   <label class="field">Скидка, %<input type="number" id="discount" min="0" max="100" value="0" /></label>
                 </div>
                 <div id="minimumOrderHint" class="warning-box hidden">Сумма ниже минимального заказа 1 800 ₽.</div>
-                <label class="toggle-row"><input type="checkbox" id="callAhead" checked /><span><strong>Позвонить за 30 минут</strong><small>Добавится в описание события и напоминание.</small></span></label>
+                <label class="toggle-row"><input type="checkbox" id="callAhead" checked /><span><strong>Позвонить перед визитом</strong><small>Добавится в описание события и напоминание.</small></span></label>
+                <label class="field">Когда позвонить
+                  <select id="callAheadMinutes">
+                    <option value="15">За 15 минут</option>
+                    <option value="30" selected>За 30 минут</option>
+                    <option value="60">За 1 час</option>
+                    <option value="120">За 2 часа</option>
+                  </select>
+                </label>
                 <label class="field">Комментарий менеджера<textarea id="managerComment" rows="4" placeholder="Что пообещали, особенности заказа, важная информация для водителя"></textarea></label>
               </section>
 
@@ -196,6 +204,7 @@
               <li>Добавить адрес опубликованного приложения в Authorized JavaScript origins.</li>
               <li>Вставить Client ID в поле выше и нажать «Подключить Google».</li>
             </ol>
+            <p class="settings-note">Google подключается отдельно на каждом устройстве и в каждом браузере. Если приложение открыто на новом телефоне или после сброса данных браузера, нажмите «Подключить Google» ещё раз.</p>
           </section>
         </div>
       </section>
@@ -219,14 +228,14 @@
             <label><input type="checkbox" value="Шерсть" /><span>Шерсть</span></label>
             <label><input type="checkbox" value="Волосы" /><span>Волосы</span></label>
             <label><input type="checkbox" value="Запах мочи" /><span>Запах мочи</span></label>
-            <label><input type="checkbox" value="Сложный запах" /><span>Сложный запах</span></label>
+            <label><input type="checkbox" value="Дезинфекция" /><span>Дезинфекция</span></label>
             <label><input type="checkbox" value="Слайм / пластилин" /><span>Слайм / пластилин</span></label>
           </div>
         </div>
         <div>
           <p class="field-label">Дополнительные услуги для этого ковра</p>
           <div class="chip-grid rug-services">
-            <label><input type="checkbox" value="Вычёсывание шерсти" /><span>Вычёсывание</span></label>
+            <label><input type="checkbox" value="Подъём ворса" /><span>Подъём ворса</span></label>
             <label><input type="checkbox" value="Удаление запаха мочи" /><span>Удаление запаха</span></label>
             <label><input type="checkbox" value="Озонация" /><span>Озонация</span></label>
             <label><input type="checkbox" value="Кондиционер" /><span>Кондиционер</span></label>

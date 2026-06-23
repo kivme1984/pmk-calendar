@@ -78,7 +78,38 @@ function formatMoney(value) { return new Intl.NumberFormat('ru-RU').format(Numbe
 function escapeHtml(value = '') { return String(value).replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch])); }
 function normalizePhone(phone = '') { return phone.replace(/[^+\d]/g, ''); }
 function phoneLink(phone = '') { return `tel:${normalizePhone(phone)}`; }
-function mapLink(address = '') { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`; }
+function hasSettlement(address = '') {
+  return /(нижн(ий|его)?\s+новгород|(^|[\s,])бор([\s,]|$)|дзержинск|кстово|городец|балахна|богородск|павлово|арзамас|(^|[\s,])г\.|город|пос\.?|поселок|посёлок|(^|[\s,])д\.|деревня|село|(^|[\s,])с\.)/i.test(address);
+}
+function extractEntrance(...values) {
+  const text = values.filter(Boolean).join(', ');
+  return text.match(/(подъезд\s*№?\s*\d+|под\.?\s*\d+)/i)?.[0] || '';
+}
+function normalizeAddressForMap(address = '', accessInfo = '') {
+  const rawParts = address.split(',').map(part => part.trim()).filter(Boolean);
+  const publicParts = rawParts.filter(part => !/(кв\.?|квартира|офис|этаж|домофон|код|звонок|калитка)/i.test(part));
+  const parts = hasSettlement(address) ? publicParts : ['Нижний Новгород', ...publicParts];
+  const entrance = extractEntrance(address, accessInfo);
+  if (entrance && !parts.some(part => part.toLowerCase().includes(entrance.toLowerCase()))) parts.push(entrance);
+  return parts.join(', ');
+}
+function mapLink(address = '', accessInfo = '') { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalizeAddressForMap(address, accessInfo))}`; }
+function normalizeTag(value = '') {
+  if (value === 'Сложный запах') return 'Дезинфекция';
+  if (value === 'Вычёсывание шерсти') return '';
+  return value;
+}
+function normalizeTags(values = []) {
+  return [...new Set(values.map(normalizeTag).filter(Boolean))];
+}
+function getCallAheadMinutes(data = {}) {
+  return Number(data.callAheadMinutes || 30);
+}
+function formatCallAhead(minutes) {
+  if (minutes === 60) return 'за 1 час';
+  if (minutes === 120) return 'за 2 часа';
+  return `за ${minutes} минут`;
+}
 
 function showToast(message, type = '') {
   const toast = qs('#toast');
@@ -147,15 +178,16 @@ function collectCheckedFrom(root, selector) {
 }
 
 function setRugChecked(card, selector, values = []) {
-  qsa(`${selector} input`, card).forEach(input => input.checked = values.includes(input.value));
+  const normalizedValues = normalizeTags(values);
+  qsa(`${selector} input`, card).forEach(input => input.checked = normalizedValues.includes(input.value));
 }
 
 function normalizeRugs(data = {}) {
   const sourceRugs = data.rugs?.length ? data.rugs : [{}];
   return sourceRugs.map((rug, index) => ({
     ...rug,
-    issues: Array.isArray(rug.issues) ? rug.issues : (index === 0 ? (data.issues || []) : []),
-    services: Array.isArray(rug.services) ? rug.services : (index === 0 ? (data.services || []) : []),
+    issues: normalizeTags(Array.isArray(rug.issues) ? rug.issues : (index === 0 ? (data.issues || []) : [])),
+    services: normalizeTags(Array.isArray(rug.services) ? rug.services : (index === 0 ? (data.services || []) : [])),
   }));
 }
 
@@ -181,6 +213,7 @@ function getFormData() {
     estimatedPrice: Number(qs('#estimatedPrice').value || 0),
     discount: Number(qs('#discount').value || 0),
     callAhead: qs('#callAhead').checked,
+    callAheadMinutes: Number(qs('#callAheadMinutes').value || 30),
     managerComment: qs('#managerComment').value.trim(),
   };
 }
@@ -220,7 +253,7 @@ function eventDescription(data) {
     '',
     `Предварительная стоимость: ${data.estimatedPrice ? formatMoney(data.estimatedPrice) : 'не указана'}`,
     `Скидка: ${data.discount || 0}%`,
-    data.callAhead ? 'Позвонить за 30 минут: да' : 'Позвонить за 30 минут: нет',
+    data.callAhead ? `Позвонить ${formatCallAhead(getCallAheadMinutes(data))}: да` : 'Позвонить перед визитом: нет',
     data.managerComment ? `\nКомментарий:\n${data.managerComment}` : '',
   ].filter(line => line !== '').join('\n');
 }
@@ -352,13 +385,14 @@ function decodePmkData(event) {
 }
 
 function toGoogleEvent(data) {
+  const callAheadMinutes = getCallAheadMinutes(data);
   return {
     summary: eventTitle(data),
     description: eventDescription(data),
-    location: data.address,
+    location: normalizeAddressForMap(data.address, data.accessInfo),
     start: { dateTime: `${data.visitDate}T${data.startTime}:00`, timeZone: state.settings.timezone },
     end: { dateTime: `${data.visitDate}T${data.endTime}:00`, timeZone: state.settings.timezone },
-    reminders: data.callAhead ? { useDefault: false, overrides: [{ method: 'popup', minutes: 30 }] } : { useDefault: true },
+    reminders: data.callAhead ? { useDefault: false, overrides: [{ method: 'popup', minutes: callAheadMinutes }] } : { useDefault: true },
     extendedProperties: { private: encodePmkData(data) },
   };
 }
@@ -519,7 +553,7 @@ function renderToday(events) {
       <div class="event-main"><h3>${escapeHtml(event.summary || 'Заявка')}</h3><p>${escapeHtml(data.address || event.location || 'Адрес не указан')}${data.phone ? ` · ${escapeHtml(data.phone)}` : ''}${data.estimatedPrice ? ` · ${formatMoney(data.estimatedPrice)}` : ''}</p></div>
       <div class="event-actions">
         ${data.phone ? `<a class="mini-button" href="${phoneLink(data.phone)}">Позвонить</a>` : ''}
-        ${(data.address || event.location) ? `<a class="mini-button" target="_blank" rel="noopener" href="${mapLink(data.address || event.location)}">Маршрут</a>` : ''}
+        ${(data.address || event.location) ? `<a class="mini-button" target="_blank" rel="noopener" href="${mapLink(data.address || event.location, data.accessInfo)}">Маршрут</a>` : ''}
         <button class="mini-button" data-edit-event="${escapeHtml(event.id)}">Изменить</button>
         <button class="mini-button" data-delete-event="${escapeHtml(event.id)}">Удалить</button>
       </div>
@@ -580,6 +614,7 @@ function fillForm(data) {
   qs('#estimatedPrice').value = data.estimatedPrice || '';
   qs('#discount').value = data.discount || 0;
   qs('#callAhead').checked = data.callAhead !== false;
+  qs('#callAheadMinutes').value = String(getCallAheadMinutes(data));
   qs('#managerComment').value = data.managerComment || '';
   qs('#rugsContainer').innerHTML = '';
   normalizeRugs(data).forEach(addRug);
@@ -593,7 +628,7 @@ function resetForm(addDefaultRug = true) {
   qs('#eventId').value = '';
   qs('#eventId').dataset.pmkId = makeId();
   qs('#visitDate').value = businessTodayKey();
-  qs('#startTime').value = '10:00'; qs('#endTime').value = '12:00'; qs('#discount').value = '0'; qs('#callAhead').checked = true;
+  qs('#startTime').value = '10:00'; qs('#endTime').value = '12:00'; qs('#discount').value = '0'; qs('#callAhead').checked = true; qs('#callAheadMinutes').value = '30';
   qs('#rugsContainer').innerHTML = '';
   if (addDefaultRug) addRug();
   qs('#deleteEventBtn').classList.add('hidden');
