@@ -23,13 +23,16 @@ const ROUTES = {
 const WEEKDAY_NAMES = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
 const WEEKDAY_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 const WEEKDAY_ROUTE = ['в воскресенье', 'в понедельник', 'во вторник', 'в среду', 'в четверг', 'в пятницу', 'в субботу'];
+const TOKEN_STORAGE_KEY = 'pmk-google-token';
 const state = {
   settings: loadSettings(),
-  token: null,
+  token: loadSavedToken(),
   tokenClient: null,
   events: [],
   localEvents: loadLocalEvents(),
   currentView: 'today',
+  autoReconnectTried: false,
+  silentReconnect: false,
 };
 
 const qs = (selector, root = document) => root.querySelector(selector);
@@ -55,6 +58,31 @@ function loadLocalEvents() {
 
 function persistLocalEvents() {
   localStorage.setItem('pmk-local-events', JSON.stringify(state.localEvents));
+}
+
+function loadSavedToken() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TOKEN_STORAGE_KEY) || 'null');
+    if (!saved?.accessToken || !saved?.expiresAt || Date.now() > saved.expiresAt) {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      return null;
+    }
+    return saved.accessToken;
+  } catch {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    return null;
+  }
+}
+
+function saveToken(response) {
+  const expiresIn = Number(response.expires_in || 3600);
+  const expiresAt = Date.now() + Math.max(60, expiresIn - 60) * 1000;
+  localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({ accessToken: response.access_token, expiresAt }));
+}
+
+function clearSavedToken() {
+  state.token = null;
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
 }
 
 function pad(value) { return String(value).padStart(2, '0'); }
@@ -201,6 +229,7 @@ function getFormData() {
     visitType,
     customerName: qs('#customerName').value.trim(),
     phone: qs('#phone').value.trim(),
+    orderSource: qs('#orderSource').value,
     address: qs('#address').value.trim(),
     district: qs('#district').value,
     accessInfo: qs('#accessInfo').value.trim(),
@@ -241,6 +270,7 @@ function eventDescription(data) {
   return [
     `Клиент: ${data.customerName || '—'}`,
     `Телефон: ${data.phone || '—'}`,
+    `Источник: ${data.orderSource || 'не указан'}`,
     '',
     `Адрес: ${data.address || '—'}`,
     `Район: ${data.district || '—'}`,
@@ -403,7 +433,7 @@ async function googleRequest(path, options = {}) {
     ...options,
     headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
   });
-  if (response.status === 401) { state.token = null; updateConnectionUI(); throw new Error('Сессия Google истекла. Подключитесь снова.'); }
+  if (response.status === 401) { clearSavedToken(); updateConnectionUI(); autoReconnectGoogle(true); throw new Error('Сессия Google истекла. Пробую переподключить автоматически.'); }
   if (!response.ok) { const body = await response.text(); throw new Error(`Google Calendar: ${response.status} ${body.slice(0,160)}`); }
   return response.status === 204 ? null : response.json();
 }
@@ -415,8 +445,13 @@ function initializeGoogleTokenClient() {
     client_id: state.settings.clientId,
     scope: 'https://www.googleapis.com/auth/calendar.events',
     callback: async response => {
-      if (response.error) return showToast(`Google: ${response.error}`, 'error');
+      if (response.error) {
+        state.silentReconnect = false;
+        return response.error === 'interaction_required' ? updateConnectionUI() : showToast(`Google: ${response.error}`, 'error');
+      }
+      state.silentReconnect = false;
       state.token = response.access_token;
+      saveToken(response);
       updateConnectionUI();
       showToast('Google Calendar подключён.', 'success');
       await refreshEvents();
@@ -428,7 +463,27 @@ function initializeGoogleTokenClient() {
 function connectGoogle() {
   if (!state.settings.clientId) { setView('settings'); showToast('Сначала укажите OAuth Client ID.', 'error'); return; }
   if (!initializeGoogleTokenClient()) { showToast('Библиотека Google ещё загружается. Повторите через несколько секунд.', 'error'); return; }
+  state.silentReconnect = false;
   state.tokenClient.requestAccessToken({ prompt: state.token ? '' : 'consent' });
+}
+
+function autoReconnectGoogle(force = false) {
+  if (state.token || (!force && state.autoReconnectTried)) return;
+  state.autoReconnectTried = true;
+  if (!initializeGoogleTokenClient()) return;
+  try {
+    state.silentReconnect = true;
+    state.tokenClient.requestAccessToken({ prompt: '' });
+  } catch {}
+}
+
+function scheduleGoogleAutoReconnect() {
+  if (state.token) return refreshEvents();
+  const started = Date.now();
+  const timer = setInterval(() => {
+    if (state.token || Date.now() - started > 10000) return clearInterval(timer);
+    autoReconnectGoogle();
+  }, 500);
 }
 
 function updateConnectionUI() {
@@ -604,6 +659,7 @@ function fillForm(data) {
   qs('#eventId').dataset.pmkId = data.pmkId || makeId();
   qs('#customerName').value = data.customerName || '';
   qs('#phone').value = data.phone || '';
+  qs('#orderSource').value = data.orderSource || '';
   qs('#address').value = data.address || '';
   qs('#district').value = data.district || '';
   qs('#accessInfo').value = data.accessInfo || '';
@@ -627,6 +683,7 @@ function resetForm(addDefaultRug = true) {
   qs('#requestForm').reset();
   qs('#eventId').value = '';
   qs('#eventId').dataset.pmkId = makeId();
+  qs('#orderSource').value = '';
   qs('#visitDate').value = businessTodayKey();
   qs('#startTime').value = '10:00'; qs('#endTime').value = '12:00'; qs('#discount').value = '0'; qs('#callAhead').checked = true; qs('#callAheadMinutes').value = '30';
   qs('#rugsContainer').innerHTML = '';
@@ -651,6 +708,7 @@ function registerServiceWorker() {
 
 document.addEventListener('DOMContentLoaded', () => {
   setupSettingsUI(); initializeForm(); renderAll(); updateConnectionUI(); registerServiceWorker();
+  scheduleGoogleAutoReconnect();
 
   qsa('.nav-item').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
   qsa('[data-open-form]').forEach(button => button.addEventListener('click', () => { resetForm(); setView('form'); }));
@@ -678,7 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
       duration: Number(qs('#durationSetting').value || 120),
       strictRoute: qs('#strictRouteSetting').checked,
     };
-    saveSettings(); state.token = null; state.tokenClient = null; updateConnectionUI(); updatePreview();
+    saveSettings(); clearSavedToken(); state.tokenClient = null; state.autoReconnectTried = false; updateConnectionUI(); updatePreview();
     showToast('Настройки сохранены.', 'success');
   });
   qsa('#requestForm input, #requestForm select, #requestForm textarea').forEach(el => el.addEventListener('input', updatePreview));

@@ -101,6 +101,22 @@
                   <label class="field">Имя клиента *<input id="customerName" name="customerName" autocomplete="name" required placeholder="Например, Иван" /></label>
                   <label class="field">Телефон *<input id="phone" name="phone" inputmode="tel" autocomplete="tel" required placeholder="+7 999 000-00-00" /></label>
                 </div>
+                <label class="field">Источник заказа
+                  <select id="orderSource" name="orderSource">
+                    <option value="">Не указан</option>
+                    <option>Avito 1</option>
+                    <option>Avito 2</option>
+                    <option>Avito 3</option>
+                    <option>Яндекс</option>
+                    <option>Рекомендации</option>
+                    <option>ВК</option>
+                    <option>Постоянный клиент</option>
+                    <option>Макс</option>
+                    <option>Сайт</option>
+                    <option>Квиз</option>
+                    <option>Другое</option>
+                  </select>
+                </label>
                 <label class="field">Адрес *<input id="address" name="address" autocomplete="street-address" required placeholder="Улица, дом, корпус, квартира" /></label>
                 <div class="field-grid two">
                   <label class="field">Район *
@@ -204,7 +220,7 @@
               <li>Добавить адрес опубликованного приложения в Authorized JavaScript origins.</li>
               <li>Вставить Client ID в поле выше и нажать «Подключить Google».</li>
             </ol>
-            <p class="settings-note">Google подключается отдельно на каждом устройстве и в каждом браузере. Если приложение открыто на новом телефоне или после сброса данных браузера, нажмите «Подключить Google» ещё раз.</p>
+            <p class="settings-note">После первого подключения приложение сохраняет доступ на этом устройстве и пробует восстановить Google Calendar автоматически. Если Google-сессия в браузере закончилась, нажмите «Подключить Google» ещё раз.</p>
           </section>
         </div>
       </section>
