@@ -55,7 +55,7 @@ function persistLocalEvents() {
 
 function pad(value) { return String(value).padStart(2, '0'); }
 function makeId() {
-  if (globalThis.crypto?.randomUUID) return globalThis.makeId();
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   return `pmk-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 function toDateInput(date) { return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`; }
