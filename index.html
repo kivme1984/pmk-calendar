@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#171717" />
+  <meta name="description" content="ПМК Календарь — оформление заявок Промой Ковер через Google Calendar" />
+  <title>ПМК Календарь</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <header class="app-header">
+    <button class="icon-button mobile-menu" id="menuToggle" aria-label="Открыть меню">☰</button>
+    <div class="brand">
+      <div class="brand-mark">ПМК</div>
+      <div>
+        <strong>ПМК Календарь</strong>
+        <span>Заявки «Промой Ковер»</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span id="connectionBadge" class="status-badge offline">Демо-режим</span>
+      <button id="connectGoogleBtn" class="button button-primary">Подключить Google</button>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside id="sidebar" class="sidebar">
+      <nav class="nav-list" aria-label="Основная навигация">
+        <button class="nav-item active" data-view="today"><span>Сегодня</span><b id="todayCount">0</b></button>
+        <button class="nav-item" data-view="week"><span>Неделя</span><b id="weekCount">0</b></button>
+        <button class="nav-item nav-create" data-view="form"><span>＋ Новая заявка</span></button>
+        <button class="nav-item" data-view="settings"><span>Настройки</span></button>
+      </nav>
+      <div class="sidebar-note">
+        <strong>Маршруты</strong>
+        <span>Пн — Автозаводский, Ленинский, Канавинский</span>
+        <span>Вт/Пт — Московский, Сормовский</span>
+        <span>Ср/Сб — Нижегородский, Советский, Приокский</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <section id="view-today" class="view active">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">Рабочий день</p>
+            <h1 id="todayTitle">Сегодня</h1>
+            <p id="todaySubtitle">Загрузите события или создайте первую заявку.</p>
+          </div>
+          <button class="button button-primary" data-open-form>＋ Добавить заявку</button>
+        </div>
+
+        <div class="summary-grid">
+          <article class="summary-card"><span>Всего точек</span><strong id="summaryTotal">0</strong></article>
+          <article class="summary-card"><span>Заборы</span><strong id="summaryPickup">0</strong></article>
+          <article class="summary-card"><span>Доставки</span><strong id="summaryDelivery">0</strong></article>
+          <article class="summary-card"><span>Требует внимания</span><strong id="summaryAttention">0</strong></article>
+        </div>
+
+        <div id="todayEvents" class="event-list"></div>
+      </section>
+
+      <section id="view-week" class="view">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">Планирование</p>
+            <h1>Неделя</h1>
+            <p>Все заборы и доставки на ближайшие семь дней.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="button button-secondary" id="refreshBtn">Обновить</button>
+            <button class="button button-primary" data-open-form>＋ Добавить заявку</button>
+          </div>
+        </div>
+        <div id="weekEvents" class="week-board"></div>
+      </section>
+
+      <section id="view-form" class="view">
+        <div class="page-heading compact">
+          <div>
+            <p class="eyebrow">Единый формат</p>
+            <h1 id="formTitle">Новая заявка</h1>
+            <p>Заполните поля — событие Google Calendar сформируется автоматически.</p>
+          </div>
+          <button class="button button-ghost" id="cancelEditBtn">Отмена</button>
+        </div>
+
+        <form id="requestForm" novalidate>
+          <input type="hidden" id="eventId" />
+          <div class="form-layout">
+            <div class="form-column">
+              <section class="form-card">
+                <div class="section-heading"><span>1</span><div><h2>Клиент и адрес</h2><p>Основные данные для связи и маршрута.</p></div></div>
+                <div class="field-grid two">
+                  <label class="field">Имя клиента *<input id="customerName" name="customerName" autocomplete="name" required placeholder="Например, Иван" /></label>
+                  <label class="field">Телефон *<input id="phone" name="phone" inputmode="tel" autocomplete="tel" required placeholder="+7 999 000-00-00" /></label>
+                </div>
+                <label class="field">Адрес *<input id="address" name="address" autocomplete="street-address" required placeholder="Улица, дом, корпус, квартира" /></label>
+                <div class="field-grid two">
+                  <label class="field">Район *
+                    <select id="district" name="district" required>
+                      <option value="">Выберите район</option>
+                      <option>Автозаводский</option><option>Ленинский</option><option>Канавинский</option>
+                      <option>Московский</option><option>Сормовский</option><option>Нижегородский</option>
+                      <option>Советский</option><option>Приокский</option><option>За городом</option>
+                    </select>
+                  </label>
+                  <label class="field">Подъезд / этаж / домофон<input id="accessInfo" name="accessInfo" placeholder="2 подъезд, 5 этаж, домофон 27" /></label>
+                </div>
+              </section>
+
+              <section class="form-card">
+                <div class="section-heading"><span>2</span><div><h2>Дата и время</h2><p>Приложение проверит маршрут и пересечения.</p></div></div>
+                <div class="segmented" role="group" aria-label="Тип визита">
+                  <label><input type="radio" name="visitType" value="pickup" checked /><span>Забор</span></label>
+                  <label><input type="radio" name="visitType" value="delivery" /><span>Доставка</span></label>
+                </div>
+                <div class="field-grid three">
+                  <label class="field">Дата *<input type="date" id="visitDate" name="visitDate" required /></label>
+                  <label class="field">Начало *<input type="time" id="startTime" name="startTime" required value="10:00" /></label>
+                  <label class="field">Окончание *<input type="time" id="endTime" name="endTime" required value="12:00" /></label>
+                </div>
+                <div id="routeHint" class="info-box">Выберите район и дату — появится проверка маршрута.</div>
+                <div id="conflictHint" class="info-box hidden"></div>
+              </section>
+
+              <section class="form-card">
+                <div class="section-heading"><span>3</span><div><h2>Ковры</h2><p>Можно добавить несколько ковров в одну заявку.</p></div></div>
+                <div id="rugsContainer" class="rug-list"></div>
+                <button type="button" id="addRugBtn" class="button button-secondary full">＋ Добавить ещё ковёр</button>
+              </section>
+            </div>
+
+            <div class="form-column">
+              <section class="form-card">
+                <div class="section-heading"><span>4</span><div><h2>Загрязнения и услуги</h2><p>Отметьте всё, что сообщил клиент.</p></div></div>
+                <div class="chip-grid" id="issuesGroup">
+                  <label><input type="checkbox" value="Пятна" /><span>Пятна</span></label>
+                  <label><input type="checkbox" value="Шерсть" /><span>Шерсть</span></label>
+                  <label><input type="checkbox" value="Волосы" /><span>Волосы</span></label>
+                  <label><input type="checkbox" value="Запах мочи" /><span>Запах мочи</span></label>
+                  <label><input type="checkbox" value="Сложный запах" /><span>Сложный запах</span></label>
+                  <label><input type="checkbox" value="Слайм / пластилин" /><span>Слайм / пластилин</span></label>
+                </div>
+                <p class="field-label">Дополнительные услуги</p>
+                <div class="chip-grid" id="servicesGroup">
+                  <label><input type="checkbox" value="Вычёсывание шерсти" /><span>Вычёсывание</span></label>
+                  <label><input type="checkbox" value="Удаление запаха мочи" /><span>Удаление запаха</span></label>
+                  <label><input type="checkbox" value="Озонация" /><span>Озонация</span></label>
+                  <label><input type="checkbox" value="Кондиционер" /><span>Кондиционер</span></label>
+                  <label><input type="checkbox" value="Экспресс-стирка" /><span>Экспресс</span></label>
+                </div>
+              </section>
+
+              <section class="form-card">
+                <div class="section-heading"><span>5</span><div><h2>Стоимость и договорённости</h2><p>Предварительная сумма и важные обещания клиенту.</p></div></div>
+                <div class="field-grid two">
+                  <label class="field">Предварительная стоимость<input type="number" id="estimatedPrice" min="0" step="50" placeholder="Например, 3800" /></label>
+                  <label class="field">Скидка, %<input type="number" id="discount" min="0" max="100" value="0" /></label>
+                </div>
+                <div id="minimumOrderHint" class="warning-box hidden">Сумма ниже минимального заказа 1 800 ₽.</div>
+                <label class="toggle-row"><input type="checkbox" id="callAhead" checked /><span><strong>Позвонить за 30 минут</strong><small>Добавится в описание события и напоминание.</small></span></label>
+                <label class="field">Комментарий менеджера<textarea id="managerComment" rows="4" placeholder="Что пообещали, особенности заказа, важная информация для водителя"></textarea></label>
+              </section>
+
+              <section class="preview-card">
+                <p class="eyebrow">Предпросмотр события</p>
+                <h2 id="eventPreviewTitle">ЗАБОР • Клиент • Район</h2>
+                <pre id="eventPreviewDescription"></pre>
+              </section>
+
+              <div class="form-actions">
+                <button type="button" id="saveDraftBtn" class="button button-secondary">Сохранить локально</button>
+                <button type="submit" id="submitBtn" class="button button-primary">Создать в календаре</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section id="view-settings" class="view">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">Подключение</p>
+            <h1>Настройки</h1>
+            <p>Эти значения хранятся только на текущем устройстве.</p>
+          </div>
+        </div>
+        <div class="settings-grid">
+          <section class="form-card">
+            <h2>Google Calendar</h2>
+            <label class="field">OAuth Client ID<input id="clientIdSetting" placeholder="...apps.googleusercontent.com" /></label>
+            <label class="field">Calendar ID<input id="calendarIdSetting" value="primary" /></label>
+            <label class="field">Часовой пояс<input id="timezoneSetting" value="Europe/Moscow" /></label>
+            <button id="saveSettingsBtn" class="button button-primary">Сохранить настройки</button>
+          </section>
+          <section class="form-card">
+            <h2>Правила заявок</h2>
+            <label class="field">Минимальный заказ, ₽<input type="number" id="minimumOrderSetting" value="1800" /></label>
+            <label class="field">Стандартная длительность, минут<input type="number" id="durationSetting" value="120" /></label>
+            <label class="toggle-row"><input type="checkbox" id="strictRouteSetting" /><span><strong>Строго запрещать неподходящие дни</strong><small>По умолчанию приложение только предупреждает.</small></span></label>
+          </section>
+          <section class="form-card setup-help">
+            <h2>Что потребуется для подключения</h2>
+            <ol>
+              <li>Создать проект в Google Cloud.</li>
+              <li>Включить Google Calendar API.</li>
+              <li>Создать OAuth Client ID типа Web application.</li>
+              <li>Добавить адрес опубликованного приложения в Authorized JavaScript origins.</li>
+              <li>Вставить Client ID в поле выше и нажать «Подключить Google».</li>
+            </ol>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <template id="rugTemplate">
+    <article class="rug-card">
+      <div class="rug-card-header"><strong>Ковёр <span class="rug-number">1</span></strong><button type="button" class="remove-rug" aria-label="Удалить ковёр">Удалить</button></div>
+      <div class="field-grid four">
+        <label class="field">Длина, м<input type="number" class="rug-length" min="0" max="8" step="0.1" placeholder="2" /></label>
+        <label class="field">Ширина, м<input type="number" class="rug-width" min="0" max="8" step="0.1" placeholder="3" /></label>
+        <label class="field">Материал<select class="rug-material"><option value="">Не указан</option><option>Синтетика</option><option>Шерсть</option><option>Вискоза</option><option>Шёлк</option><option>Хлопок</option><option>Безворсный</option></select></label>
+        <label class="field">Ворс<select class="rug-pile"><option value="">Не указан</option><option>Без ворса</option><option>До 1 см</option><option>Более 1 см</option></select></label>
+      </div>
+      <div class="rug-total">Площадь: <strong>0 м²</strong></div>
+    </article>
+  </template>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
