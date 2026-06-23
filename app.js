@@ -1,7 +1,7 @@
 'use strict';
 
 const DEFAULT_SETTINGS = {
-  clientId: '',
+  clientId: '590025911241-pcl02les7r12l6stk1mb4aesdv294nba.apps.googleusercontent.com',
   calendarId: 'primary',
   timezone: 'Europe/Moscow',
   minimumOrder: 1800,
@@ -36,7 +36,11 @@ const qs = (selector, root = document) => root.querySelector(selector);
 const qsa = (selector, root = document) => [...root.querySelectorAll(selector)];
 
 function loadSettings() {
-  try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem('pmk-settings') || '{}') }; }
+  try {
+    const settings = { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem('pmk-settings') || '{}') };
+    if (!settings.clientId || !settings.clientId.endsWith('.apps.googleusercontent.com')) settings.clientId = DEFAULT_SETTINGS.clientId;
+    return settings;
+  }
   catch { return { ...DEFAULT_SETTINGS }; }
 }
 
@@ -608,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   qs('#saveSettingsBtn').addEventListener('click', () => {
     state.settings = {
-      clientId: qs('#clientIdSetting').value.trim(),
+      clientId: qs('#clientIdSetting').value.trim() || DEFAULT_SETTINGS.clientId,
       calendarId: qs('#calendarIdSetting').value.trim() || 'primary',
       timezone: qs('#timezoneSetting').value.trim() || 'Europe/Moscow',
       minimumOrder: Number(qs('#minimumOrderSetting').value || 1800),
