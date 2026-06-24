@@ -5,7 +5,7 @@ const DEFAULT_SETTINGS = {
   calendarId: 'primary',
   timezone: 'Europe/Moscow',
   minimumOrder: 1800,
-  duration: 120,
+  duration: 30,
   strictRoute: false,
 };
 
@@ -24,6 +24,7 @@ const WEEKDAY_NAMES = ['воскресенье', 'понедельник', 'вт
 const WEEKDAY_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 const WEEKDAY_ROUTE = ['в воскресенье', 'в понедельник', 'во вторник', 'в среду', 'в четверг', 'в пятницу', 'в субботу'];
 const TOKEN_STORAGE_KEY = 'pmk-google-token';
+const REQUEST_DURATION_MINUTES = 30;
 const STATUS_OPTIONS = {
   'pending-pickup': { label: 'Ожидает забора', short: 'Забор', className: 'pending-pickup', colorId: '9' },
   'picked-up': { label: 'Забрали', short: 'Забрали', className: 'picked-up', colorId: '5' },
@@ -127,7 +128,8 @@ function normalizeAddressForMap(address = '', accessInfo = '') {
   if (entrance && !parts.some(part => part.toLowerCase().includes(entrance.toLowerCase()))) parts.push(entrance);
   return parts.join(', ');
 }
-function mapLink(address = '', accessInfo = '') { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalizeAddressForMap(address, accessInfo))}`; }
+function yandexMapLink(address = '', accessInfo = '') { return `https://yandex.ru/maps/?text=${encodeURIComponent(normalizeAddressForMap(address, accessInfo))}`; }
+function googleMapLink(address = '', accessInfo = '') { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalizeAddressForMap(address, accessInfo))}`; }
 function normalizeTag(value = '') {
   if (value === 'Сложный запах') return 'Дезинфекция';
   if (value === 'Вычёсывание шерсти') return '';
@@ -186,8 +188,10 @@ function initializeForm() {
 function addRug(data = {}) {
   const fragment = qs('#rugTemplate').content.cloneNode(true);
   const card = qs('.rug-card', fragment);
-  qs('.rug-length', card).value = data.length || 0;
+  qs('.rug-length', card).value = clampDimension(data.length || 1, 1, 5);
   qs('.rug-width', card).value = data.width || 0;
+  qs('.rug-length-value', card).value = Number(qs('.rug-length', card).value).toFixed(1);
+  qs('.rug-width-value', card).value = Number(qs('.rug-width', card).value).toFixed(1);
   qs('.rug-material', card).value = data.material || '';
   qs('.rug-pile', card).value = data.pile || '';
   setRugChecked(card, '.rug-issues', data.issues || []);
@@ -198,6 +202,7 @@ function addRug(data = {}) {
     renumberRugs(); updatePreview();
   });
   qsa('input,select', card).forEach(el => el.addEventListener('input', () => {
+    syncRugDimension(card, el);
     if (el.type === 'range') vibrateTick();
     updateRugTotal(card); updatePreview();
   }));
@@ -212,9 +217,29 @@ function renumberRugs() {
 function updateRugTotal(card) {
   const length = Number(qs('.rug-length', card).value || 0);
   const width = Number(qs('.rug-width', card).value || 0);
-  qs('.rug-length-value', card).textContent = length.toFixed(1);
-  qs('.rug-width-value', card).textContent = width.toFixed(1);
+  if (document.activeElement !== qs('.rug-length-value', card)) qs('.rug-length-value', card).value = length.toFixed(1);
+  if (document.activeElement !== qs('.rug-width-value', card)) qs('.rug-width-value', card).value = width.toFixed(1);
   qs('.rug-total strong', card).textContent = `${(length * width).toFixed(2).replace('.00','')} м²`;
+}
+
+function clampDimension(value, min, max) {
+  const number = Number(String(value).replace(',', '.'));
+  if (!Number.isFinite(number)) return min;
+  return Math.min(max, Math.max(min, number));
+}
+
+function syncRugDimension(card, source) {
+  const pairs = [
+    { range: qs('.rug-length', card), input: qs('.rug-length-value', card), min: 1, max: 5 },
+    { range: qs('.rug-width', card), input: qs('.rug-width-value', card), min: 0, max: 4 },
+  ];
+  pairs.forEach(pair => {
+    if (source === pair.range) pair.input.value = Number(pair.range.value).toFixed(1);
+    if (source === pair.input) {
+      const value = clampDimension(pair.input.value, pair.min, pair.max);
+      pair.range.value = value;
+    }
+  });
 }
 
 function vibrateTick() {
@@ -635,6 +660,21 @@ function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMont
 function formatTime(value) { return businessDateTimeParts(value).time || '—'; }
 function formatDateLong(dateKey) { return dateKeyForDisplay(dateKey).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }); }
 function eventDateKey(event) { return businessDateTimeParts(event.start?.dateTime || event.start).date; }
+function timeToMinutes(time = '00:00') {
+  const [hours, minutes] = String(time).split(':').map(Number);
+  return (Number.isFinite(hours) ? hours : 0) * 60 + (Number.isFinite(minutes) ? minutes : 0);
+}
+function minutesToTime(totalMinutes) {
+  const minutes = Math.max(0, Math.min(23 * 60 + 59, totalMinutes));
+  return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+}
+function addMinutesToTime(time, minutes) {
+  return minutesToTime(timeToMinutes(time) + Number(minutes || 30));
+}
+function autoSetEndTime() {
+  qs('#endTime').value = addMinutesToTime(qs('#startTime').value || '10:00', REQUEST_DURATION_MINUTES);
+  updatePreview();
+}
 
 function eventMeta(event) {
   const data = decodePmkData(event);
@@ -683,30 +723,65 @@ function dayTitle(dateKey) {
 
 function renderToday(events) {
   const container = qs('#todayEvents');
-  if (!events.length) { container.innerHTML = '<div class="empty-state"><strong>На этот день заявок нет.</strong><br>Добавьте первую заявку или подключите Google Calendar.</div>'; return; }
-  container.innerHTML = events.map(event => {
-    const data = eventMeta(event);
-    const start = event.start?.dateTime || event.start;
-    const end = event.end?.dateTime || event.end;
-    const currentStatus = statusInfo(data.requestStatus, data.visitType);
-    return `<article class="event-card status-${currentStatus.className}">
+  container.innerHTML = renderDayTimeline(events);
+  bindEventActions(container);
+}
+
+function renderEventCard(event, timelineStyle = '') {
+  const data = eventMeta(event);
+  const start = event.start?.dateTime || event.start;
+  const end = event.end?.dateTime || event.end;
+  const currentStatus = statusInfo(data.requestStatus, data.visitType);
+  return `<article class="event-card status-${currentStatus.className}" ${timelineStyle}>
       <div class="event-time"><strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em></div>
       <div class="event-main"><h3>${escapeHtml(event.summary || 'Заявка')}</h3><p>${addressCapsule(data, event)}${data.phone ? ` · ${escapeHtml(data.phone)}` : ''}${data.estimatedPrice ? ` · ${formatMoney(data.estimatedPrice)}` : ''}</p></div>
       <div class="event-actions">
         ${data.phone ? `<a class="mini-button" href="${phoneLink(data.phone)}">Позвонить</a>` : ''}
+        ${routeButtons(data, event)}
         <button class="mini-button" data-edit-event="${escapeHtml(event.id)}">Изменить</button>
         ${statusButtons(event.id, data.requestStatus)}
         <button class="mini-button" data-delete-event="${escapeHtml(event.id)}">Удалить</button>
       </div>
     </article>`;
+}
+
+function renderDayTimeline(events) {
+  const startHour = 8;
+  const endHour = 22;
+  const hourHeight = 84;
+  const startMinute = startHour * 60;
+  const endMinute = endHour * 60;
+  const hours = Array.from({ length: endHour - startHour + 1 }, (_, index) => startHour + index);
+  const currentParts = businessDateTimeParts(new Date().toISOString());
+  const showNow = state.selectedDayKey === businessTodayKey();
+  const nowTop = Math.max(0, Math.min((endMinute - startMinute) / 60 * hourHeight, (timeToMinutes(currentParts.time) - startMinute) / 60 * hourHeight));
+  const eventItems = events.map(event => {
+    const start = timeToMinutes(formatTime(event.start?.dateTime || event.start));
+    const end = Math.max(start + 30, timeToMinutes(formatTime(event.end?.dateTime || event.end)));
+    const top = Math.max(0, (start - startMinute) / 60 * hourHeight);
+    const height = Math.max(66, Math.min(endMinute - startMinute, end - start) / 60 * hourHeight);
+    return renderEventCard(event, `style="top:${top}px;min-height:${height}px"`);
   }).join('');
-  bindEventActions(container);
+  return `<div class="day-timeline" style="--timeline-height:${(endHour - startHour) * hourHeight}px">
+    <div class="timeline-hours">${hours.map(hour => `<div class="timeline-hour" style="height:${hourHeight}px"><span>${pad(hour)}:00</span></div>`).join('')}</div>
+    <div class="timeline-track">
+      ${hours.slice(0, -1).map((hour, index) => `<div class="timeline-line" style="top:${index * hourHeight}px"></div>`).join('')}
+      ${showNow ? `<div class="timeline-now" style="top:${nowTop}px"><span>сейчас</span></div>` : ''}
+      ${eventItems || '<div class="timeline-empty">Свободный день. Нажмите «＋ Заявка» в неделе или добавьте заявку сверху.</div>'}
+    </div>
+  </div>`;
 }
 
 function addressCapsule(data, event) {
   const address = data.address || event.location || '';
   if (!address) return '<span class="address-empty">Адрес не указан</span>';
-  return `<a class="address-pill" target="_blank" rel="noopener" href="${mapLink(address, data.accessInfo)}">${escapeHtml(address)}</a>`;
+  return `<a class="address-pill" target="_blank" rel="noopener" href="${yandexMapLink(address, data.accessInfo)}" title="Открыть в Яндекс Картах">${escapeHtml(address)}</a>`;
+}
+
+function routeButtons(data, event) {
+  const address = data.address || event.location || '';
+  if (!address) return '';
+  return `<a class="mini-button route-yandex" target="_blank" rel="noopener" href="${yandexMapLink(address, data.accessInfo)}">Я.Карты</a><a class="mini-button" target="_blank" rel="noopener" href="${googleMapLink(address, data.accessInfo)}">Google</a>`;
 }
 
 function statusButtons(id, currentStatus) {
@@ -724,6 +799,7 @@ function renderWeek(events) {
     const dayEvents = events.filter(event => eventDateKey(event) === dateKey);
     return `<section class="day-column ${index === 0 ? 'today' : ''}">
       <button class="day-heading day-open" data-open-day="${dateKey}"><strong>${WEEKDAY_SHORT[date.getUTCDay()]}, ${date.getUTCDate()} ${date.toLocaleDateString('ru-RU',{month:'short', timeZone:'UTC'})}</strong><span>${dayEvents.length} ${pluralPoints(dayEvents.length)}</span></button>
+      <button class="mini-button day-add" data-add-day="${dateKey}">＋ Заявка</button>
       ${dayEvents.map(event => {
         const data = eventMeta(event);
         const currentStatus = statusInfo(data.requestStatus, data.visitType);
@@ -733,6 +809,7 @@ function renderWeek(events) {
   }).join('');
   bindEventActions(board);
   qsa('[data-open-day]', board).forEach(button => button.addEventListener('click', () => openDay(button.dataset.openDay)));
+  qsa('[data-add-day]', board).forEach(button => button.addEventListener('click', () => createEventForDay(button.dataset.addDay)));
 }
 
 function openDay(dateKey) {
@@ -743,6 +820,13 @@ function openDay(dateKey) {
   qsa('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === state.currentView));
   qs('#sidebar').classList.remove('open');
   renderAll();
+}
+
+function createEventForDay(dateKey) {
+  state.selectedDayKey = dateKey;
+  resetForm();
+  qs('#visitDate').value = dateKey;
+  setView('form');
 }
 
 function pluralPoints(number) {
@@ -779,7 +863,7 @@ function fillForm(data) {
   qs(`input[name="visitType"][value="${data.visitType || 'pickup'}"]`).checked = true;
   qs('#visitDate').value = data.visitDate || businessTodayKey();
   qs('#startTime').value = data.startTime || '10:00';
-  qs('#endTime').value = data.endTime || '12:00';
+  qs('#endTime').value = data.endTime || addMinutesToTime(qs('#startTime').value, REQUEST_DURATION_MINUTES);
   qs('#requestStatus').value = normalizeStatus(data.requestStatus, data.visitType);
   qs('#estimatedPrice').value = data.estimatedPrice || '';
   qs('#discount').value = data.discount || 0;
@@ -798,9 +882,9 @@ function resetForm(addDefaultRug = true) {
   qs('#eventId').value = '';
   qs('#eventId').dataset.pmkId = makeId();
   qs('#orderSource').value = '';
-  qs('#visitDate').value = businessTodayKey();
+  qs('#visitDate').value = state.selectedDayKey || businessTodayKey();
   qs('#requestStatus').value = 'pending-pickup';
-  qs('#startTime').value = '10:00'; qs('#endTime').value = '12:00'; qs('#discount').value = '0'; qs('#callAhead').checked = true; qs('#callAheadMinutes').value = '30';
+  qs('#startTime').value = '10:00'; qs('#endTime').value = addMinutesToTime('10:00', REQUEST_DURATION_MINUTES); qs('#discount').value = '0'; qs('#callAhead').checked = true; qs('#callAheadMinutes').value = '30';
   qs('#rugsContainer').innerHTML = '';
   if (addDefaultRug) addRug();
   qs('#deleteEventBtn').classList.add('hidden');
@@ -831,6 +915,7 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#connectGoogleBtn').addEventListener('click', connectGoogle);
   qs('#refreshBtn').addEventListener('click', refreshEvents);
   qs('#addRugBtn').addEventListener('click', () => addRug());
+  qs('#startTime').addEventListener('input', autoSetEndTime);
   qsa('input[name="visitType"]').forEach(input => input.addEventListener('change', () => {
     if (qs('#requestStatus').value === 'pending-pickup' || qs('#requestStatus').value === 'pending-delivery') {
       qs('#requestStatus').value = defaultStatusForVisit(qs('input[name="visitType"]:checked')?.value);

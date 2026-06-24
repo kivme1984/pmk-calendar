@@ -141,7 +141,7 @@
                 <div class="field-grid three">
                   <label class="field">Дата *<input type="date" id="visitDate" name="visitDate" required /></label>
                   <label class="field">Начало *<input type="time" id="startTime" name="startTime" required value="10:00" /></label>
-                  <label class="field">Окончание *<input type="time" id="endTime" name="endTime" required value="12:00" /></label>
+                  <label class="field">Окончание *<input type="time" id="endTime" name="endTime" required value="10:30" /></label>
                 </div>
                 <label class="field">Статус заявки
                   <select id="requestStatus">
@@ -216,7 +216,7 @@
           <section class="form-card">
             <h2>Правила заявок</h2>
             <label class="field">Минимальный заказ, ₽<input type="number" id="minimumOrderSetting" value="1800" /></label>
-            <label class="field">Стандартная длительность, минут<input type="number" id="durationSetting" value="120" /></label>
+            <label class="field">Стандартная длительность, минут<input type="number" id="durationSetting" value="30" /></label>
             <label class="toggle-row"><input type="checkbox" id="strictRouteSetting" /><span><strong>Строго запрещать неподходящие дни</strong><small>По умолчанию приложение только предупреждает.</small></span></label>
           </section>
           <section class="form-card setup-help">
@@ -239,8 +239,8 @@
     <article class="rug-card">
       <div class="rug-card-header"><strong>Ковёр <span class="rug-number">1</span></strong><button type="button" class="remove-rug" aria-label="Удалить ковёр">Удалить</button></div>
       <div class="field-grid four">
-        <label class="field range-field">Длина, м <strong class="range-value rug-length-value">0.0</strong><input type="range" class="rug-length" min="0" max="10" step="0.1" value="0" /></label>
-        <label class="field range-field">Ширина, м <strong class="range-value rug-width-value">0.0</strong><input type="range" class="rug-width" min="0" max="4" step="0.1" value="0" /></label>
+        <label class="field range-field">Длина, м <input type="number" class="range-value rug-length-value" min="1" max="5" step="0.1" value="1.0" inputmode="decimal" /><input type="range" class="rug-length" min="1" max="5" step="0.1" value="1" /></label>
+        <label class="field range-field">Ширина, м <input type="number" class="range-value rug-width-value" min="0" max="4" step="0.1" value="0.0" inputmode="decimal" /><input type="range" class="rug-width" min="0" max="4" step="0.1" value="0" /></label>
         <label class="field">Материал<select class="rug-material"><option value="">Не указан</option><option>Синтетика</option><option>Шерсть</option><option>Вискоза</option><option>Шёлк</option><option>Хлопок</option><option>Безворсный</option></select></label>
         <label class="field">Ворс<select class="rug-pile"><option value="">Не указан</option><option>Без ворса</option><option>До 1 см</option><option>Более 1 см</option></select></label>
       </div>
