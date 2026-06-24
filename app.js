@@ -19,6 +19,12 @@ const ROUTES = {
   'Советский': [3, 6],
   'Приокский': [3, 6],
 };
+const PERIOD_LABELS = {
+  week: ['Неделя', 'Ближайшие семь дней с разбивкой по маршрутам.'],
+  'next-week': ['Следующая неделя', 'Планирование следующей недели.'],
+  month: ['Месяц', 'Все заявки текущего месяца.'],
+  'next-month': ['Следующий месяц', 'Планирование следующего месяца.'],
+};
 
 const WEEKDAY_NAMES = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
 const WEEKDAY_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
@@ -129,7 +135,6 @@ function normalizeAddressForMap(address = '', accessInfo = '') {
   return parts.join(', ');
 }
 function yandexMapLink(address = '', accessInfo = '') { return `https://yandex.ru/maps/?text=${encodeURIComponent(normalizeAddressForMap(address, accessInfo))}`; }
-function googleMapLink(address = '', accessInfo = '') { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalizeAddressForMap(address, accessInfo))}`; }
 function normalizeTag(value = '') {
   if (value === 'Сложный запах') return 'Дезинфекция';
   if (value === 'Вычёсывание шерсти') return '';
@@ -169,13 +174,13 @@ function showToast(message, type = '') {
 
 function setView(view) {
   state.currentView = view;
-  const targetView = view === 'tomorrow' ? 'today' : view;
+  const targetView = view === 'tomorrow' ? 'today' : (['next-week','month','next-month'].includes(view) ? 'week' : view);
   if (view === 'today') state.selectedDayKey = businessTodayKey();
   if (view === 'tomorrow') state.selectedDayKey = addDaysToKey(businessTodayKey(), 1);
   qsa('.view').forEach(el => el.classList.toggle('active', el.id === `view-${targetView}`));
   qsa('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === view));
   qs('#sidebar').classList.remove('open');
-  if (view === 'today' || view === 'tomorrow' || view === 'week') refreshEvents();
+  if (['today','tomorrow','week','next-week','month','next-month'].includes(view)) refreshEvents();
 }
 
 function initializeForm() {
@@ -300,6 +305,7 @@ function getFormData() {
     services: [...new Set(rugs.flatMap(rug => rug.services || []))],
     estimatedPrice: Number(qs('#estimatedPrice').value || 0),
     discount: Number(qs('#discount').value || 0),
+    regularCustomer: qs('#regularCustomer').checked,
     callAhead: qs('#callAhead').checked,
     callAheadMinutes: Number(qs('#callAheadMinutes').value || 30),
     managerComment: qs('#managerComment').value.trim(),
@@ -343,6 +349,7 @@ function eventDescription(data) {
     '',
     `Предварительная стоимость: ${data.estimatedPrice ? formatMoney(data.estimatedPrice) : 'не указана'}`,
     `Скидка: ${data.discount || 0}%`,
+    `Постоянный клиент: ${data.regularCustomer ? 'да' : 'нет'}`,
     data.callAhead ? `Позвонить ${formatCallAhead(getCallAheadMinutes(data))}: да` : 'Позвонить перед визитом: нет',
     data.managerComment ? `\nКомментарий:\n${data.managerComment}` : '',
   ].filter(line => line !== '').join('\n');
@@ -638,8 +645,8 @@ async function deleteEvent(id) {
 async function refreshEvents() {
   try {
     if (state.token) {
-      const start = new Date(); start.setUTCDate(start.getUTCDate() - 2);
-      const end = new Date(); end.setUTCDate(end.getUTCDate() + 10);
+      const start = new Date(); start.setUTCDate(start.getUTCDate() - 40);
+      const end = new Date(); end.setUTCDate(end.getUTCDate() + 80);
       const params = new URLSearchParams({
         timeMin: start.toISOString(), timeMax: end.toISOString(), singleEvents: 'true', orderBy: 'startTime', maxResults: '250',
       });
@@ -660,6 +667,30 @@ function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMont
 function formatTime(value) { return businessDateTimeParts(value).time || '—'; }
 function formatDateLong(dateKey) { return dateKeyForDisplay(dateKey).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }); }
 function eventDateKey(event) { return businessDateTimeParts(event.start?.dateTime || event.start).date; }
+function monthKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: state.settings.timezone, year: 'numeric', month: '2-digit' }).formatToParts(date);
+  const map = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${map.year}-${map.month}`;
+}
+function daysInMonthKey(key) {
+  const [year, month] = key.split('-').map(Number);
+  return new Date(year, month, 0).getDate();
+}
+function periodKeys(period) {
+  const todayKey = businessTodayKey();
+  if (period === 'next-week') return Array.from({ length: 7 }, (_, index) => addDaysToKey(todayKey, index + 7));
+  if (period === 'month' || period === 'next-month') {
+    const base = new Date(`${todayKey}T12:00:00Z`);
+    if (period === 'next-month') base.setUTCMonth(base.getUTCMonth() + 1, 1);
+    const key = monthKey(base);
+    return Array.from({ length: daysInMonthKey(key) }, (_, index) => `${key}-${pad(index + 1)}`);
+  }
+  return Array.from({ length: 7 }, (_, index) => addDaysToKey(todayKey, index));
+}
+function routeDistrictsForWeekday(weekday) {
+  const districts = Object.entries(ROUTES).filter(([, days]) => days.includes(weekday)).map(([district]) => district);
+  return districts.length ? districts.join(', ') : 'Маршрут не задан';
+}
 function timeToMinutes(time = '00:00') {
   const [hours, minutes] = String(time).split(':').map(Number);
   return (Number.isFinite(hours) ? hours : 0) * 60 + (Number.isFinite(minutes) ? minutes : 0);
@@ -696,22 +727,33 @@ function renderAll() {
   const todayKey = businessTodayKey();
   if (!state.selectedDayKey) state.selectedDayKey = todayKey;
   const all = getAllEvents();
-  const weekKeys = Array.from({ length: 7 }, (_, index) => addDaysToKey(todayKey, index));
   const selectedEvents = all.filter(event => eventDateKey(event) === state.selectedDayKey);
   const todayEvents = all.filter(event => eventDateKey(event) === todayKey);
   const tomorrowEvents = all.filter(event => eventDateKey(event) === addDaysToKey(todayKey, 1));
-  const weekEvents = all.filter(event => weekKeys.includes(eventDateKey(event)));
+  const weekKeys = periodKeys('week');
+  const nextWeekKeys = periodKeys('next-week');
+  const monthKeys = periodKeys('month');
+  const nextMonthKeys = periodKeys('next-month');
+  const period = ['week','next-week','month','next-month'].includes(state.currentView) ? state.currentView : 'week';
+  const activePeriodKeys = periodKeys(period);
+  const periodEvents = all.filter(event => activePeriodKeys.includes(eventDateKey(event)));
   qs('#todayCount').textContent = todayEvents.length;
   qs('#tomorrowCount').textContent = tomorrowEvents.length;
-  qs('#weekCount').textContent = weekEvents.length;
+  qs('#weekCount').textContent = all.filter(event => weekKeys.includes(eventDateKey(event))).length;
+  qs('#nextWeekCount').textContent = all.filter(event => nextWeekKeys.includes(eventDateKey(event))).length;
+  qs('#monthCount').textContent = all.filter(event => monthKeys.includes(eventDateKey(event))).length;
+  qs('#nextMonthCount').textContent = all.filter(event => nextMonthKeys.includes(eventDateKey(event))).length;
   qs('#todayTitle').textContent = dayTitle(state.selectedDayKey);
   qs('#todaySubtitle').textContent = state.token ? 'Данные синхронизированы с Google Calendar.' : 'Работает демо-режим: заявки хранятся на устройстве.';
+  const [periodTitle, periodSubtitle] = PERIOD_LABELS[period] || PERIOD_LABELS.week;
+  qs('#periodTitle').textContent = periodTitle;
+  qs('#periodSubtitle').textContent = periodSubtitle;
   qs('#summaryTotal').textContent = selectedEvents.length;
   qs('#summaryPickup').textContent = selectedEvents.filter(event => eventMeta(event).visitType === 'pickup').length;
   qs('#summaryDelivery').textContent = selectedEvents.filter(event => eventMeta(event).visitType === 'delivery').length;
   qs('#summaryAttention').textContent = selectedEvents.filter(event => !eventMeta(event).phone || !event.location).length;
   renderToday(selectedEvents);
-  renderWeek(weekEvents);
+  renderPeriod(periodEvents, activePeriodKeys, period);
 }
 
 function dayTitle(dateKey) {
@@ -732,7 +774,7 @@ function renderEventCard(event, timelineStyle = '') {
   const start = event.start?.dateTime || event.start;
   const end = event.end?.dateTime || event.end;
   const currentStatus = statusInfo(data.requestStatus, data.visitType);
-  return `<article class="event-card status-${currentStatus.className}" ${timelineStyle}>
+  return `<article class="event-card status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}" ${timelineStyle}>
       <div class="event-time"><strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em></div>
       <div class="event-main"><h3>${escapeHtml(event.summary || 'Заявка')}</h3><p>${addressCapsule(data, event)}${data.phone ? ` · ${escapeHtml(data.phone)}` : ''}${data.estimatedPrice ? ` · ${formatMoney(data.estimatedPrice)}` : ''}</p></div>
       <div class="event-actions">
@@ -747,7 +789,7 @@ function renderEventCard(event, timelineStyle = '') {
 
 function renderDayTimeline(events) {
   const startHour = 8;
-  const endHour = 22;
+  const endHour = 21;
   const hourHeight = 84;
   const startMinute = startHour * 60;
   const endMinute = endHour * 60;
@@ -755,12 +797,13 @@ function renderDayTimeline(events) {
   const currentParts = businessDateTimeParts(new Date().toISOString());
   const showNow = state.selectedDayKey === businessTodayKey();
   const nowTop = Math.max(0, Math.min((endMinute - startMinute) / 60 * hourHeight, (timeToMinutes(currentParts.time) - startMinute) / 60 * hourHeight));
-  const eventItems = events.map(event => {
-    const start = timeToMinutes(formatTime(event.start?.dateTime || event.start));
-    const end = Math.max(start + 30, timeToMinutes(formatTime(event.end?.dateTime || event.end)));
-    const top = Math.max(0, (start - startMinute) / 60 * hourHeight);
-    const height = Math.max(66, Math.min(endMinute - startMinute, end - start) / 60 * hourHeight);
-    return renderEventCard(event, `style="top:${top}px;min-height:${height}px"`);
+  const layoutItems = layoutTimelineEvents(events);
+  const eventItems = layoutItems.map(item => {
+    const top = Math.max(0, (item.start - startMinute) / 60 * hourHeight);
+    const height = Math.max(42, Math.min(endMinute - startMinute, item.end - item.start) / 60 * hourHeight);
+    const width = `calc((100% - 24px - ${(item.columns - 1) * 8}px) / ${item.columns})`;
+    const left = `calc(12px + (${width} + 8px) * ${item.column})`;
+    return renderEventCard(item.event, `style="top:${top}px;min-height:${height}px;width:${width};left:${left};right:auto"`);
   }).join('');
   return `<div class="day-timeline" style="--timeline-height:${(endHour - startHour) * hourHeight}px">
     <div class="timeline-hours">${hours.map(hour => `<div class="timeline-hour" style="height:${hourHeight}px"><span>${pad(hour)}:00</span></div>`).join('')}</div>
@@ -772,6 +815,25 @@ function renderDayTimeline(events) {
   </div>`;
 }
 
+function layoutTimelineEvents(events) {
+  const items = events.map(event => {
+    const start = timeToMinutes(formatTime(event.start?.dateTime || event.start));
+    return { event, start, end: Math.max(start + REQUEST_DURATION_MINUTES, timeToMinutes(formatTime(event.end?.dateTime || event.end))) };
+  }).sort((a, b) => a.start - b.start || a.end - b.end);
+  const active = [];
+  items.forEach(item => {
+    for (let index = active.length - 1; index >= 0; index--) if (active[index].end <= item.start) active.splice(index, 1);
+    const used = new Set(active.map(activeItem => activeItem.column));
+    let column = 0;
+    while (used.has(column)) column++;
+    item.column = column;
+    active.push(item);
+    const columns = Math.max(...active.map(activeItem => activeItem.column)) + 1;
+    active.forEach(activeItem => activeItem.columns = Math.max(activeItem.columns || 1, columns));
+  });
+  return items.map(item => ({ ...item, columns: item.columns || 1 }));
+}
+
 function addressCapsule(data, event) {
   const address = data.address || event.location || '';
   if (!address) return '<span class="address-empty">Адрес не указан</span>';
@@ -781,7 +843,7 @@ function addressCapsule(data, event) {
 function routeButtons(data, event) {
   const address = data.address || event.location || '';
   if (!address) return '';
-  return `<a class="mini-button route-yandex" target="_blank" rel="noopener" href="${yandexMapLink(address, data.accessInfo)}">Я.Карты</a><a class="mini-button" target="_blank" rel="noopener" href="${googleMapLink(address, data.accessInfo)}">Google</a>`;
+  return `<a class="mini-button route-yandex" target="_blank" rel="noopener" href="${yandexMapLink(address, data.accessInfo)}">Я.Карты</a>`;
 }
 
 function statusButtons(id, currentStatus) {
@@ -790,15 +852,14 @@ function statusButtons(id, currentStatus) {
   )).join('');
 }
 
-function renderWeek(events) {
+function renderPeriod(events, dateKeys, period = 'week') {
   const board = qs('#weekEvents');
-  const startKey = businessTodayKey();
-  board.innerHTML = Array.from({ length: 7 }, (_, index) => {
-    const dateKey = addDaysToKey(startKey, index);
+  board.classList.toggle('month-board', dateKeys.length > 7);
+  board.innerHTML = dateKeys.map((dateKey, index) => {
     const date = dateKeyForDisplay(dateKey);
     const dayEvents = events.filter(event => eventDateKey(event) === dateKey);
     return `<section class="day-column ${index === 0 ? 'today' : ''}">
-      <button class="day-heading day-open" data-open-day="${dateKey}"><strong>${WEEKDAY_SHORT[date.getUTCDay()]}, ${date.getUTCDate()} ${date.toLocaleDateString('ru-RU',{month:'short', timeZone:'UTC'})}</strong><span>${dayEvents.length} ${pluralPoints(dayEvents.length)}</span></button>
+      <button class="day-heading day-open" data-open-day="${dateKey}"><strong>${WEEKDAY_SHORT[date.getUTCDay()]}, ${date.getUTCDate()} ${date.toLocaleDateString('ru-RU',{month:'short', timeZone:'UTC'})}</strong><span>${dayEvents.length} ${pluralPoints(dayEvents.length)}</span><small>${escapeHtml(routeDistrictsForWeekday(date.getUTCDay()))}</small></button>
       <button class="mini-button day-add" data-add-day="${dateKey}">＋ Заявка</button>
       ${dayEvents.map(event => {
         const data = eventMeta(event);
@@ -837,7 +898,10 @@ function pluralPoints(number) {
 }
 
 function bindEventActions(root) {
-  qsa('[data-edit-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); openEvent(button.dataset.editEvent); }));
+  qsa('[data-edit-event]', root).forEach(button => button.addEventListener('click', event => {
+    if (event.target.closest('a,input,select,textarea,.event-actions')) return;
+    event.preventDefault(); openEvent(button.dataset.editEvent);
+  }));
   qsa('[data-delete-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); deleteEvent(button.dataset.deleteEvent); }));
   qsa('[data-status-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); updateEventStatus(button.dataset.statusEvent, button.dataset.status); }));
 }
@@ -867,7 +931,8 @@ function fillForm(data) {
   qs('#requestStatus').value = normalizeStatus(data.requestStatus, data.visitType);
   qs('#estimatedPrice').value = data.estimatedPrice || '';
   qs('#discount').value = data.discount || 0;
-  qs('#callAhead').checked = data.callAhead !== false;
+  qs('#regularCustomer').checked = Boolean(data.regularCustomer);
+  qs('#callAhead').checked = Boolean(data.callAhead);
   qs('#callAheadMinutes').value = String(getCallAheadMinutes(data));
   qs('#managerComment').value = data.managerComment || '';
   qs('#rugsContainer').innerHTML = '';
@@ -884,7 +949,7 @@ function resetForm(addDefaultRug = true) {
   qs('#orderSource').value = '';
   qs('#visitDate').value = state.selectedDayKey || businessTodayKey();
   qs('#requestStatus').value = 'pending-pickup';
-  qs('#startTime').value = '10:00'; qs('#endTime').value = addMinutesToTime('10:00', REQUEST_DURATION_MINUTES); qs('#discount').value = '0'; qs('#callAhead').checked = true; qs('#callAheadMinutes').value = '30';
+  qs('#startTime').value = '10:00'; qs('#endTime').value = addMinutesToTime('10:00', REQUEST_DURATION_MINUTES); qs('#discount').value = '0'; qs('#regularCustomer').checked = false; qs('#callAhead').checked = false; qs('#callAheadMinutes').value = '30';
   qs('#rugsContainer').innerHTML = '';
   if (addDefaultRug) addRug();
   qs('#deleteEventBtn').classList.add('hidden');
@@ -916,6 +981,7 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#refreshBtn').addEventListener('click', refreshEvents);
   qs('#addRugBtn').addEventListener('click', () => addRug());
   qs('#startTime').addEventListener('input', autoSetEndTime);
+  qs('#startTime').addEventListener('change', autoSetEndTime);
   qsa('input[name="visitType"]').forEach(input => input.addEventListener('change', () => {
     if (qs('#requestStatus').value === 'pending-pickup' || qs('#requestStatus').value === 'pending-delivery') {
       qs('#requestStatus').value = defaultStatusForVisit(qs('input[name="visitType"]:checked')?.value);

@@ -35,6 +35,9 @@
         <button class="nav-item active" data-view="today"><span>Сегодня</span><b id="todayCount">0</b></button>
         <button class="nav-item" data-view="tomorrow"><span>Завтра</span><b id="tomorrowCount">0</b></button>
         <button class="nav-item" data-view="week"><span>Неделя</span><b id="weekCount">0</b></button>
+        <button class="nav-item" data-view="next-week"><span>След. неделя</span><b id="nextWeekCount">0</b></button>
+        <button class="nav-item" data-view="month"><span>Месяц</span><b id="monthCount">0</b></button>
+        <button class="nav-item" data-view="next-month"><span>След. месяц</span><b id="nextMonthCount">0</b></button>
         <button class="nav-item nav-create" data-view="form"><span>＋ Новая заявка</span></button>
         <button class="nav-item" data-view="settings"><span>Настройки</span></button>
       </nav>
@@ -71,8 +74,8 @@
         <div class="page-heading">
           <div>
             <p class="eyebrow">Планирование</p>
-            <h1>Неделя</h1>
-            <p>Все заборы и доставки на ближайшие семь дней.</p>
+            <h1 id="periodTitle">Неделя</h1>
+            <p id="periodSubtitle">Все заборы и доставки на ближайшие семь дней.</p>
           </div>
           <div class="heading-actions">
             <button class="button button-secondary" id="refreshBtn">Обновить</button>
@@ -168,8 +171,9 @@
                   <label class="field">Предварительная стоимость<input type="number" id="estimatedPrice" min="0" step="50" placeholder="Например, 3800" /></label>
                   <label class="field">Скидка, %<input type="number" id="discount" min="0" max="100" value="0" /></label>
                 </div>
+                <label class="toggle-row"><input type="checkbox" id="regularCustomer" /><span><strong>Постоянный клиент</strong><small>Отметка для менеджера и водителя.</small></span></label>
                 <div id="minimumOrderHint" class="warning-box hidden">Сумма ниже минимального заказа 1 800 ₽.</div>
-                <label class="toggle-row"><input type="checkbox" id="callAhead" checked /><span><strong>Позвонить перед визитом</strong><small>Добавится в описание события и напоминание.</small></span></label>
+                <label class="toggle-row"><input type="checkbox" id="callAhead" /><span><strong>Позвонить перед визитом</strong><small>Добавится в описание события и напоминание.</small></span></label>
                 <label class="field">Когда позвонить
                   <select id="callAheadMinutes">
                     <option value="15">За 15 минут</option>
