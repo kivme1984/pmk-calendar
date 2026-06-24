@@ -24,6 +24,11 @@ const WEEKDAY_NAMES = ['воскресенье', 'понедельник', 'вт
 const WEEKDAY_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 const WEEKDAY_ROUTE = ['в воскресенье', 'в понедельник', 'во вторник', 'в среду', 'в четверг', 'в пятницу', 'в субботу'];
 const TOKEN_STORAGE_KEY = 'pmk-google-token';
+const STATUS_OPTIONS = {
+  'pending-pickup': { label: 'Ожидает забора', short: 'Забор', className: 'pending-pickup', colorId: '9' },
+  'picked-up': { label: 'Забрали', short: 'Забрали', className: 'picked-up', colorId: '5' },
+  'pending-delivery': { label: 'Ожидает доставки', short: 'Доставка', className: 'pending-delivery', colorId: '11' },
+};
 const state = {
   settings: loadSettings(),
   token: loadSavedToken(),
@@ -31,6 +36,7 @@ const state = {
   events: [],
   localEvents: loadLocalEvents(),
   currentView: 'today',
+  selectedDayKey: null,
   autoReconnectTried: false,
   silentReconnect: false,
 };
@@ -138,6 +144,18 @@ function formatCallAhead(minutes) {
   if (minutes === 120) return 'за 2 часа';
   return `за ${minutes} минут`;
 }
+function defaultStatusForVisit(visitType = 'pickup') {
+  return visitType === 'delivery' ? 'pending-delivery' : 'pending-pickup';
+}
+function normalizeStatus(status, visitType = 'pickup') {
+  return STATUS_OPTIONS[status] ? status : defaultStatusForVisit(visitType);
+}
+function statusInfo(status, visitType = 'pickup') {
+  return STATUS_OPTIONS[normalizeStatus(status, visitType)];
+}
+function isPmkEvent(event) {
+  return Boolean(decodePmkData(event));
+}
 
 function showToast(message, type = '') {
   const toast = qs('#toast');
@@ -149,13 +167,17 @@ function showToast(message, type = '') {
 
 function setView(view) {
   state.currentView = view;
-  qsa('.view').forEach(el => el.classList.toggle('active', el.id === `view-${view}`));
+  const targetView = view === 'tomorrow' ? 'today' : view;
+  if (view === 'today') state.selectedDayKey = businessTodayKey();
+  if (view === 'tomorrow') state.selectedDayKey = addDaysToKey(businessTodayKey(), 1);
+  qsa('.view').forEach(el => el.classList.toggle('active', el.id === `view-${targetView}`));
   qsa('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === view));
   qs('#sidebar').classList.remove('open');
-  if (view === 'today' || view === 'week') refreshEvents();
+  if (view === 'today' || view === 'tomorrow' || view === 'week') refreshEvents();
 }
 
 function initializeForm() {
+  state.selectedDayKey = businessTodayKey();
   qs('#visitDate').value = businessTodayKey();
   addRug();
   updatePreview();
@@ -164,8 +186,8 @@ function initializeForm() {
 function addRug(data = {}) {
   const fragment = qs('#rugTemplate').content.cloneNode(true);
   const card = qs('.rug-card', fragment);
-  qs('.rug-length', card).value = data.length || '';
-  qs('.rug-width', card).value = data.width || '';
+  qs('.rug-length', card).value = data.length || 0;
+  qs('.rug-width', card).value = data.width || 0;
   qs('.rug-material', card).value = data.material || '';
   qs('.rug-pile', card).value = data.pile || '';
   setRugChecked(card, '.rug-issues', data.issues || []);
@@ -175,7 +197,10 @@ function addRug(data = {}) {
     card.remove();
     renumberRugs(); updatePreview();
   });
-  qsa('input,select', card).forEach(el => el.addEventListener('input', () => { updateRugTotal(card); updatePreview(); }));
+  qsa('input,select', card).forEach(el => el.addEventListener('input', () => {
+    if (el.type === 'range') vibrateTick();
+    updateRugTotal(card); updatePreview();
+  }));
   qs('#rugsContainer').appendChild(fragment);
   renumberRugs(); updateRugTotal(card);
 }
@@ -187,7 +212,15 @@ function renumberRugs() {
 function updateRugTotal(card) {
   const length = Number(qs('.rug-length', card).value || 0);
   const width = Number(qs('.rug-width', card).value || 0);
+  qs('.rug-length-value', card).textContent = length.toFixed(1);
+  qs('.rug-width-value', card).textContent = width.toFixed(1);
   qs('.rug-total strong', card).textContent = `${(length * width).toFixed(2).replace('.00','')} м²`;
+}
+
+function vibrateTick() {
+  if (!navigator.vibrate) return;
+  clearTimeout(vibrateTick.timer);
+  vibrateTick.timer = setTimeout(() => navigator.vibrate(8), 35);
 }
 
 function collectRugs() {
@@ -236,6 +269,7 @@ function getFormData() {
     visitDate: qs('#visitDate').value,
     startTime: qs('#startTime').value,
     endTime: qs('#endTime').value,
+    requestStatus: normalizeStatus(qs('#requestStatus').value, visitType),
     rugs,
     issues: [...new Set(rugs.flatMap(rug => rug.issues || []))],
     services: [...new Set(rugs.flatMap(rug => rug.services || []))],
@@ -276,6 +310,7 @@ function eventDescription(data) {
     `Район: ${data.district || '—'}`,
     data.accessInfo ? `Доступ: ${data.accessInfo}` : '',
     `Тип визита: ${data.visitType === 'delivery' ? 'доставка' : 'забор'}`,
+    `Статус: ${statusInfo(data.requestStatus, data.visitType).label}`,
     `Время: ${data.startTime || '—'}–${data.endTime || '—'}`,
     '',
     'Ковры:',
@@ -416,12 +451,14 @@ function decodePmkData(event) {
 
 function toGoogleEvent(data) {
   const callAheadMinutes = getCallAheadMinutes(data);
+  const currentStatus = statusInfo(data.requestStatus, data.visitType);
   return {
     summary: eventTitle(data),
     description: eventDescription(data),
     location: normalizeAddressForMap(data.address, data.accessInfo),
     start: { dateTime: `${data.visitDate}T${data.startTime}:00`, timeZone: state.settings.timezone },
     end: { dateTime: `${data.visitDate}T${data.endTime}:00`, timeZone: state.settings.timezone },
+    colorId: currentStatus.colorId,
     reminders: data.callAhead ? { useDefault: false, overrides: [{ method: 'popup', minutes: callAheadMinutes }] } : { useDefault: true },
     extendedProperties: { private: encodePmkData(data) },
   };
@@ -525,6 +562,38 @@ async function saveRequest(data, localOnly = false) {
   setView('today');
 }
 
+async function updateEventStatus(id, nextStatus) {
+  const event = getAllEvents().find(item => item.id === id);
+  if (!event) return showToast('Заявка не найдена.', 'error');
+  const data = eventMeta(event);
+  const nextData = { ...data, requestStatus: nextStatus, eventId: id };
+  const currentStatus = statusInfo(nextStatus, nextData.visitType);
+  try {
+    if (id.startsWith('local-')) {
+      const googleEvent = toGoogleEvent(nextData);
+      state.localEvents = state.localEvents.map(item => item.id === id ? { ...item, ...googleEvent, colorId: currentStatus.colorId } : item);
+      persistLocalEvents();
+    } else {
+      const calendarId = encodeURIComponent(state.settings.calendarId || 'primary');
+      if (isPmkEvent(event)) {
+        await googleRequest(`/calendars/${calendarId}/events/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(toGoogleEvent(nextData)) });
+      } else {
+        await googleRequest(`/calendars/${calendarId}/events/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ colorId: currentStatus.colorId, description: appendExternalStatus(event.description || '', currentStatus.label) }),
+        });
+      }
+    }
+    showToast(`Статус: ${currentStatus.label}`, 'success');
+    await refreshEvents();
+  } catch (error) { showToast(error.message, 'error'); }
+}
+
+function appendExternalStatus(description = '', label = '') {
+  const clean = String(description || '').replace(/\n?Статус ПМК: .*/g, '').trim();
+  return `${clean}${clean ? '\n' : ''}Статус ПМК: ${label}`;
+}
+
 async function deleteEvent(id) {
   if (!confirm('Удалить эту заявку?')) return;
   try {
@@ -569,52 +638,81 @@ function eventDateKey(event) { return businessDateTimeParts(event.start?.dateTim
 
 function eventMeta(event) {
   const data = decodePmkData(event);
-  if (data) return data;
+  if (data) return { ...data, requestStatus: normalizeStatus(data.requestStatus, data.visitType) };
   const summary = event.summary || '';
+  const statusFromColor = Object.entries(STATUS_OPTIONS).find(([, item]) => item.colorId === event.colorId)?.[0];
   return {
     customerName: summary.split('•')[1]?.trim() || summary,
     visitType: summary.toUpperCase().includes('ДОСТАВКА') ? 'delivery' : 'pickup',
     phone: '', address: event.location || '', district: summary.split('•')[2]?.trim() || '', estimatedPrice: 0,
+    requestStatus: normalizeStatus(statusFromColor, summary.toUpperCase().includes('ДОСТАВКА') ? 'delivery' : 'pickup'),
+    visitDate: eventDateKey(event),
+    startTime: formatTime(event.start?.dateTime || event.start),
+    endTime: formatTime(event.end?.dateTime || event.end),
   };
 }
 
 function renderAll() {
   const todayKey = businessTodayKey();
+  if (!state.selectedDayKey) state.selectedDayKey = todayKey;
   const all = getAllEvents();
   const weekKeys = Array.from({ length: 7 }, (_, index) => addDaysToKey(todayKey, index));
+  const selectedEvents = all.filter(event => eventDateKey(event) === state.selectedDayKey);
   const todayEvents = all.filter(event => eventDateKey(event) === todayKey);
+  const tomorrowEvents = all.filter(event => eventDateKey(event) === addDaysToKey(todayKey, 1));
   const weekEvents = all.filter(event => weekKeys.includes(eventDateKey(event)));
   qs('#todayCount').textContent = todayEvents.length;
+  qs('#tomorrowCount').textContent = tomorrowEvents.length;
   qs('#weekCount').textContent = weekEvents.length;
-  qs('#todayTitle').textContent = `Сегодня, ${formatDateLong(todayKey)}`;
+  qs('#todayTitle').textContent = dayTitle(state.selectedDayKey);
   qs('#todaySubtitle').textContent = state.token ? 'Данные синхронизированы с Google Calendar.' : 'Работает демо-режим: заявки хранятся на устройстве.';
-  qs('#summaryTotal').textContent = todayEvents.length;
-  qs('#summaryPickup').textContent = todayEvents.filter(event => eventMeta(event).visitType === 'pickup').length;
-  qs('#summaryDelivery').textContent = todayEvents.filter(event => eventMeta(event).visitType === 'delivery').length;
-  qs('#summaryAttention').textContent = todayEvents.filter(event => !eventMeta(event).phone || !event.location).length;
-  renderToday(todayEvents);
+  qs('#summaryTotal').textContent = selectedEvents.length;
+  qs('#summaryPickup').textContent = selectedEvents.filter(event => eventMeta(event).visitType === 'pickup').length;
+  qs('#summaryDelivery').textContent = selectedEvents.filter(event => eventMeta(event).visitType === 'delivery').length;
+  qs('#summaryAttention').textContent = selectedEvents.filter(event => !eventMeta(event).phone || !event.location).length;
+  renderToday(selectedEvents);
   renderWeek(weekEvents);
+}
+
+function dayTitle(dateKey) {
+  const todayKey = businessTodayKey();
+  if (dateKey === todayKey) return `Сегодня, ${formatDateLong(dateKey)}`;
+  if (dateKey === addDaysToKey(todayKey, 1)) return `Завтра, ${formatDateLong(dateKey)}`;
+  return formatDateLong(dateKey).replace(/^./, char => char.toUpperCase());
 }
 
 function renderToday(events) {
   const container = qs('#todayEvents');
-  if (!events.length) { container.innerHTML = '<div class="empty-state"><strong>На сегодня заявок нет.</strong><br>Добавьте первую заявку или подключите Google Calendar.</div>'; return; }
+  if (!events.length) { container.innerHTML = '<div class="empty-state"><strong>На этот день заявок нет.</strong><br>Добавьте первую заявку или подключите Google Calendar.</div>'; return; }
   container.innerHTML = events.map(event => {
     const data = eventMeta(event);
     const start = event.start?.dateTime || event.start;
     const end = event.end?.dateTime || event.end;
-    return `<article class="event-card ${data.visitType === 'delivery' ? 'delivery' : ''}">
-      <div class="event-time"><strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span></div>
-      <div class="event-main"><h3>${escapeHtml(event.summary || 'Заявка')}</h3><p>${escapeHtml(data.address || event.location || 'Адрес не указан')}${data.phone ? ` · ${escapeHtml(data.phone)}` : ''}${data.estimatedPrice ? ` · ${formatMoney(data.estimatedPrice)}` : ''}</p></div>
+    const currentStatus = statusInfo(data.requestStatus, data.visitType);
+    return `<article class="event-card status-${currentStatus.className}">
+      <div class="event-time"><strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em></div>
+      <div class="event-main"><h3>${escapeHtml(event.summary || 'Заявка')}</h3><p>${addressCapsule(data, event)}${data.phone ? ` · ${escapeHtml(data.phone)}` : ''}${data.estimatedPrice ? ` · ${formatMoney(data.estimatedPrice)}` : ''}</p></div>
       <div class="event-actions">
         ${data.phone ? `<a class="mini-button" href="${phoneLink(data.phone)}">Позвонить</a>` : ''}
-        ${(data.address || event.location) ? `<a class="mini-button" target="_blank" rel="noopener" href="${mapLink(data.address || event.location, data.accessInfo)}">Маршрут</a>` : ''}
         <button class="mini-button" data-edit-event="${escapeHtml(event.id)}">Изменить</button>
+        ${statusButtons(event.id, data.requestStatus)}
         <button class="mini-button" data-delete-event="${escapeHtml(event.id)}">Удалить</button>
       </div>
     </article>`;
   }).join('');
   bindEventActions(container);
+}
+
+function addressCapsule(data, event) {
+  const address = data.address || event.location || '';
+  if (!address) return '<span class="address-empty">Адрес не указан</span>';
+  return `<a class="address-pill" target="_blank" rel="noopener" href="${mapLink(address, data.accessInfo)}">${escapeHtml(address)}</a>`;
+}
+
+function statusButtons(id, currentStatus) {
+  return Object.entries(STATUS_OPTIONS).map(([status, item]) => (
+    `<button class="status-dot status-${item.className}${status === currentStatus ? ' active' : ''}" title="${item.label}" aria-label="${item.label}" data-status-event="${escapeHtml(id)}" data-status="${status}"></button>`
+  )).join('');
 }
 
 function renderWeek(events) {
@@ -625,11 +723,26 @@ function renderWeek(events) {
     const date = dateKeyForDisplay(dateKey);
     const dayEvents = events.filter(event => eventDateKey(event) === dateKey);
     return `<section class="day-column ${index === 0 ? 'today' : ''}">
-      <div class="day-heading"><strong>${WEEKDAY_SHORT[date.getUTCDay()]}, ${date.getUTCDate()} ${date.toLocaleDateString('ru-RU',{month:'short', timeZone:'UTC'})}</strong><span>${dayEvents.length} ${pluralPoints(dayEvents.length)}</span></div>
-      ${dayEvents.map(event => `<button class="day-event" data-edit-event="${escapeHtml(event.id)}"><b>${formatTime(event.start?.dateTime || event.start)} · ${escapeHtml(event.summary || 'Заявка')}</b><span>${escapeHtml(event.location || 'Адрес не указан')}</span></button>`).join('') || '<div class="empty-state">Свободно</div>'}
+      <button class="day-heading day-open" data-open-day="${dateKey}"><strong>${WEEKDAY_SHORT[date.getUTCDay()]}, ${date.getUTCDate()} ${date.toLocaleDateString('ru-RU',{month:'short', timeZone:'UTC'})}</strong><span>${dayEvents.length} ${pluralPoints(dayEvents.length)}</span></button>
+      ${dayEvents.map(event => {
+        const data = eventMeta(event);
+        const currentStatus = statusInfo(data.requestStatus, data.visitType);
+        return `<button class="day-event status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}"><b>${formatTime(event.start?.dateTime || event.start)} · ${escapeHtml(event.summary || 'Заявка')}</b><span>${escapeHtml(event.location || data.address || 'Адрес не указан')}</span><em>${currentStatus.label}</em></button>`;
+      }).join('') || '<div class="empty-state">Свободно</div>'}
     </section>`;
   }).join('');
   bindEventActions(board);
+  qsa('[data-open-day]', board).forEach(button => button.addEventListener('click', () => openDay(button.dataset.openDay)));
+}
+
+function openDay(dateKey) {
+  state.selectedDayKey = dateKey;
+  const todayKey = businessTodayKey();
+  state.currentView = dateKey === todayKey ? 'today' : (dateKey === addDaysToKey(todayKey, 1) ? 'tomorrow' : 'day');
+  qsa('.view').forEach(el => el.classList.toggle('active', el.id === 'view-today'));
+  qsa('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === state.currentView));
+  qs('#sidebar').classList.remove('open');
+  renderAll();
 }
 
 function pluralPoints(number) {
@@ -642,14 +755,14 @@ function pluralPoints(number) {
 function bindEventActions(root) {
   qsa('[data-edit-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); openEvent(button.dataset.editEvent); }));
   qsa('[data-delete-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); deleteEvent(button.dataset.deleteEvent); }));
+  qsa('[data-status-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); updateEventStatus(button.dataset.statusEvent, button.dataset.status); }));
 }
 
 function openEvent(id) {
   const event = getAllEvents().find(item => item.id === id);
   if (!event) return showToast('Заявка не найдена.', 'error');
   const data = decodePmkData(event);
-  if (!data) return showToast('Это событие создано не в ПМК Календаре и пока доступно только для просмотра.', 'error');
-  fillForm({ ...data, eventId: event.id });
+  fillForm({ ...(data || eventMeta(event)), eventId: event.id, externalEvent: !data });
   setView('form');
 }
 
@@ -667,6 +780,7 @@ function fillForm(data) {
   qs('#visitDate').value = data.visitDate || businessTodayKey();
   qs('#startTime').value = data.startTime || '10:00';
   qs('#endTime').value = data.endTime || '12:00';
+  qs('#requestStatus').value = normalizeStatus(data.requestStatus, data.visitType);
   qs('#estimatedPrice').value = data.estimatedPrice || '';
   qs('#discount').value = data.discount || 0;
   qs('#callAhead').checked = data.callAhead !== false;
@@ -685,6 +799,7 @@ function resetForm(addDefaultRug = true) {
   qs('#eventId').dataset.pmkId = makeId();
   qs('#orderSource').value = '';
   qs('#visitDate').value = businessTodayKey();
+  qs('#requestStatus').value = 'pending-pickup';
   qs('#startTime').value = '10:00'; qs('#endTime').value = '12:00'; qs('#discount').value = '0'; qs('#callAhead').checked = true; qs('#callAheadMinutes').value = '30';
   qs('#rugsContainer').innerHTML = '';
   if (addDefaultRug) addRug();
@@ -716,6 +831,11 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#connectGoogleBtn').addEventListener('click', connectGoogle);
   qs('#refreshBtn').addEventListener('click', refreshEvents);
   qs('#addRugBtn').addEventListener('click', () => addRug());
+  qsa('input[name="visitType"]').forEach(input => input.addEventListener('change', () => {
+    if (qs('#requestStatus').value === 'pending-pickup' || qs('#requestStatus').value === 'pending-delivery') {
+      qs('#requestStatus').value = defaultStatusForVisit(qs('input[name="visitType"]:checked')?.value);
+    }
+  }));
   qs('#cancelEditBtn').addEventListener('click', () => { resetForm(); setView('today'); });
   qs('#deleteEventBtn').addEventListener('click', () => {
     const id = qs('#eventId').value;
