@@ -32,14 +32,12 @@
   <div class="app-shell">
     <aside id="sidebar" class="sidebar">
       <nav class="nav-list" aria-label="Основная навигация">
-        <button class="nav-item active" data-view="today"><span>Сегодня</span><b id="todayCount">0</b></button>
-        <button class="nav-item" data-view="tomorrow"><span>Завтра</span><b id="tomorrowCount">0</b></button>
-        <button class="nav-item" data-view="week"><span>Неделя</span><b id="weekCount">0</b></button>
-        <button class="nav-item" data-view="next-week"><span>След. неделя</span><b id="nextWeekCount">0</b></button>
-        <button class="nav-item" data-view="month"><span>Месяц</span><b id="monthCount">0</b></button>
-        <button class="nav-item" data-view="next-month"><span>След. месяц</span><b id="nextMonthCount">0</b></button>
-        <button class="nav-item" data-view="delivery-waiting"><span>Ожидают доставки</span><b id="deliveryWaitingCount">0</b></button>
         <button class="nav-item" data-view="search"><span>Поиск</span></button>
+        <button class="nav-item active" data-view="day"><span>День</span><b id="todayCount">0</b></button>
+        <button class="nav-item" data-view="three-days"><span>3 дня</span><b id="threeDaysCount">0</b></button>
+        <button class="nav-item" data-view="week"><span>Неделя</span><b id="weekCount">0</b></button>
+        <button class="nav-item" data-view="month"><span>Месяц</span><b id="monthCount">0</b></button>
+        <button class="nav-item" data-view="delivery-waiting"><span>Ожидают доставки</span><b id="deliveryWaitingCount">0</b></button>
         <button class="nav-item nav-create" data-view="form"><span>＋ Новая заявка</span></button>
         <button class="nav-item nav-reminder" data-view="reminder"><span>＋ Новое напоминание</span></button>
         <button class="nav-item" data-view="settings"><span>Настройки</span></button>
@@ -89,7 +87,7 @@
             <button class="button button-secondary" id="prevPeriodBtn">← Назад</button>
             <input class="period-picker" type="date" id="jumpPeriodDate" />
             <button class="button button-secondary" id="nextPeriodBtn">Вперёд →</button>
-            <button class="button button-secondary" id="refreshBtn">Обновить</button>
+            <a class="button button-secondary" id="refreshBtn" href="reset.html">Обновить</a>
             <button class="button button-primary" data-open-form>＋ Добавить заявку</button>
           </div>
         </div>
@@ -268,13 +266,13 @@
           </div>
         </div>
         <div class="settings-grid">
-          <section class="form-card">
-            <h2>Google Calendar</h2>
+          <details class="form-card settings-details google-settings">
+            <summary>Google Calendar</summary>
             <label class="field">OAuth Client ID<input id="clientIdSetting" placeholder="...apps.googleusercontent.com" /></label>
             <label class="field">Calendar ID<input id="calendarIdSetting" value="primary" /></label>
             <label class="field">Часовой пояс<input id="timezoneSetting" value="Europe/Moscow" /></label>
             <button id="saveSettingsBtn" class="button button-primary">Сохранить настройки</button>
-          </section>
+          </details>
           <section class="form-card">
             <h2>Правила заявок</h2>
             <label class="field">Минимальный заказ, ₽<input type="number" id="minimumOrderSetting" value="1800" /></label>
@@ -294,17 +292,6 @@
             <label class="toggle-row"><input type="checkbox" id="soundSetting" /><span><strong>Звук</strong><small>Короткий сигнал вместе с уведомлением.</small></span></label>
             <label class="field">За сколько минут предупреждать<input type="number" id="notifyMinutesSetting" min="1" step="1" value="30" /></label>
             <button id="requestNotificationsBtn" type="button" class="button button-secondary">Разрешить уведомления</button>
-          </section>
-          <section class="form-card setup-help">
-            <h2>Что потребуется для подключения</h2>
-            <ol>
-              <li>Создать проект в Google Cloud.</li>
-              <li>Включить Google Calendar API.</li>
-              <li>Создать OAuth Client ID типа Web application.</li>
-              <li>Добавить адрес опубликованного приложения в Authorized JavaScript origins.</li>
-              <li>Вставить Client ID в поле выше и нажать «Подключить Google».</li>
-            </ol>
-            <p class="settings-note">После первого подключения приложение сохраняет доступ на этом устройстве и пробует восстановить Google Calendar автоматически. Если Google-сессия в браузере закончилась, нажмите «Подключить Google» ещё раз.</p>
           </section>
         </div>
       </section>

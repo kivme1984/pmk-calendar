@@ -15,20 +15,60 @@ const DEFAULT_SETTINGS = {
 };
 
 const ROUTES = {
-  'Автозаводский': [1],
-  'Ленинский': [1],
-  'Канавинский': [1],
+  'Автозаводский': [1, 4],
+  'Ленинский': [1, 4],
+  'Канавинский': [1, 4],
   'Московский': [2, 5],
   'Сормовский': [2, 5],
   'Нижегородский': [3, 6],
   'Советский': [3, 6],
   'Приокский': [3, 6],
 };
+const PICKUP_SCHEDULE = {
+  1: [
+    ['14:00', '16:00', 'Автозаводский'],
+    ['16:00', '17:00', 'Ленинский'],
+    ['17:00', '18:00', 'Канавинский'],
+    ['18:00', '19:00', 'Ленинский', 'вечерний выезд'],
+    ['19:00', '20:00', 'Автозаводский', 'вечерний выезд'],
+  ],
+  2: [
+    ['15:00', '17:00', 'Московский'],
+    ['17:00', '19:00', 'Сормовский'],
+    ['19:00', '20:00', 'Московский', 'вечерний выезд'],
+  ],
+  3: [
+    ['15:00', '16:00', 'Приокский'],
+    ['16:00', '17:00', 'Советский'],
+    ['17:00', '18:00', 'Нижегородский'],
+    ['18:00', '19:00', 'Советский', 'вечерний выезд'],
+    ['18:00', '19:00', 'Приокский', 'вечерний выезд'],
+  ],
+  4: [
+    ['14:00', '16:00', 'Автозаводский'],
+    ['16:00', '17:00', 'Ленинский'],
+    ['17:00', '18:00', 'Канавинский'],
+    ['18:00', '19:00', 'Ленинский', 'вечерний выезд'],
+    ['19:00', '20:00', 'Автозаводский', 'вечерний выезд'],
+  ],
+  5: [
+    ['15:00', '17:00', 'Московский'],
+    ['17:00', '19:00', 'Сормовский'],
+    ['19:00', '20:00', 'Московский', 'вечерний выезд'],
+  ],
+  6: [
+    ['15:00', '16:00', 'Приокский'],
+    ['16:00', '17:00', 'Советский'],
+    ['17:00', '18:00', 'Нижегородский'],
+    ['18:00', '19:00', 'Советский', 'вечерний выезд'],
+    ['18:00', '19:00', 'Приокский', 'вечерний выезд'],
+  ],
+};
 const PERIOD_LABELS = {
-  week: ['Неделя', 'Ближайшие семь дней с разбивкой по маршрутам.'],
-  'next-week': ['Следующая неделя', 'Планирование следующей недели.'],
-  month: ['Месяц', 'Все заявки текущего месяца.'],
-  'next-month': ['Следующий месяц', 'Планирование следующего месяца.'],
+  day: ['День', 'Один рабочий день с заявками и свободными окнами.'],
+  'three-days': ['3 дня', 'Три дня рядом для быстрой раскладки маршрутов.'],
+  week: ['Неделя', 'Семь дней с разбивкой по маршрутам.'],
+  month: ['Месяц', 'Все заявки выбранного месяца.'],
 };
 
 const WEEKDAY_NAMES = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
@@ -49,8 +89,8 @@ const state = {
   tokenClient: null,
   events: [],
   localEvents: loadLocalEvents(),
-  currentView: 'today',
-  returnView: 'today',
+  currentView: 'day',
+  returnView: 'day',
   selectedDayKey: null,
   periodAnchorKey: null,
   autoReconnectTried: false,
@@ -256,8 +296,21 @@ function parseDistrictHours() {
     return map;
   }, {});
 }
-function districtWorkingHours(district = '') {
-  return parseDistrictHours()[String(district).trim().toLowerCase()] || '';
+function pickupSlotsForDate(dateKey) {
+  const weekday = dateKeyForDisplay(dateKey || businessTodayKey()).getUTCDay();
+  return PICKUP_SCHEDULE[weekday] || [];
+}
+function formatPickupSlot(slot) {
+  const [from, to, district, note] = slot;
+  return `${from}-${to} ${district}${note ? ` (${note})` : ''}`;
+}
+function districtWorkingHours(district = '', dateKey = businessTodayKey()) {
+  const districtKey = String(district).trim().toLowerCase();
+  const scheduledSlots = pickupSlotsForDate(dateKey)
+    .filter(([, , slotDistrict]) => String(slotDistrict).trim().toLowerCase() === districtKey)
+    .map(formatPickupSlot);
+  if (scheduledSlots.length) return scheduledSlots.join(', ');
+  return parseDistrictHours()[districtKey] || '';
 }
 function isScheduleNote(data = {}) {
   return /жд[её]т\s+по\s+расписанию/i.test(data.timeNote || '');
@@ -278,16 +331,15 @@ function showToast(message, type = '') {
 function setView(view, options = {}) {
   const previousView = state.currentView;
   state.currentView = view;
-  const targetView = ['day','tomorrow','delivery-waiting'].includes(view) ? 'today' : (['next-week','month','next-month'].includes(view) ? 'week' : view);
-  if (view === 'today') state.selectedDayKey = businessTodayKey();
-  if (view === 'tomorrow') state.selectedDayKey = addDaysToKey(businessTodayKey(), 1);
+  const targetView = view === 'delivery-waiting' ? 'today' : (['day','three-days','week','month'].includes(view) ? 'week' : view);
+  if (view === 'day' && !state.selectedDayKey) state.selectedDayKey = businessTodayKey();
   if (view === 'form' || view === 'reminder') state.returnView = options.returnView || (previousView === 'form' || previousView === 'reminder' ? state.returnView : previousView);
   qsa('.view').forEach(el => el.classList.toggle('active', el.id === `view-${targetView}`));
   qsa('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === view));
   qs('#sidebar').classList.remove('open');
   if (!options.skipHistory) pushAppHistory(view);
   syncDateControls();
-  if (['day','today','tomorrow','week','next-week','month','next-month','delivery-waiting','search'].includes(view)) refreshEvents();
+  if (['day','three-days','week','month','delivery-waiting','search'].includes(view)) renderAll();
 }
 
 function pushAppHistory(view) {
@@ -298,14 +350,14 @@ function pushAppHistory(view) {
 }
 
 function restoreFromHistory(event) {
-  const view = event.state?.pmkView || state.returnView || 'today';
+  const view = event.state?.pmkView || state.returnView || 'day';
   if (event.state?.selectedDayKey) state.selectedDayKey = event.state.selectedDayKey;
   if (event.state?.periodAnchorKey) state.periodAnchorKey = event.state.periodAnchorKey;
   setView(view, { skipHistory: true });
 }
 
 function returnFromForm() {
-  const target = state.returnView || 'today';
+  const target = state.returnView || 'day';
   resetForm();
   setView(target);
 }
@@ -492,8 +544,8 @@ function eventDescription(data) {
     `Статус: ${statusInfo(data.requestStatus, data.visitType).label}`,
     `Время: ${data.startTime || '—'}–${data.endTime || '—'}`,
     data.timeNote ? `Пометка по времени: ${data.timeNote}` : '',
-    isScheduleNote(data) && districtWorkingHours(data.district) ? `Рабочее время района: ${districtWorkingHours(data.district)}` : '',
-    isScheduleNote(data) && !districtWorkingHours(data.district) ? 'Рабочее время района: не задано в настройках' : '',
+    isScheduleNote(data) && districtWorkingHours(data.district, data.visitDate) ? `Рабочее время района: ${districtWorkingHours(data.district, data.visitDate)}` : '',
+    isScheduleNote(data) && !districtWorkingHours(data.district, data.visitDate) ? 'Рабочее время района: не задано в настройках' : '',
     '',
     'Ковры:',
     rugs || '—',
@@ -744,10 +796,9 @@ async function saveRequest(data, localOnly = false) {
     }
   }
   state.selectedDayKey = data.visitDate || state.selectedDayKey;
-  const todayKey = businessTodayKey();
-  const savedView = state.selectedDayKey === todayKey ? 'today' : (state.selectedDayKey === addDaysToKey(todayKey, 1) ? 'tomorrow' : 'day');
+  state.periodAnchorKey = state.selectedDayKey;
   resetForm();
-  setView(['week','next-week','month','next-month','delivery-waiting','search'].includes(state.returnView) ? state.returnView : savedView);
+  setView(['three-days','week','month','delivery-waiting','search'].includes(state.returnView) ? state.returnView : 'day');
 }
 
 async function updateEventStatus(id, nextStatus) {
@@ -777,9 +828,40 @@ async function updateEventStatus(id, nextStatus) {
   } catch (error) { showToast(error.message, 'error'); }
 }
 
+async function updateEventContract(id, contractNumber) {
+  const event = getAllEvents().find(item => item.id === id);
+  if (!event) return showToast('Заявка не найдена.', 'error');
+  const data = eventMeta(event);
+  const nextData = { ...data, contractNumber: cleanShortField(contractNumber), eventId: id };
+  try {
+    if (id.startsWith('local-')) {
+      const googleEvent = toGoogleEvent(nextData);
+      state.localEvents = state.localEvents.map(item => item.id === id ? { ...item, ...googleEvent } : item);
+      persistLocalEvents();
+    } else {
+      const calendarId = encodeURIComponent(state.settings.calendarId || 'primary');
+      if (isPmkEvent(event)) {
+        await googleRequest(`/calendars/${calendarId}/events/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(toGoogleEvent(nextData)) });
+      } else {
+        await googleRequest(`/calendars/${calendarId}/events/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ description: appendExternalContract(event.description || '', nextData.contractNumber) }),
+        });
+      }
+    }
+    showToast('Номер договора сохранен.', 'success');
+    await refreshEvents();
+  } catch (error) { showToast(error.message, 'error'); }
+}
+
 function appendExternalStatus(description = '', label = '') {
   const clean = String(description || '').replace(/\n?Статус ПМК: .*/g, '').trim();
   return `${clean}${clean ? '\n' : ''}Статус ПМК: ${label}`;
+}
+
+function appendExternalContract(description = '', contractNumber = '') {
+  const clean = String(description || '').replace(/\n?Договор ПМК: .*/g, '').trim();
+  return contractNumber ? `${clean}${clean ? '\n' : ''}Договор ПМК: ${contractNumber}` : clean;
 }
 
 async function deleteEvent(id) {
@@ -794,7 +876,7 @@ async function deleteEvent(id) {
     }
     showToast('Заявка удалена.', 'success');
     resetForm();
-    setView(state.returnView || 'today');
+    setView(state.returnView || 'day');
   } catch (error) { showToast(error.message, 'error'); }
 }
 
@@ -826,7 +908,7 @@ async function saveReminder(data) {
   }
   qs('#reminderForm').reset();
   qs('#reminderDate').value = state.selectedDayKey || businessTodayKey();
-  setView(state.returnView || 'today');
+  setView(state.returnView || 'day');
 }
 
 async function refreshEvents() {
@@ -854,6 +936,7 @@ function startOfDay(date) { const value = new Date(date); value.setHours(0,0,0,0
 function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
 function formatTime(value) { return businessDateTimeParts(value).time || '—'; }
 function formatDateLong(dateKey) { return dateKeyForDisplay(dateKey).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }); }
+function formatDateShort(dateKey) { return dateKeyForDisplay(dateKey).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'UTC' }); }
 function eventDateKey(event) { return businessDateTimeParts(event.start?.dateTime || event.start).date; }
 function monthKey(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone: state.settings.timezone, year: 'numeric', month: '2-digit' }).formatToParts(date);
@@ -866,18 +949,18 @@ function daysInMonthKey(key) {
 }
 function periodKeys(period) {
   const todayKey = state.periodAnchorKey || businessTodayKey();
-  if (period === 'next-week') return Array.from({ length: 7 }, (_, index) => addDaysToKey(todayKey, index + 7));
-  if (period === 'month' || period === 'next-month') {
+  if (period === 'day') return [state.selectedDayKey || todayKey];
+  if (period === 'three-days') return Array.from({ length: 3 }, (_, index) => addDaysToKey(todayKey, index));
+  if (period === 'month') {
     const base = new Date(`${todayKey}T12:00:00Z`);
-    if (period === 'next-month') base.setUTCMonth(base.getUTCMonth() + 1, 1);
     const key = monthKey(base);
     return Array.from({ length: daysInMonthKey(key) }, (_, index) => `${key}-${pad(index + 1)}`);
   }
   return Array.from({ length: 7 }, (_, index) => addDaysToKey(todayKey, index));
 }
 function routeDistrictsForWeekday(weekday) {
-  const districts = Object.entries(ROUTES).filter(([, days]) => days.includes(weekday)).map(([district]) => district);
-  return districts.length ? districts.join(', ') : 'Маршрут не задан';
+  const slots = PICKUP_SCHEDULE[weekday] || [];
+  return slots.length ? slots.map(formatPickupSlot).join('; ') : 'Выходной';
 }
 function timeToMinutes(time = '00:00') {
   const [hours, minutes] = String(time).split(':').map(Number);
@@ -916,24 +999,20 @@ function renderAll() {
   if (!state.selectedDayKey) state.selectedDayKey = todayKey;
   const all = getAllEvents();
   const selectedEvents = all.filter(event => eventDateKey(event) === state.selectedDayKey);
-  const todayEvents = all.filter(event => eventDateKey(event) === todayKey);
-  const tomorrowEvents = all.filter(event => eventDateKey(event) === addDaysToKey(todayKey, 1));
   const deliveryWaitingEvents = all
     .filter(event => eventMeta(event).requestStatus === 'pending-delivery')
     .sort((a, b) => comparableEventRange(a).start.localeCompare(comparableEventRange(b).start));
+  const dayKeys = periodKeys('day');
+  const threeDayKeys = periodKeys('three-days');
   const weekKeys = periodKeys('week');
-  const nextWeekKeys = periodKeys('next-week');
   const monthKeys = periodKeys('month');
-  const nextMonthKeys = periodKeys('next-month');
-  const period = ['week','next-week','month','next-month'].includes(state.currentView) ? state.currentView : 'week';
+  const period = ['day','three-days','week','month'].includes(state.currentView) ? state.currentView : 'day';
   const activePeriodKeys = periodKeys(period);
   const periodEvents = all.filter(event => activePeriodKeys.includes(eventDateKey(event)));
-  qs('#todayCount').textContent = todayEvents.length;
-  qs('#tomorrowCount').textContent = tomorrowEvents.length;
+  qs('#todayCount').textContent = all.filter(event => dayKeys.includes(eventDateKey(event))).length;
+  qs('#threeDaysCount').textContent = all.filter(event => threeDayKeys.includes(eventDateKey(event))).length;
   qs('#weekCount').textContent = all.filter(event => weekKeys.includes(eventDateKey(event))).length;
-  qs('#nextWeekCount').textContent = all.filter(event => nextWeekKeys.includes(eventDateKey(event))).length;
   qs('#monthCount').textContent = all.filter(event => monthKeys.includes(eventDateKey(event))).length;
-  qs('#nextMonthCount').textContent = all.filter(event => nextMonthKeys.includes(eventDateKey(event))).length;
   qs('#deliveryWaitingCount').textContent = deliveryWaitingEvents.length;
   qs('#todayTitle').textContent = state.currentView === 'delivery-waiting' ? 'Ожидают доставки' : dayTitle(state.selectedDayKey);
   qs('#todaySubtitle').textContent = state.currentView === 'delivery-waiting'
@@ -962,6 +1041,7 @@ function syncDateControls() {
 
 function shiftSelectedDay(days) {
   state.selectedDayKey = addDaysToKey(state.selectedDayKey || businessTodayKey(), days);
+  state.periodAnchorKey = state.selectedDayKey;
   state.currentView = 'day';
   renderAll();
   pushAppHistory('day');
@@ -969,8 +1049,45 @@ function shiftSelectedDay(days) {
 
 function shiftPeriod(days) {
   state.periodAnchorKey = addDaysToKey(state.periodAnchorKey || businessTodayKey(), days);
+  if (state.currentView === 'day') state.selectedDayKey = state.periodAnchorKey;
   renderAll();
   pushAppHistory(state.currentView);
+}
+
+function periodStepDays() {
+  if (state.currentView === 'day') return 1;
+  if (state.currentView === 'three-days') return 3;
+  if (state.currentView === 'month') return 30;
+  return 7;
+}
+
+function setupSwipeNavigation() {
+  let startX = 0;
+  let startY = 0;
+  const threshold = 55;
+  const start = event => {
+    const touch = event.touches?.[0];
+    if (!touch) return;
+    startX = touch.clientX;
+    startY = touch.clientY;
+  };
+  const end = event => {
+    const touch = event.changedTouches?.[0];
+    if (!touch) return;
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    if (Math.abs(dx) < threshold || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+    if (qs('#sidebar').classList.contains('open') && dx < 0) {
+      qs('#sidebar').classList.remove('open');
+      return;
+    }
+    if (!['day', 'three-days', 'week', 'month'].includes(state.currentView)) return;
+    shiftPeriod(dx < 0 ? periodStepDays() : -periodStepDays());
+  };
+  qs('.main-content').addEventListener('touchstart', start, { passive: true });
+  qs('.main-content').addEventListener('touchend', end, { passive: true });
+  qs('#sidebar').addEventListener('touchstart', start, { passive: true });
+  qs('#sidebar').addEventListener('touchend', end, { passive: true });
 }
 
 function eventSearchText(event) {
@@ -1017,8 +1134,9 @@ function renderEventCard(event) {
   const currentStatus = statusInfo(data.requestStatus, data.visitType);
   const title = data.customerName || event.summary || 'Заявка';
   const metaLine = [data.district, data.phone].filter(Boolean).map(escapeHtml).join(' · ');
+  const dateKey = eventDateKey(event);
   return `<article class="event-card status-${currentStatus.className}">
-      <div class="event-time">${data.contractNumber ? `<small class="contract-line top">№ ${escapeHtml(data.contractNumber)}</small>` : ''}<strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em></div>
+      <div class="event-time">${data.contractNumber ? `<small class="contract-line top">№ ${escapeHtml(data.contractNumber)}</small>` : ''}<small class="event-date">${formatDateShort(dateKey)}</small><strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em></div>
       <div class="event-main">
         <h3>${data.contractNumber ? `<span class="inline-contract">№ ${escapeHtml(data.contractNumber)}</span>` : ''}${escapeHtml(title)}</h3>
         ${metaLine ? `<p class="event-meta-line">${metaLine}</p>` : ''}
@@ -1027,6 +1145,7 @@ function renderEventCard(event) {
         ${data.managerComment ? `<p class="event-note">${escapeHtml(data.managerComment)}</p>` : ''}
       </div>
       <div class="event-actions">
+        <div class="contract-quick"><input data-contract-input="${escapeHtml(event.id)}" value="${escapeHtml(data.contractNumber || '')}" placeholder="Договор №" inputmode="numeric" /><button class="mini-button" data-contract-save="${escapeHtml(event.id)}">ОК</button></div>
         <div class="action-row status-row">${statusButtons(event.id, data.requestStatus)}</div>
         <div class="action-row manage-row">
           ${data.phone ? `<a class="mini-button call-button" href="${phoneLink(data.phone)}">Позвонить</a>` : ''}
@@ -1057,11 +1176,12 @@ function statusButtons(id, currentStatus) {
 
 function renderPeriod(events, dateKeys, period = 'week') {
   const board = qs('#weekEvents');
-  board.classList.toggle('month-board', dateKeys.length > 7);
+  board.className = `week-board ${period}-board ${dateKeys.length > 7 ? 'month-board' : ''}`.trim();
+  const todayKey = businessTodayKey();
   board.innerHTML = dateKeys.map((dateKey, index) => {
     const date = dateKeyForDisplay(dateKey);
     const dayEvents = events.filter(event => eventDateKey(event) === dateKey);
-    return `<section class="day-column ${index === 0 ? 'today' : ''}">
+    return `<section class="day-column ${dateKey === todayKey ? 'today' : ''}">
       <button class="day-heading day-open" data-open-day="${dateKey}"><strong>${WEEKDAY_SHORT[date.getUTCDay()]}, ${date.getUTCDate()} ${date.toLocaleDateString('ru-RU',{month:'short', timeZone:'UTC'})}</strong><span>${dayEvents.length} ${pluralPoints(dayEvents.length)}</span><small>Маршрут: ${escapeHtml(routeDistrictsForWeekday(date.getUTCDay()))}</small></button>
       <button class="mini-button day-add" data-add-day="${dateKey}">＋ Заявка</button>
       ${dayEvents.map(event => {
@@ -1078,12 +1198,8 @@ function renderPeriod(events, dateKeys, period = 'week') {
 
 function openDay(dateKey) {
   state.selectedDayKey = dateKey;
-  const todayKey = businessTodayKey();
-  state.currentView = dateKey === todayKey ? 'today' : (dateKey === addDaysToKey(todayKey, 1) ? 'tomorrow' : 'day');
-  qsa('.view').forEach(el => el.classList.toggle('active', el.id === 'view-today'));
-  qsa('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === state.currentView));
-  qs('#sidebar').classList.remove('open');
-  renderAll();
+  state.periodAnchorKey = dateKey;
+  setView('day');
 }
 
 function createEventForDay(dateKey) {
@@ -1105,6 +1221,13 @@ function bindEventActions(root) {
   qsa('.day-event[data-edit-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); openEvent(button.dataset.editEvent); }));
   qsa('[data-delete-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); deleteEvent(button.dataset.deleteEvent); }));
   qsa('[data-status-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); updateEventStatus(button.dataset.statusEvent, button.dataset.status); }));
+  qsa('[data-contract-input]', root).forEach(input => input.addEventListener('click', event => event.stopPropagation()));
+  qsa('[data-contract-save]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    const input = qsa('[data-contract-input]', root).find(item => item.dataset.contractInput === button.dataset.contractSave);
+    updateEventContract(button.dataset.contractSave, input?.value || '');
+  }));
 }
 
 function openEvent(id) {
@@ -1237,7 +1360,8 @@ function checkUpcomingNotifications() {
 
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme(); setupSettingsUI(); initializeForm(); renderAll(); updateConnectionUI(); registerServiceWorker();
-  history.replaceState({ pmkView: state.currentView, selectedDayKey: state.selectedDayKey, periodAnchorKey: state.periodAnchorKey }, '', location.hash || '#today');
+  setupSwipeNavigation();
+  history.replaceState({ pmkView: state.currentView, selectedDayKey: state.selectedDayKey, periodAnchorKey: state.periodAnchorKey }, '', location.hash || '#day');
   scheduleGoogleAutoReconnect();
 
   qsa('.nav-item').forEach(button => button.addEventListener('click', () => {
@@ -1249,14 +1373,13 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('popstate', restoreFromHistory);
   qs('#menuToggle').addEventListener('click', () => qs('#sidebar').classList.toggle('open'));
   qs('#connectGoogleBtn').addEventListener('click', connectGoogle);
-  qs('#refreshBtn').addEventListener('click', refreshEvents);
   qs('#refreshSearchBtn').addEventListener('click', refreshEvents);
   qs('#prevDayBtn').addEventListener('click', () => shiftSelectedDay(-1));
   qs('#nextDayBtn').addEventListener('click', () => shiftSelectedDay(1));
   qs('#jumpDate').addEventListener('change', event => { state.selectedDayKey = event.target.value || businessTodayKey(); state.currentView = 'day'; renderAll(); pushAppHistory('day'); });
-  qs('#prevPeriodBtn').addEventListener('click', () => shiftPeriod(state.currentView === 'month' || state.currentView === 'next-month' ? -30 : -7));
-  qs('#nextPeriodBtn').addEventListener('click', () => shiftPeriod(state.currentView === 'month' || state.currentView === 'next-month' ? 30 : 7));
-  qs('#jumpPeriodDate').addEventListener('change', event => { state.periodAnchorKey = event.target.value || businessTodayKey(); renderAll(); pushAppHistory(state.currentView); });
+  qs('#prevPeriodBtn').addEventListener('click', () => shiftPeriod(-periodStepDays()));
+  qs('#nextPeriodBtn').addEventListener('click', () => shiftPeriod(periodStepDays()));
+  qs('#jumpPeriodDate').addEventListener('change', event => { state.periodAnchorKey = event.target.value || businessTodayKey(); if (state.currentView === 'day') state.selectedDayKey = state.periodAnchorKey; renderAll(); pushAppHistory(state.currentView); });
   qs('#addRugBtn').addEventListener('click', () => addRug());
   qs('#startTime').addEventListener('input', autoSetEndTime);
   qs('#startTime').addEventListener('change', autoSetEndTime);
@@ -1266,7 +1389,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }));
   qs('#cancelEditBtn').addEventListener('click', returnFromForm);
-  qs('#cancelReminderBtn').addEventListener('click', () => setView(state.returnView || 'today'));
+  qs('#cancelReminderBtn').addEventListener('click', () => setView(state.returnView || 'day'));
   qs('#deleteEventBtn').addEventListener('click', () => {
     const id = qs('#eventId').value;
     if (!id) return showToast('Сначала откройте сохранённую заявку.', 'error');
