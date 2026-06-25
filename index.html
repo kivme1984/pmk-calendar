@@ -38,6 +38,7 @@
         <button class="nav-item" data-view="next-week"><span>След. неделя</span><b id="nextWeekCount">0</b></button>
         <button class="nav-item" data-view="month"><span>Месяц</span><b id="monthCount">0</b></button>
         <button class="nav-item" data-view="next-month"><span>След. месяц</span><b id="nextMonthCount">0</b></button>
+        <button class="nav-item" data-view="delivery-waiting"><span>Ожидают доставки</span><b id="deliveryWaitingCount">0</b></button>
         <button class="nav-item nav-create" data-view="form"><span>＋ Новая заявка</span></button>
         <button class="nav-item" data-view="settings"><span>Настройки</span></button>
       </nav>
@@ -121,7 +122,16 @@
                     <option>Другое</option>
                   </select>
                 </label>
-                <label class="field">Адрес *<input id="address" name="address" autocomplete="street-address" required placeholder="Улица, дом, корпус, квартира" /></label>
+                <div class="field-grid three">
+                  <label class="field">Населённый пункт<input id="settlement" name="settlement" autocomplete="address-level2" placeholder="Нижний Новгород" /></label>
+                  <label class="field">Улица *<input id="street" name="street" autocomplete="street-address" required placeholder="Например, Большая Покровская" /></label>
+                  <label class="field">Дом *<input id="houseNumber" name="houseNumber" required placeholder="10 / 2А" /></label>
+                </div>
+                <div class="field-grid three">
+                  <label class="field">Квартира<input id="apartmentNumber" name="apartmentNumber" placeholder="45" /></label>
+                  <label class="field">Подъезд<input id="entrance" name="entrance" placeholder="2" /></label>
+                  <label class="field">Этаж<input id="floor" name="floor" placeholder="5" /></label>
+                </div>
                 <div class="field-grid two">
                   <label class="field">Район *
                     <select id="district" name="district" required>
@@ -131,7 +141,6 @@
                       <option>Советский</option><option>Приокский</option><option>За городом</option>
                     </select>
                   </label>
-                  <label class="field">Подъезд / этаж<input id="accessInfo" name="accessInfo" placeholder="Подъезд 2 этаж 5" /></label>
                 </div>
               </section>
 
@@ -173,6 +182,7 @@
                   <label class="field">Предварительная стоимость<input type="number" id="estimatedPrice" min="0" step="50" placeholder="Например, 3800" /></label>
                   <label class="field">Скидка, %<input type="number" id="discount" min="0" max="100" value="0" /></label>
                 </div>
+                <label class="field">Номер договора<input id="contractNumber" name="contractNumber" placeholder="Например, 1842" /></label>
                 <label class="toggle-row"><input type="checkbox" id="regularCustomer" /><span><strong>Постоянный клиент</strong><small>Отметка для менеджера и водителя.</small></span></label>
                 <div id="minimumOrderHint" class="warning-box hidden">Сумма ниже минимального заказа 1 800 ₽.</div>
                 <label class="toggle-row"><input type="checkbox" id="callAhead" /><span><strong>Позвонить перед визитом</strong><small>Добавится в описание события и напоминание.</small></span></label>
@@ -243,7 +253,7 @@
 
   <template id="rugTemplate">
     <article class="rug-card">
-      <div class="rug-card-header"><strong>Ковёр <span class="rug-number">1</span></strong><button type="button" class="remove-rug" aria-label="Удалить ковёр">Удалить</button></div>
+      <div class="rug-card-header"><strong>Ковёр <span class="rug-number">1</span></strong><div class="rug-card-actions"><button type="button" class="edit-rug-size">Изменить размеры</button><button type="button" class="remove-rug" aria-label="Удалить ковёр">Удалить</button></div></div>
       <div class="field-grid four">
         <label class="field range-field">Длина, м <input type="number" class="range-value rug-length-value" min="1" max="5" step="0.1" value="1.0" inputmode="decimal" /><input type="range" class="rug-length" min="1" max="5" step="0.1" value="1" /></label>
         <label class="field range-field">Ширина, м <input type="number" class="range-value rug-width-value" min="0" max="4" step="0.1" value="0.0" inputmode="decimal" /><input type="range" class="rug-width" min="0" max="4" step="0.1" value="0" /></label>

@@ -141,6 +141,79 @@ function yandexMapLink(address = '', accessInfo = '') { return `https://yandex.r
 function cleanAccessInfo(value = '') {
   return String(value).replace(/[,\-–—]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
+function cleanShortField(value = '') {
+  return String(value).replace(/[,\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function prefixedValue(prefix, value = '') {
+  const clean = cleanShortField(value);
+  if (!clean) return '';
+  const pattern = new RegExp(`^${prefix}\\.?\\s*`, 'i');
+  const separator = ['д', 'кв'].includes(prefix) ? '. ' : ' ';
+  return pattern.test(clean) ? clean : `${prefix}${separator}${clean}`;
+}
+function parseLegacyAddress(address = '', accessInfo = '') {
+  const parts = String(address).split(',').map(part => part.trim()).filter(Boolean);
+  const result = {
+    settlement: '',
+    street: '',
+    houseNumber: '',
+    apartmentNumber: '',
+    entrance: '',
+    floor: '',
+  };
+  const entrance = extractEntrance(address, accessInfo).match(/\d+[а-яa-z]?/i)?.[0] || '';
+  const floor = String(accessInfo || address).match(/этаж\s*№?\s*(\d+[а-яa-z]?)/i)?.[1] || '';
+  result.entrance = entrance;
+  result.floor = floor;
+  parts.forEach(part => {
+    if (/кв\.?|квартира/i.test(part)) result.apartmentNumber = part.replace(/кв\.?|квартира/ig, '').trim();
+    else if (/подъезд|под\./i.test(part)) result.entrance = part.match(/\d+[а-яa-z]?/i)?.[0] || result.entrance;
+    else if (/этаж/i.test(part)) result.floor = part.match(/\d+[а-яa-z]?/i)?.[0] || result.floor;
+    else if (!result.settlement && hasSettlement(part)) result.settlement = part;
+    else if (!result.street) result.street = part;
+    else if (!result.houseNumber) result.houseNumber = part.replace(/^д\.?\s*/i, '').trim();
+  });
+  if (!result.street && parts[0]) result.street = parts[0];
+  return result;
+}
+function withAddressParts(data = {}) {
+  const legacy = parseLegacyAddress(data.address || '', data.accessInfo || '');
+  return {
+    ...data,
+    settlement: cleanShortField(data.settlement || legacy.settlement),
+    street: cleanShortField(data.street || legacy.street),
+    houseNumber: cleanShortField(data.houseNumber || legacy.houseNumber),
+    apartmentNumber: cleanShortField(data.apartmentNumber || legacy.apartmentNumber),
+    entrance: cleanShortField(data.entrance || legacy.entrance),
+    floor: cleanShortField(data.floor || legacy.floor),
+  };
+}
+function fullAddress(data = {}) {
+  const item = withAddressParts(data);
+  const settlement = item.settlement || 'Нижний Новгород';
+  const parts = [
+    settlement,
+    item.street,
+    prefixedValue('д', item.houseNumber),
+    prefixedValue('кв', item.apartmentNumber),
+    prefixedValue('подъезд', item.entrance),
+    prefixedValue('этаж', item.floor),
+  ].filter(Boolean);
+  return parts.join(', ') || item.address || '';
+}
+function navigationAddress(data = {}) {
+  const item = withAddressParts(data);
+  const parts = [
+    item.settlement || 'Нижний Новгород',
+    item.street,
+    prefixedValue('д', item.houseNumber),
+    prefixedValue('подъезд', item.entrance),
+  ].filter(Boolean);
+  return parts.join(', ') || normalizeAddressForMap(item.address || '', item.accessInfo || '');
+}
+function yandexMapLinkForData(data = {}, event = {}) {
+  return `https://yandex.ru/maps/?text=${encodeURIComponent(navigationAddress(data) || event.location || '')}`;
+}
 function normalizeTag(value = '') {
   if (value === 'Сложный запах') return 'Дезинфекция';
   if (value === 'Вычёсывание шерсти') return '';
@@ -180,13 +253,13 @@ function showToast(message, type = '') {
 
 function setView(view) {
   state.currentView = view;
-  const targetView = view === 'tomorrow' ? 'today' : (['next-week','month','next-month'].includes(view) ? 'week' : view);
+  const targetView = ['tomorrow','delivery-waiting'].includes(view) ? 'today' : (['next-week','month','next-month'].includes(view) ? 'week' : view);
   if (view === 'today') state.selectedDayKey = businessTodayKey();
   if (view === 'tomorrow') state.selectedDayKey = addDaysToKey(businessTodayKey(), 1);
   qsa('.view').forEach(el => el.classList.toggle('active', el.id === `view-${targetView}`));
   qsa('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === view));
   qs('#sidebar').classList.remove('open');
-  if (['today','tomorrow','week','next-week','month','next-month'].includes(view)) refreshEvents();
+  if (['today','tomorrow','week','next-week','month','next-month','delivery-waiting'].includes(view)) refreshEvents();
 }
 
 function initializeForm() {
@@ -207,6 +280,7 @@ function addRug(data = {}) {
   qs('.rug-pile', card).value = data.pile || '';
   setRugChecked(card, '.rug-issues', data.issues || []);
   setRugChecked(card, '.rug-services', data.services || []);
+  qs('.edit-rug-size', card).addEventListener('click', () => setRugSizeEditing(card, card.classList.contains('rug-size-locked')));
   qs('.remove-rug', card).addEventListener('click', () => {
     if (qsa('.rug-card').length <= 1) return showToast('В заявке должен остаться хотя бы один ковёр.', 'error');
     card.remove();
@@ -218,11 +292,18 @@ function addRug(data = {}) {
     updateRugTotal(card); updatePreview();
   }));
   qs('#rugsContainer').appendChild(fragment);
+  setRugSizeEditing(card, false);
   renumberRugs(); updateRugTotal(card);
 }
 
 function renumberRugs() {
   qsa('.rug-card').forEach((card, index) => qs('.rug-number', card).textContent = index + 1);
+}
+
+function setRugSizeEditing(card, enabled) {
+  card.classList.toggle('rug-size-locked', !enabled);
+  qsa('.rug-length,.rug-width,.rug-length-value,.rug-width-value', card).forEach(input => input.disabled = !enabled);
+  qs('.edit-rug-size', card).textContent = enabled ? 'Готово' : 'Изменить размеры';
 }
 
 function updateRugTotal(card) {
@@ -291,7 +372,15 @@ function normalizeRugs(data = {}) {
 function getFormData() {
   const visitType = qs('input[name="visitType"]:checked')?.value || 'pickup';
   const rugs = collectRugs();
-  return {
+  const addressData = {
+    settlement: cleanShortField(qs('#settlement').value),
+    street: cleanShortField(qs('#street').value),
+    houseNumber: cleanShortField(qs('#houseNumber').value),
+    apartmentNumber: cleanShortField(qs('#apartmentNumber').value),
+    entrance: cleanShortField(qs('#entrance').value),
+    floor: cleanShortField(qs('#floor').value),
+  };
+  const data = {
     version: 1,
     pmkId: qs('#eventId').dataset.pmkId || makeId(),
     eventId: qs('#eventId').value || '',
@@ -299,9 +388,8 @@ function getFormData() {
     customerName: qs('#customerName').value.trim(),
     phone: qs('#phone').value.trim(),
     orderSource: qs('#orderSource').value,
-    address: qs('#address').value.trim(),
+    ...addressData,
     district: qs('#district').value,
-    accessInfo: cleanAccessInfo(qs('#accessInfo').value),
     visitDate: qs('#visitDate').value,
     startTime: qs('#startTime').value,
     endTime: qs('#endTime').value,
@@ -312,11 +400,15 @@ function getFormData() {
     services: [...new Set(rugs.flatMap(rug => rug.services || []))],
     estimatedPrice: Number(qs('#estimatedPrice').value || 0),
     discount: Number(qs('#discount').value || 0),
+    contractNumber: cleanShortField(qs('#contractNumber').value),
     regularCustomer: qs('#regularCustomer').checked,
     callAhead: qs('#callAhead').checked,
     callAheadMinutes: Number(qs('#callAheadMinutes').value || 30),
     managerComment: qs('#managerComment').value.trim(),
   };
+  data.address = fullAddress(data);
+  data.accessInfo = [prefixedValue('подъезд', data.entrance), prefixedValue('этаж', data.floor)].filter(Boolean).join(' ');
+  return data;
 }
 
 function eventTitle(data) {
@@ -345,6 +437,7 @@ function eventDescription(data) {
     `Источник: ${data.orderSource || 'не указан'}`,
     '',
     `Адрес: ${data.address || '—'}`,
+    data.contractNumber ? `Договор: ${data.contractNumber}` : '',
     `Район: ${data.district || '—'}`,
     data.accessInfo ? `Доступ: ${data.accessInfo}` : '',
     `Тип визита: ${data.visitType === 'delivery' ? 'доставка' : 'забор'}`,
@@ -453,7 +546,7 @@ function checkConflicts(data) {
 
 function validateForm(data) {
   const required = [
-    ['#customerName', data.customerName], ['#phone', data.phone], ['#address', data.address],
+    ['#customerName', data.customerName], ['#phone', data.phone], ['#street', data.street], ['#houseNumber', data.houseNumber],
     ['#district', data.district], ['#visitDate', data.visitDate], ['#startTime', data.startTime], ['#endTime', data.endTime],
   ];
   required.forEach(([selector, value]) => qs(selector).classList.toggle('invalid', !value));
@@ -495,7 +588,7 @@ function toGoogleEvent(data) {
   return {
     summary: eventTitle(data),
     description: eventDescription(data),
-    location: normalizeAddressForMap(data.address, data.accessInfo),
+    location: navigationAddress(data),
     start: { dateTime: `${data.visitDate}T${data.startTime}:00`, timeZone: state.settings.timezone },
     end: { dateTime: `${data.visitDate}T${data.endTime}:00`, timeZone: state.settings.timezone },
     colorId: currentStatus.colorId,
@@ -740,6 +833,9 @@ function renderAll() {
   const selectedEvents = all.filter(event => eventDateKey(event) === state.selectedDayKey);
   const todayEvents = all.filter(event => eventDateKey(event) === todayKey);
   const tomorrowEvents = all.filter(event => eventDateKey(event) === addDaysToKey(todayKey, 1));
+  const deliveryWaitingEvents = all
+    .filter(event => eventMeta(event).requestStatus === 'pending-delivery')
+    .sort((a, b) => comparableEventRange(a).start.localeCompare(comparableEventRange(b).start));
   const weekKeys = periodKeys('week');
   const nextWeekKeys = periodKeys('next-week');
   const monthKeys = periodKeys('month');
@@ -753,16 +849,20 @@ function renderAll() {
   qs('#nextWeekCount').textContent = all.filter(event => nextWeekKeys.includes(eventDateKey(event))).length;
   qs('#monthCount').textContent = all.filter(event => monthKeys.includes(eventDateKey(event))).length;
   qs('#nextMonthCount').textContent = all.filter(event => nextMonthKeys.includes(eventDateKey(event))).length;
-  qs('#todayTitle').textContent = dayTitle(state.selectedDayKey);
-  qs('#todaySubtitle').textContent = state.token ? 'Данные синхронизированы с Google Calendar.' : 'Работает демо-режим: заявки хранятся на устройстве.';
+  qs('#deliveryWaitingCount').textContent = deliveryWaitingEvents.length;
+  qs('#todayTitle').textContent = state.currentView === 'delivery-waiting' ? 'Ожидают доставки' : dayTitle(state.selectedDayKey);
+  qs('#todaySubtitle').textContent = state.currentView === 'delivery-waiting'
+    ? 'Ковры, которые уже забрали и нужно вернуть клиенту.'
+    : (state.token ? 'Данные синхронизированы с Google Calendar.' : 'Работает демо-режим: заявки хранятся на устройстве.');
   const [periodTitle, periodSubtitle] = PERIOD_LABELS[period] || PERIOD_LABELS.week;
   qs('#periodTitle').textContent = periodTitle;
   qs('#periodSubtitle').textContent = periodSubtitle;
-  qs('#summaryTotal').textContent = selectedEvents.length;
-  qs('#summaryPickup').textContent = selectedEvents.filter(event => eventMeta(event).visitType === 'pickup').length;
-  qs('#summaryDelivery').textContent = selectedEvents.filter(event => eventMeta(event).visitType === 'delivery').length;
-  qs('#summaryAttention').textContent = selectedEvents.filter(event => !eventMeta(event).phone || !event.location).length;
-  renderToday(selectedEvents);
+  const listEvents = state.currentView === 'delivery-waiting' ? deliveryWaitingEvents : selectedEvents;
+  qs('#summaryTotal').textContent = listEvents.length;
+  qs('#summaryPickup').textContent = listEvents.filter(event => eventMeta(event).visitType === 'pickup').length;
+  qs('#summaryDelivery').textContent = listEvents.filter(event => eventMeta(event).visitType === 'delivery').length;
+  qs('#summaryAttention').textContent = listEvents.filter(event => !eventMeta(event).phone || !displayAddress(eventMeta(event), event)).length;
+  renderToday(listEvents);
   renderPeriod(periodEvents, activePeriodKeys, period);
 }
 
@@ -786,35 +886,44 @@ function renderEventCard(event) {
   const end = event.end?.dateTime || event.end;
   const currentStatus = statusInfo(data.requestStatus, data.visitType);
   const title = data.customerName || event.summary || 'Заявка';
+  const metaLine = [data.district, data.phone].filter(Boolean).map(escapeHtml).join(' · ');
   return `<article class="event-card status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}">
-      <div class="event-time"><strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em></div>
+      <div class="event-time"><strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em>${data.contractNumber ? `<small class="contract-line">Договор № ${escapeHtml(data.contractNumber)}</small>` : ''}</div>
       <div class="event-main">
         <h3>${escapeHtml(title)}</h3>
-        <p class="event-meta-line"><strong>${currentStatus.label}</strong>${data.district ? ` · ${escapeHtml(data.district)}` : ''}${data.phone ? ` · ${escapeHtml(data.phone)}` : ''}</p>
+        ${metaLine ? `<p class="event-meta-line">${metaLine}</p>` : ''}
         <p>${addressCapsule(data, event)}</p>
         ${data.timeNote ? `<p class="event-note">Время: ${escapeHtml(data.timeNote)}</p>` : ''}
         ${data.managerComment ? `<p class="event-note">${escapeHtml(data.managerComment)}</p>` : ''}
       </div>
       <div class="event-actions">
-        ${data.phone ? `<a class="mini-button" href="${phoneLink(data.phone)}">Позвонить</a>` : ''}
-        ${routeButtons(data, event)}
-        <button class="mini-button" data-edit-event="${escapeHtml(event.id)}">Изменить</button>
-        ${statusButtons(event.id, data.requestStatus)}
-        <button class="mini-button" data-delete-event="${escapeHtml(event.id)}">Удалить</button>
+        <div class="action-row status-row">${statusButtons(event.id, data.requestStatus)}</div>
+        <div class="action-row manage-row">
+          ${data.phone ? `<a class="mini-button call-button" href="${phoneLink(data.phone)}">Позвонить</a>` : ''}
+          ${routeButtons(data, event)}
+          <button class="mini-button" data-edit-event="${escapeHtml(event.id)}">Изменить</button>
+          <button class="mini-button" data-delete-event="${escapeHtml(event.id)}">Удалить</button>
+        </div>
       </div>
     </article>`;
 }
 
+function displayAddress(data = {}, event = {}) {
+  const item = withAddressParts(data);
+  if (item.street || item.houseNumber || item.address) return fullAddress(item);
+  return event.location || '';
+}
+
 function addressCapsule(data, event) {
-  const address = data.address || event.location || '';
+  const address = displayAddress(data, event);
   if (!address) return '<span class="address-empty">Адрес не указан</span>';
-  return `<a class="address-pill" target="_blank" rel="noopener" href="${yandexMapLink(address, data.accessInfo)}" title="Открыть в Яндекс Картах">${escapeHtml(address)}</a>`;
+  return `<a class="address-pill" target="_blank" rel="noopener" href="${yandexMapLinkForData(data, event)}" title="Открыть в Яндекс Картах">${escapeHtml(address)}</a>`;
 }
 
 function routeButtons(data, event) {
-  const address = data.address || event.location || '';
+  const address = displayAddress(data, event);
   if (!address) return '';
-  return `<a class="mini-button route-yandex" target="_blank" rel="noopener" href="${yandexMapLink(address, data.accessInfo)}">Я.Карты</a>`;
+  return `<a class="mini-button route-yandex" target="_blank" rel="noopener" href="${yandexMapLinkForData(data, event)}">Я.Карты</a>`;
 }
 
 function statusButtons(id, currentStatus) {
@@ -835,7 +944,7 @@ function renderPeriod(events, dateKeys, period = 'week') {
       ${dayEvents.map(event => {
         const data = eventMeta(event);
         const currentStatus = statusInfo(data.requestStatus, data.visitType);
-        return `<button class="day-event status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}"><b>${formatTime(event.start?.dateTime || event.start)} · ${escapeHtml(data.customerName || event.summary || 'Заявка')}</b><span>${currentStatus.label}${data.district ? ` · ${escapeHtml(data.district)}` : ''}</span><span>${escapeHtml(event.location || data.address || 'Адрес не указан')}</span>${data.timeNote ? `<span>Время: ${escapeHtml(data.timeNote)}</span>` : ''}${data.managerComment ? `<span>${escapeHtml(data.managerComment)}</span>` : ''}</button>`;
+        return `<button class="day-event status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}"><b>${formatTime(event.start?.dateTime || event.start)} · ${escapeHtml(data.customerName || event.summary || 'Заявка')}</b><span>${currentStatus.label}${data.district ? ` · ${escapeHtml(data.district)}` : ''}</span>${data.contractNumber ? `<span>Договор № ${escapeHtml(data.contractNumber)}</span>` : ''}<span>${escapeHtml(displayAddress(data, event) || 'Адрес не указан')}</span>${data.timeNote ? `<span>Время: ${escapeHtml(data.timeNote)}</span>` : ''}${data.managerComment ? `<span>${escapeHtml(data.managerComment)}</span>` : ''}</button>`;
       }).join('') || '<div class="empty-state">Свободно</div>'}
     </section>`;
   }).join('');
@@ -886,15 +995,20 @@ function openEvent(id) {
 }
 
 function fillForm(data) {
+  const item = withAddressParts(data);
   resetForm(false);
   qs('#eventId').value = data.eventId || '';
   qs('#eventId').dataset.pmkId = data.pmkId || makeId();
   qs('#customerName').value = data.customerName || '';
   qs('#phone').value = data.phone || '';
   qs('#orderSource').value = data.orderSource || '';
-  qs('#address').value = data.address || '';
+  qs('#settlement').value = item.settlement || '';
+  qs('#street').value = item.street || '';
+  qs('#houseNumber').value = item.houseNumber || '';
+  qs('#apartmentNumber').value = item.apartmentNumber || '';
+  qs('#entrance').value = item.entrance || '';
+  qs('#floor').value = item.floor || '';
   qs('#district').value = data.district || '';
-  qs('#accessInfo').value = data.accessInfo || '';
   qs(`input[name="visitType"][value="${data.visitType || 'pickup'}"]`).checked = true;
   qs('#visitDate').value = data.visitDate || businessTodayKey();
   qs('#startTime').value = data.startTime || '10:00';
@@ -903,6 +1017,7 @@ function fillForm(data) {
   qs('#requestStatus').value = normalizeStatus(data.requestStatus, data.visitType);
   qs('#estimatedPrice').value = data.estimatedPrice || '';
   qs('#discount').value = data.discount || 0;
+  qs('#contractNumber').value = data.contractNumber || '';
   qs('#regularCustomer').checked = Boolean(data.regularCustomer);
   qs('#callAhead').checked = Boolean(data.callAhead);
   qs('#callAheadMinutes').value = String(getCallAheadMinutes(data));
@@ -921,7 +1036,7 @@ function resetForm(addDefaultRug = true) {
   qs('#orderSource').value = '';
   qs('#visitDate').value = state.selectedDayKey || businessTodayKey();
   qs('#requestStatus').value = 'pending-pickup';
-  qs('#startTime').value = '10:00'; qs('#endTime').value = addMinutesToTime('10:00', REQUEST_DURATION_MINUTES); qs('#timeNote').value = ''; qs('#discount').value = '0'; qs('#regularCustomer').checked = false; qs('#callAhead').checked = false; qs('#callAheadMinutes').value = '30';
+  qs('#startTime').value = '10:00'; qs('#endTime').value = addMinutesToTime('10:00', REQUEST_DURATION_MINUTES); qs('#timeNote').value = ''; qs('#discount').value = '0'; qs('#contractNumber').value = ''; qs('#regularCustomer').checked = false; qs('#callAhead').checked = false; qs('#callAheadMinutes').value = '30';
   qs('#rugsContainer').innerHTML = '';
   if (addDefaultRug) addRug();
   qs('#deleteEventBtn').classList.add('hidden');
@@ -954,10 +1069,6 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#addRugBtn').addEventListener('click', () => addRug());
   qs('#startTime').addEventListener('input', autoSetEndTime);
   qs('#startTime').addEventListener('change', autoSetEndTime);
-  qs('#accessInfo').addEventListener('input', () => {
-    const cleaned = cleanAccessInfo(qs('#accessInfo').value);
-    if (qs('#accessInfo').value !== cleaned) qs('#accessInfo').value = cleaned;
-  });
   qsa('input[name="visitType"]').forEach(input => input.addEventListener('change', () => {
     if (qs('#requestStatus').value === 'pending-pickup' || qs('#requestStatus').value === 'pending-delivery') {
       qs('#requestStatus').value = defaultStatusForVisit(qs('input[name="visitType"]:checked')?.value);
