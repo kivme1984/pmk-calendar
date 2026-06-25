@@ -765,16 +765,17 @@ function dayTitle(dateKey) {
 
 function renderToday(events) {
   const container = qs('#todayEvents');
-  container.innerHTML = renderDayTimeline(events);
+  if (!events.length) { container.innerHTML = '<div class="empty-state"><strong>На этот день заявок нет.</strong><br>Добавьте первую заявку или подключите Google Calendar.</div>'; return; }
+  container.innerHTML = events.map(event => renderEventCard(event)).join('');
   bindEventActions(container);
 }
 
-function renderEventCard(event, timelineStyle = '') {
+function renderEventCard(event) {
   const data = eventMeta(event);
   const start = event.start?.dateTime || event.start;
   const end = event.end?.dateTime || event.end;
   const currentStatus = statusInfo(data.requestStatus, data.visitType);
-  return `<article class="event-card status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}" ${timelineStyle}>
+  return `<article class="event-card status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}">
       <div class="event-time"><strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em></div>
       <div class="event-main"><h3>${escapeHtml(event.summary || 'Заявка')}</h3><p>${addressCapsule(data, event)}${data.phone ? ` · ${escapeHtml(data.phone)}` : ''}${data.estimatedPrice ? ` · ${formatMoney(data.estimatedPrice)}` : ''}</p></div>
       <div class="event-actions">
@@ -785,53 +786,6 @@ function renderEventCard(event, timelineStyle = '') {
         <button class="mini-button" data-delete-event="${escapeHtml(event.id)}">Удалить</button>
       </div>
     </article>`;
-}
-
-function renderDayTimeline(events) {
-  const startHour = 8;
-  const endHour = 21;
-  const hourHeight = 84;
-  const startMinute = startHour * 60;
-  const endMinute = endHour * 60;
-  const hours = Array.from({ length: endHour - startHour + 1 }, (_, index) => startHour + index);
-  const currentParts = businessDateTimeParts(new Date().toISOString());
-  const showNow = state.selectedDayKey === businessTodayKey();
-  const nowTop = Math.max(0, Math.min((endMinute - startMinute) / 60 * hourHeight, (timeToMinutes(currentParts.time) - startMinute) / 60 * hourHeight));
-  const layoutItems = layoutTimelineEvents(events);
-  const eventItems = layoutItems.map(item => {
-    const top = Math.max(0, (item.start - startMinute) / 60 * hourHeight);
-    const height = Math.max(42, Math.min(endMinute - startMinute, item.end - item.start) / 60 * hourHeight);
-    const width = `calc((100% - 24px - ${(item.columns - 1) * 8}px) / ${item.columns})`;
-    const left = `calc(12px + (${width} + 8px) * ${item.column})`;
-    return renderEventCard(item.event, `style="top:${top}px;min-height:${height}px;width:${width};left:${left};right:auto"`);
-  }).join('');
-  return `<div class="day-timeline" style="--timeline-height:${(endHour - startHour) * hourHeight}px">
-    <div class="timeline-hours">${hours.map(hour => `<div class="timeline-hour" style="height:${hourHeight}px"><span>${pad(hour)}:00</span></div>`).join('')}</div>
-    <div class="timeline-track">
-      ${hours.slice(0, -1).map((hour, index) => `<div class="timeline-line" style="top:${index * hourHeight}px"></div>`).join('')}
-      ${showNow ? `<div class="timeline-now" style="top:${nowTop}px"><span>сейчас</span></div>` : ''}
-      ${eventItems || '<div class="timeline-empty">Свободный день. Нажмите «＋ Заявка» в неделе или добавьте заявку сверху.</div>'}
-    </div>
-  </div>`;
-}
-
-function layoutTimelineEvents(events) {
-  const items = events.map(event => {
-    const start = timeToMinutes(formatTime(event.start?.dateTime || event.start));
-    return { event, start, end: Math.max(start + REQUEST_DURATION_MINUTES, timeToMinutes(formatTime(event.end?.dateTime || event.end))) };
-  }).sort((a, b) => a.start - b.start || a.end - b.end);
-  const active = [];
-  items.forEach(item => {
-    for (let index = active.length - 1; index >= 0; index--) if (active[index].end <= item.start) active.splice(index, 1);
-    const used = new Set(active.map(activeItem => activeItem.column));
-    let column = 0;
-    while (used.has(column)) column++;
-    item.column = column;
-    active.push(item);
-    const columns = Math.max(...active.map(activeItem => activeItem.column)) + 1;
-    active.forEach(activeItem => activeItem.columns = Math.max(activeItem.columns || 1, columns));
-  });
-  return items.map(item => ({ ...item, columns: item.columns || 1 }));
 }
 
 function addressCapsule(data, event) {
@@ -859,7 +813,7 @@ function renderPeriod(events, dateKeys, period = 'week') {
     const date = dateKeyForDisplay(dateKey);
     const dayEvents = events.filter(event => eventDateKey(event) === dateKey);
     return `<section class="day-column ${index === 0 ? 'today' : ''}">
-      <button class="day-heading day-open" data-open-day="${dateKey}"><strong>${WEEKDAY_SHORT[date.getUTCDay()]}, ${date.getUTCDate()} ${date.toLocaleDateString('ru-RU',{month:'short', timeZone:'UTC'})}</strong><span>${dayEvents.length} ${pluralPoints(dayEvents.length)}</span><small>${escapeHtml(routeDistrictsForWeekday(date.getUTCDay()))}</small></button>
+      <button class="day-heading day-open" data-open-day="${dateKey}"><strong>${WEEKDAY_SHORT[date.getUTCDay()]}, ${date.getUTCDate()} ${date.toLocaleDateString('ru-RU',{month:'short', timeZone:'UTC'})}</strong><span>${dayEvents.length} ${pluralPoints(dayEvents.length)}</span><small>Маршрут: ${escapeHtml(routeDistrictsForWeekday(date.getUTCDay()))}</small></button>
       <button class="mini-button day-add" data-add-day="${dateKey}">＋ Заявка</button>
       ${dayEvents.map(event => {
         const data = eventMeta(event);
