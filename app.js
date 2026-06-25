@@ -30,6 +30,7 @@ const WEEKDAY_NAMES = ['воскресенье', 'понедельник', 'вт
 const WEEKDAY_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 const WEEKDAY_ROUTE = ['в воскресенье', 'в понедельник', 'во вторник', 'в среду', 'в четверг', 'в пятницу', 'в субботу'];
 const TOKEN_STORAGE_KEY = 'pmk-google-token';
+const GOOGLE_CONNECTED_KEY = 'pmk-google-connected';
 const REQUEST_DURATION_MINUTES = 30;
 const STATUS_OPTIONS = {
   'pending-pickup': { label: 'Ожидает забора', short: 'Забор', className: 'pending-pickup', colorId: '9' },
@@ -91,6 +92,7 @@ function saveToken(response) {
   const expiresIn = Number(response.expires_in || 3600);
   const expiresAt = Date.now() + Math.max(60, expiresIn - 60) * 1000;
   localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify({ accessToken: response.access_token, expiresAt }));
+  localStorage.setItem(GOOGLE_CONNECTED_KEY, '1');
 }
 
 function clearSavedToken() {
@@ -130,11 +132,15 @@ function normalizeAddressForMap(address = '', accessInfo = '') {
   const rawParts = address.split(',').map(part => part.trim()).filter(Boolean);
   const publicParts = rawParts.filter(part => !/(кв\.?|квартира|офис|этаж|домофон|код|звонок|калитка)/i.test(part));
   const parts = hasSettlement(address) ? publicParts : ['Нижний Новгород', ...publicParts];
-  const entrance = extractEntrance(address, accessInfo);
+  const cleanAccess = cleanAccessInfo(accessInfo);
+  const entrance = extractEntrance(address, cleanAccess) || cleanAccess.match(/подъезд\s*№?\s*\d+|под\.?\s*\d+/i)?.[0] || '';
   if (entrance && !parts.some(part => part.toLowerCase().includes(entrance.toLowerCase()))) parts.push(entrance);
   return parts.join(', ');
 }
 function yandexMapLink(address = '', accessInfo = '') { return `https://yandex.ru/maps/?text=${encodeURIComponent(normalizeAddressForMap(address, accessInfo))}`; }
+function cleanAccessInfo(value = '') {
+  return String(value).replace(/[,\-–—]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
 function normalizeTag(value = '') {
   if (value === 'Сложный запах') return 'Дезинфекция';
   if (value === 'Вычёсывание шерсти') return '';
@@ -295,10 +301,11 @@ function getFormData() {
     orderSource: qs('#orderSource').value,
     address: qs('#address').value.trim(),
     district: qs('#district').value,
-    accessInfo: qs('#accessInfo').value.trim(),
+    accessInfo: cleanAccessInfo(qs('#accessInfo').value),
     visitDate: qs('#visitDate').value,
     startTime: qs('#startTime').value,
     endTime: qs('#endTime').value,
+    timeNote: qs('#timeNote').value.trim(),
     requestStatus: normalizeStatus(qs('#requestStatus').value, visitType),
     rugs,
     issues: [...new Set(rugs.flatMap(rug => rug.issues || []))],
@@ -343,6 +350,7 @@ function eventDescription(data) {
     `Тип визита: ${data.visitType === 'delivery' ? 'доставка' : 'забор'}`,
     `Статус: ${statusInfo(data.requestStatus, data.visitType).label}`,
     `Время: ${data.startTime || '—'}–${data.endTime || '—'}`,
+    data.timeNote ? `Пометка по времени: ${data.timeNote}` : '',
     '',
     'Ковры:',
     rugs || '—',
@@ -513,6 +521,7 @@ function initializeGoogleTokenClient() {
   state.tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: state.settings.clientId,
     scope: 'https://www.googleapis.com/auth/calendar.events',
+    include_granted_scopes: true,
     callback: async response => {
       if (response.error) {
         state.silentReconnect = false;
@@ -533,11 +542,12 @@ function connectGoogle() {
   if (!state.settings.clientId) { setView('settings'); showToast('Сначала укажите OAuth Client ID.', 'error'); return; }
   if (!initializeGoogleTokenClient()) { showToast('Библиотека Google ещё загружается. Повторите через несколько секунд.', 'error'); return; }
   state.silentReconnect = false;
-  state.tokenClient.requestAccessToken({ prompt: state.token ? '' : 'consent' });
+  state.tokenClient.requestAccessToken({ prompt: '' });
 }
 
 function autoReconnectGoogle(force = false) {
   if (state.token || (!force && state.autoReconnectTried)) return;
+  if (!force && localStorage.getItem(GOOGLE_CONNECTED_KEY) !== '1') return;
   state.autoReconnectTried = true;
   if (!initializeGoogleTokenClient()) return;
   try {
@@ -550,7 +560,7 @@ function scheduleGoogleAutoReconnect() {
   if (state.token) return refreshEvents();
   const started = Date.now();
   const timer = setInterval(() => {
-    if (state.token || Date.now() - started > 10000) return clearInterval(timer);
+    if (state.token || Date.now() - started > 18000) return clearInterval(timer);
     autoReconnectGoogle();
   }, 500);
 }
@@ -775,9 +785,16 @@ function renderEventCard(event) {
   const start = event.start?.dateTime || event.start;
   const end = event.end?.dateTime || event.end;
   const currentStatus = statusInfo(data.requestStatus, data.visitType);
+  const title = data.customerName || event.summary || 'Заявка';
   return `<article class="event-card status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}">
       <div class="event-time"><strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em></div>
-      <div class="event-main"><h3>${escapeHtml(event.summary || 'Заявка')}</h3><p>${addressCapsule(data, event)}${data.phone ? ` · ${escapeHtml(data.phone)}` : ''}${data.estimatedPrice ? ` · ${formatMoney(data.estimatedPrice)}` : ''}</p></div>
+      <div class="event-main">
+        <h3>${escapeHtml(title)}</h3>
+        <p class="event-meta-line"><strong>${currentStatus.label}</strong>${data.district ? ` · ${escapeHtml(data.district)}` : ''}${data.phone ? ` · ${escapeHtml(data.phone)}` : ''}</p>
+        <p>${addressCapsule(data, event)}</p>
+        ${data.timeNote ? `<p class="event-note">Время: ${escapeHtml(data.timeNote)}</p>` : ''}
+        ${data.managerComment ? `<p class="event-note">${escapeHtml(data.managerComment)}</p>` : ''}
+      </div>
       <div class="event-actions">
         ${data.phone ? `<a class="mini-button" href="${phoneLink(data.phone)}">Позвонить</a>` : ''}
         ${routeButtons(data, event)}
@@ -802,7 +819,7 @@ function routeButtons(data, event) {
 
 function statusButtons(id, currentStatus) {
   return Object.entries(STATUS_OPTIONS).map(([status, item]) => (
-    `<button class="status-dot status-${item.className}${status === currentStatus ? ' active' : ''}" title="${item.label}" aria-label="${item.label}" data-status-event="${escapeHtml(id)}" data-status="${status}"></button>`
+    `<button class="status-action status-${item.className}${status === currentStatus ? ' active' : ''}" title="${item.label}" aria-label="${item.label}" data-status-event="${escapeHtml(id)}" data-status="${status}">${item.label}</button>`
   )).join('');
 }
 
@@ -818,7 +835,7 @@ function renderPeriod(events, dateKeys, period = 'week') {
       ${dayEvents.map(event => {
         const data = eventMeta(event);
         const currentStatus = statusInfo(data.requestStatus, data.visitType);
-        return `<button class="day-event status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}"><b>${formatTime(event.start?.dateTime || event.start)} · ${escapeHtml(event.summary || 'Заявка')}</b><span>${escapeHtml(event.location || data.address || 'Адрес не указан')}</span><em>${currentStatus.label}</em></button>`;
+        return `<button class="day-event status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}"><b>${formatTime(event.start?.dateTime || event.start)} · ${escapeHtml(data.customerName || event.summary || 'Заявка')}</b><span>${currentStatus.label}${data.district ? ` · ${escapeHtml(data.district)}` : ''}</span><span>${escapeHtml(event.location || data.address || 'Адрес не указан')}</span>${data.timeNote ? `<span>Время: ${escapeHtml(data.timeNote)}</span>` : ''}${data.managerComment ? `<span>${escapeHtml(data.managerComment)}</span>` : ''}</button>`;
       }).join('') || '<div class="empty-state">Свободно</div>'}
     </section>`;
   }).join('');
@@ -882,6 +899,7 @@ function fillForm(data) {
   qs('#visitDate').value = data.visitDate || businessTodayKey();
   qs('#startTime').value = data.startTime || '10:00';
   qs('#endTime').value = data.endTime || addMinutesToTime(qs('#startTime').value, REQUEST_DURATION_MINUTES);
+  qs('#timeNote').value = data.timeNote || '';
   qs('#requestStatus').value = normalizeStatus(data.requestStatus, data.visitType);
   qs('#estimatedPrice').value = data.estimatedPrice || '';
   qs('#discount').value = data.discount || 0;
@@ -903,7 +921,7 @@ function resetForm(addDefaultRug = true) {
   qs('#orderSource').value = '';
   qs('#visitDate').value = state.selectedDayKey || businessTodayKey();
   qs('#requestStatus').value = 'pending-pickup';
-  qs('#startTime').value = '10:00'; qs('#endTime').value = addMinutesToTime('10:00', REQUEST_DURATION_MINUTES); qs('#discount').value = '0'; qs('#regularCustomer').checked = false; qs('#callAhead').checked = false; qs('#callAheadMinutes').value = '30';
+  qs('#startTime').value = '10:00'; qs('#endTime').value = addMinutesToTime('10:00', REQUEST_DURATION_MINUTES); qs('#timeNote').value = ''; qs('#discount').value = '0'; qs('#regularCustomer').checked = false; qs('#callAhead').checked = false; qs('#callAheadMinutes').value = '30';
   qs('#rugsContainer').innerHTML = '';
   if (addDefaultRug) addRug();
   qs('#deleteEventBtn').classList.add('hidden');
@@ -936,6 +954,10 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#addRugBtn').addEventListener('click', () => addRug());
   qs('#startTime').addEventListener('input', autoSetEndTime);
   qs('#startTime').addEventListener('change', autoSetEndTime);
+  qs('#accessInfo').addEventListener('input', () => {
+    const cleaned = cleanAccessInfo(qs('#accessInfo').value);
+    if (qs('#accessInfo').value !== cleaned) qs('#accessInfo').value = cleaned;
+  });
   qsa('input[name="visitType"]').forEach(input => input.addEventListener('change', () => {
     if (qs('#requestStatus').value === 'pending-pickup' || qs('#requestStatus').value === 'pending-delivery') {
       qs('#requestStatus').value = defaultStatusForVisit(qs('input[name="visitType"]:checked')?.value);
@@ -965,4 +987,8 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Настройки сохранены.', 'success');
   });
   qsa('#requestForm input, #requestForm select, #requestForm textarea').forEach(el => el.addEventListener('input', updatePreview));
+  qsa('[data-time-note]').forEach(button => button.addEventListener('click', () => {
+    qs('#timeNote').value = button.dataset.timeNote || '';
+    updatePreview();
+  }));
 });

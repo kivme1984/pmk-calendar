@@ -131,7 +131,7 @@
                       <option>Советский</option><option>Приокский</option><option>За городом</option>
                     </select>
                   </label>
-                  <label class="field">Подъезд / этаж / домофон<input id="accessInfo" name="accessInfo" placeholder="2 подъезд, 5 этаж, домофон 27" /></label>
+                  <label class="field">Подъезд / этаж<input id="accessInfo" name="accessInfo" placeholder="Подъезд 2 этаж 5" /></label>
                 </div>
               </section>
 
@@ -146,6 +146,8 @@
                   <label class="field">Начало *<input type="time" id="startTime" name="startTime" required value="10:00" /></label>
                   <label class="field">Окончание *<input type="time" id="endTime" name="endTime" required value="10:30" /></label>
                 </div>
+                <label class="field">Пометка по времени<input id="timeNote" name="timeNote" placeholder="Например: с 12 до 15, после 18:00" /></label>
+                <button type="button" class="mini-button quick-note" data-time-note="Ждёт по расписанию">Ждёт по расписанию</button>
                 <label class="field">Статус заявки
                   <select id="requestStatus">
                     <option value="pending-pickup">Ожидает забора</option>
