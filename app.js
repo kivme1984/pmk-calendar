@@ -7,6 +7,11 @@ const DEFAULT_SETTINGS = {
   minimumOrder: 1800,
   duration: 30,
   strictRoute: false,
+  theme: 'light',
+  districtHours: '',
+  notificationsEnabled: false,
+  soundEnabled: true,
+  notifyMinutes: 30,
 };
 
 const ROUTES = {
@@ -36,6 +41,7 @@ const STATUS_OPTIONS = {
   'pending-pickup': { label: 'Ожидает забора', short: 'Забор', className: 'pending-pickup', colorId: '9' },
   'picked-up': { label: 'Забрали', short: 'Забрали', className: 'picked-up', colorId: '5' },
   'pending-delivery': { label: 'Ожидает доставки', short: 'Доставка', className: 'pending-delivery', colorId: '11' },
+  'completed': { label: 'Выполнено', short: 'Готово', className: 'completed', colorId: '10' },
 };
 const state = {
   settings: loadSettings(),
@@ -44,9 +50,12 @@ const state = {
   events: [],
   localEvents: loadLocalEvents(),
   currentView: 'today',
+  returnView: 'today',
   selectedDayKey: null,
+  periodAnchorKey: null,
   autoReconnectTried: false,
   silentReconnect: false,
+  notifiedEvents: new Set(),
 };
 
 const qs = (selector, root = document) => root.querySelector(selector);
@@ -193,6 +202,7 @@ function fullAddress(data = {}) {
   const settlement = item.settlement || 'Нижний Новгород';
   const parts = [
     settlement,
+    item.district,
     item.street,
     prefixedValue('д', item.houseNumber),
     prefixedValue('кв', item.apartmentNumber),
@@ -212,7 +222,7 @@ function navigationAddress(data = {}) {
   return parts.join(', ') || normalizeAddressForMap(item.address || '', item.accessInfo || '');
 }
 function yandexMapLinkForData(data = {}, event = {}) {
-  return `https://yandex.ru/maps/?text=${encodeURIComponent(navigationAddress(data) || event.location || '')}`;
+  return `https://yandex.ru/navi/?text=${encodeURIComponent(navigationAddress(data) || event.location || '')}`;
 }
 function normalizeTag(value = '') {
   if (value === 'Сложный запах') return 'Дезинфекция';
@@ -239,6 +249,20 @@ function normalizeStatus(status, visitType = 'pickup') {
 function statusInfo(status, visitType = 'pickup') {
   return STATUS_OPTIONS[normalizeStatus(status, visitType)];
 }
+function parseDistrictHours() {
+  return String(state.settings.districtHours || '').split(/\n|;/).reduce((map, line) => {
+    const match = line.trim().match(/^(.+?)\s+(\d{1,2}:\d{2})\s*[-–—]\s*(\d{1,2}:\d{2})$/);
+    if (match) map[match[1].trim().toLowerCase()] = `${match[2]}–${match[3]}`;
+    return map;
+  }, {});
+}
+function districtWorkingHours(district = '') {
+  return parseDistrictHours()[String(district).trim().toLowerCase()] || '';
+}
+function isScheduleNote(data = {}) {
+  return /жд[её]т\s+по\s+расписанию/i.test(data.timeNote || '');
+}
+function notificationKey(event) { return event.id || `${event.summary}-${event.start?.dateTime || event.start}`; }
 function isPmkEvent(event) {
   return Boolean(decodePmkData(event));
 }
@@ -251,15 +275,39 @@ function showToast(message, type = '') {
   showToast.timer = setTimeout(() => toast.className = 'toast', 3200);
 }
 
-function setView(view) {
+function setView(view, options = {}) {
+  const previousView = state.currentView;
   state.currentView = view;
-  const targetView = ['tomorrow','delivery-waiting'].includes(view) ? 'today' : (['next-week','month','next-month'].includes(view) ? 'week' : view);
+  const targetView = ['day','tomorrow','delivery-waiting'].includes(view) ? 'today' : (['next-week','month','next-month'].includes(view) ? 'week' : view);
   if (view === 'today') state.selectedDayKey = businessTodayKey();
   if (view === 'tomorrow') state.selectedDayKey = addDaysToKey(businessTodayKey(), 1);
+  if (view === 'form' || view === 'reminder') state.returnView = options.returnView || (previousView === 'form' || previousView === 'reminder' ? state.returnView : previousView);
   qsa('.view').forEach(el => el.classList.toggle('active', el.id === `view-${targetView}`));
   qsa('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.view === view));
   qs('#sidebar').classList.remove('open');
-  if (['today','tomorrow','week','next-week','month','next-month','delivery-waiting'].includes(view)) refreshEvents();
+  if (!options.skipHistory) pushAppHistory(view);
+  syncDateControls();
+  if (['day','today','tomorrow','week','next-week','month','next-month','delivery-waiting','search'].includes(view)) refreshEvents();
+}
+
+function pushAppHistory(view) {
+  if (!history?.pushState) return;
+  const hash = view === 'today' ? '#today' : `#${view}`;
+  if (location.hash === hash && history.state?.pmkView === view) return;
+  history.pushState({ pmkView: view, returnView: state.returnView, selectedDayKey: state.selectedDayKey, periodAnchorKey: state.periodAnchorKey }, '', hash);
+}
+
+function restoreFromHistory(event) {
+  const view = event.state?.pmkView || state.returnView || 'today';
+  if (event.state?.selectedDayKey) state.selectedDayKey = event.state.selectedDayKey;
+  if (event.state?.periodAnchorKey) state.periodAnchorKey = event.state.periodAnchorKey;
+  setView(view, { skipHistory: true });
+}
+
+function returnFromForm() {
+  const target = state.returnView || 'today';
+  resetForm();
+  setView(target);
 }
 
 function initializeForm() {
@@ -444,6 +492,8 @@ function eventDescription(data) {
     `Статус: ${statusInfo(data.requestStatus, data.visitType).label}`,
     `Время: ${data.startTime || '—'}–${data.endTime || '—'}`,
     data.timeNote ? `Пометка по времени: ${data.timeNote}` : '',
+    isScheduleNote(data) && districtWorkingHours(data.district) ? `Рабочее время района: ${districtWorkingHours(data.district)}` : '',
+    isScheduleNote(data) && !districtWorkingHours(data.district) ? 'Рабочее время района: не задано в настройках' : '',
     '',
     'Ковры:',
     rugs || '—',
@@ -693,8 +743,11 @@ async function saveRequest(data, localOnly = false) {
       showToast('Заявка создана в Google Calendar.', 'success');
     }
   }
+  state.selectedDayKey = data.visitDate || state.selectedDayKey;
+  const todayKey = businessTodayKey();
+  const savedView = state.selectedDayKey === todayKey ? 'today' : (state.selectedDayKey === addDaysToKey(todayKey, 1) ? 'tomorrow' : 'day');
   resetForm();
-  setView('today');
+  setView(['week','next-week','month','next-month','delivery-waiting','search'].includes(state.returnView) ? state.returnView : savedView);
 }
 
 async function updateEventStatus(id, nextStatus) {
@@ -741,23 +794,55 @@ async function deleteEvent(id) {
     }
     showToast('Заявка удалена.', 'success');
     resetForm();
-    setView('today');
+    setView(state.returnView || 'today');
   } catch (error) { showToast(error.message, 'error'); }
+}
+
+function toReminderEvent(data) {
+  const endTime = addMinutesToTime(data.time, data.duration || 30);
+  return {
+    summary: `НАПОМИНАНИЕ • ${data.text}`,
+    description: data.text,
+    location: '',
+    start: { dateTime: `${data.date}T${data.time}:00`, timeZone: state.settings.timezone },
+    end: { dateTime: `${data.date}T${endTime}:00`, timeZone: state.settings.timezone },
+    colorId: '5',
+    reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: Number(state.settings.notifyMinutes || 30) }] },
+  };
+}
+
+async function saveReminder(data) {
+  if (!data.date || !data.time || !data.text) return showToast('Заполните дату, время и текст напоминания.', 'error');
+  const eventBody = toReminderEvent(data);
+  if (!state.token) {
+    const id = `local-reminder-${makeId()}`;
+    state.localEvents.push({ id, ...eventBody, htmlLink: '', updated: new Date().toISOString() });
+    persistLocalEvents();
+    showToast('Напоминание сохранено локально.', 'success');
+  } else {
+    const calendarId = encodeURIComponent(state.settings.calendarId || 'primary');
+    await googleRequest(`/calendars/${calendarId}/events`, { method: 'POST', body: JSON.stringify(eventBody) });
+    showToast('Напоминание создано в Google Calendar.', 'success');
+  }
+  qs('#reminderForm').reset();
+  qs('#reminderDate').value = state.selectedDayKey || businessTodayKey();
+  setView(state.returnView || 'today');
 }
 
 async function refreshEvents() {
   try {
     if (state.token) {
-      const start = new Date(); start.setUTCDate(start.getUTCDate() - 40);
-      const end = new Date(); end.setUTCDate(end.getUTCDate() + 80);
+      const start = new Date(); start.setUTCDate(start.getUTCDate() - 3650);
+      const end = new Date(); end.setUTCDate(end.getUTCDate() + 365);
       const params = new URLSearchParams({
-        timeMin: start.toISOString(), timeMax: end.toISOString(), singleEvents: 'true', orderBy: 'startTime', maxResults: '250',
+        timeMin: start.toISOString(), timeMax: end.toISOString(), singleEvents: 'true', orderBy: 'startTime', maxResults: '2500',
       });
       const calendarId = encodeURIComponent(state.settings.calendarId || 'primary');
       const result = await googleRequest(`/calendars/${calendarId}/events?${params}`);
       state.events = result.items || [];
     }
     renderAll();
+    checkUpcomingNotifications();
   } catch (error) { showToast(error.message, 'error'); renderAll(); }
 }
 
@@ -780,7 +865,7 @@ function daysInMonthKey(key) {
   return new Date(year, month, 0).getDate();
 }
 function periodKeys(period) {
-  const todayKey = businessTodayKey();
+  const todayKey = state.periodAnchorKey || businessTodayKey();
   if (period === 'next-week') return Array.from({ length: 7 }, (_, index) => addDaysToKey(todayKey, index + 7));
   if (period === 'month' || period === 'next-month') {
     const base = new Date(`${todayKey}T12:00:00Z`);
@@ -864,6 +949,51 @@ function renderAll() {
   qs('#summaryAttention').textContent = listEvents.filter(event => !eventMeta(event).phone || !displayAddress(eventMeta(event), event)).length;
   renderToday(listEvents);
   renderPeriod(periodEvents, activePeriodKeys, period);
+  renderSearch();
+  syncDateControls();
+}
+
+function syncDateControls() {
+  const dayInput = qs('#jumpDate');
+  if (dayInput) dayInput.value = state.selectedDayKey || businessTodayKey();
+  const periodInput = qs('#jumpPeriodDate');
+  if (periodInput) periodInput.value = state.periodAnchorKey || businessTodayKey();
+}
+
+function shiftSelectedDay(days) {
+  state.selectedDayKey = addDaysToKey(state.selectedDayKey || businessTodayKey(), days);
+  state.currentView = 'day';
+  renderAll();
+  pushAppHistory('day');
+}
+
+function shiftPeriod(days) {
+  state.periodAnchorKey = addDaysToKey(state.periodAnchorKey || businessTodayKey(), days);
+  renderAll();
+  pushAppHistory(state.currentView);
+}
+
+function eventSearchText(event) {
+  const data = eventMeta(event);
+  return [
+    event.summary, event.description, event.location,
+    data.customerName, data.phone, data.contractNumber, data.address, data.district,
+    data.timeNote, data.managerComment, data.orderSource,
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function renderSearch() {
+  const container = qs('#searchResults');
+  const input = qs('#globalSearch');
+  if (!container || !input) return;
+  const query = input.value.trim().toLowerCase();
+  if (!query) {
+    container.innerHTML = '<div class="empty-state"><strong>Введите слово для поиска.</strong><br>Например: телефон, договор, улица, имя или район.</div>';
+    return;
+  }
+  const results = getAllEvents().filter(event => eventSearchText(event).includes(query));
+  container.innerHTML = results.length ? results.map(event => renderEventCard(event)).join('') : '<div class="empty-state"><strong>Ничего не найдено.</strong></div>';
+  bindEventActions(container);
 }
 
 function dayTitle(dateKey) {
@@ -887,10 +1017,10 @@ function renderEventCard(event) {
   const currentStatus = statusInfo(data.requestStatus, data.visitType);
   const title = data.customerName || event.summary || 'Заявка';
   const metaLine = [data.district, data.phone].filter(Boolean).map(escapeHtml).join(' · ');
-  return `<article class="event-card status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}">
-      <div class="event-time"><strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em>${data.contractNumber ? `<small class="contract-line">Договор № ${escapeHtml(data.contractNumber)}</small>` : ''}</div>
+  return `<article class="event-card status-${currentStatus.className}">
+      <div class="event-time">${data.contractNumber ? `<small class="contract-line top">№ ${escapeHtml(data.contractNumber)}</small>` : ''}<strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em></div>
       <div class="event-main">
-        <h3>${escapeHtml(title)}</h3>
+        <h3>${data.contractNumber ? `<span class="inline-contract">№ ${escapeHtml(data.contractNumber)}</span>` : ''}${escapeHtml(title)}</h3>
         ${metaLine ? `<p class="event-meta-line">${metaLine}</p>` : ''}
         <p>${addressCapsule(data, event)}</p>
         ${data.timeNote ? `<p class="event-note">Время: ${escapeHtml(data.timeNote)}</p>` : ''}
@@ -900,8 +1030,7 @@ function renderEventCard(event) {
         <div class="action-row status-row">${statusButtons(event.id, data.requestStatus)}</div>
         <div class="action-row manage-row">
           ${data.phone ? `<a class="mini-button call-button" href="${phoneLink(data.phone)}">Позвонить</a>` : ''}
-          ${routeButtons(data, event)}
-          <button class="mini-button" data-edit-event="${escapeHtml(event.id)}">Изменить</button>
+          <button class="mini-button open-button" data-open-event="${escapeHtml(event.id)}">Открыть</button>
           <button class="mini-button" data-delete-event="${escapeHtml(event.id)}">Удалить</button>
         </div>
       </div>
@@ -918,12 +1047,6 @@ function addressCapsule(data, event) {
   const address = displayAddress(data, event);
   if (!address) return '<span class="address-empty">Адрес не указан</span>';
   return `<a class="address-pill" target="_blank" rel="noopener" href="${yandexMapLinkForData(data, event)}" title="Открыть в Яндекс Картах">${escapeHtml(address)}</a>`;
-}
-
-function routeButtons(data, event) {
-  const address = displayAddress(data, event);
-  if (!address) return '';
-  return `<a class="mini-button route-yandex" target="_blank" rel="noopener" href="${yandexMapLinkForData(data, event)}">Я.Карты</a>`;
 }
 
 function statusButtons(id, currentStatus) {
@@ -978,10 +1101,8 @@ function pluralPoints(number) {
 }
 
 function bindEventActions(root) {
-  qsa('[data-edit-event]', root).forEach(button => button.addEventListener('click', event => {
-    if (event.target.closest('a,input,select,textarea,.event-actions')) return;
-    event.preventDefault(); openEvent(button.dataset.editEvent);
-  }));
+  qsa('[data-open-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); openEvent(button.dataset.openEvent); }));
+  qsa('.day-event[data-edit-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); openEvent(button.dataset.editEvent); }));
   qsa('[data-delete-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); deleteEvent(button.dataset.deleteEvent); }));
   qsa('[data-status-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); updateEventStatus(button.dataset.statusEvent, button.dataset.status); }));
 }
@@ -1051,21 +1172,91 @@ function setupSettingsUI() {
   qs('#minimumOrderSetting').value = state.settings.minimumOrder;
   qs('#durationSetting').value = state.settings.duration;
   qs('#strictRouteSetting').checked = state.settings.strictRoute;
+  qs('#themeSetting').value = state.settings.theme || 'light';
+  qs('#districtHoursSetting').value = state.settings.districtHours || '';
+  qs('#notificationsSetting').checked = Boolean(state.settings.notificationsEnabled);
+  qs('#soundSetting').checked = Boolean(state.settings.soundEnabled);
+  qs('#notifyMinutesSetting').value = Number(state.settings.notifyMinutes || 30);
 }
 
 function registerServiceWorker() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
+function applyTheme() {
+  document.documentElement.dataset.theme = state.settings.theme || 'light';
+}
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return showToast('Браузер не поддерживает уведомления.', 'error');
+  const result = await Notification.requestPermission();
+  if (result === 'granted') {
+    state.settings.notificationsEnabled = true;
+    qs('#notificationsSetting').checked = true;
+    saveSettings();
+    showToast('Уведомления включены.', 'success');
+  } else {
+    showToast('Уведомления не разрешены в браузере.', 'error');
+  }
+}
+
+function playNotifySound() {
+  if (!state.settings.soundEnabled) return;
+  try {
+    const context = new AudioContext();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 880;
+    gain.gain.setValueAtTime(0.001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, context.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25);
+    oscillator.connect(gain); gain.connect(context.destination);
+    oscillator.start(); oscillator.stop(context.currentTime + 0.28);
+  } catch {}
+}
+
+function checkUpcomingNotifications() {
+  if (!state.settings.notificationsEnabled || !('Notification' in window) || Notification.permission !== 'granted') return;
+  const now = Date.now();
+  const warnMs = Number(state.settings.notifyMinutes || 30) * 60000;
+  getAllEvents().forEach(event => {
+    const start = new Date(event.start?.dateTime || event.start).getTime();
+    const key = notificationKey(event);
+    if (state.notifiedEvents.has(key) || start < now || start - now > warnMs) return;
+    state.notifiedEvents.add(key);
+    const data = eventMeta(event);
+    new Notification(event.summary || 'ПМК Календарь', {
+      body: `${formatTime(event.start?.dateTime || event.start)} ${data.customerName || ''} ${displayAddress(data, event) || ''}`.trim(),
+      icon: './icons/icon-192.png',
+      tag: key,
+    });
+    playNotifySound();
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  setupSettingsUI(); initializeForm(); renderAll(); updateConnectionUI(); registerServiceWorker();
+  applyTheme(); setupSettingsUI(); initializeForm(); renderAll(); updateConnectionUI(); registerServiceWorker();
+  history.replaceState({ pmkView: state.currentView, selectedDayKey: state.selectedDayKey, periodAnchorKey: state.periodAnchorKey }, '', location.hash || '#today');
   scheduleGoogleAutoReconnect();
 
-  qsa('.nav-item').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
+  qsa('.nav-item').forEach(button => button.addEventListener('click', () => {
+    if (button.dataset.view === 'form') resetForm();
+    if (button.dataset.view === 'reminder') qs('#reminderDate').value = state.selectedDayKey || businessTodayKey();
+    setView(button.dataset.view);
+  }));
   qsa('[data-open-form]').forEach(button => button.addEventListener('click', () => { resetForm(); setView('form'); }));
+  window.addEventListener('popstate', restoreFromHistory);
   qs('#menuToggle').addEventListener('click', () => qs('#sidebar').classList.toggle('open'));
   qs('#connectGoogleBtn').addEventListener('click', connectGoogle);
   qs('#refreshBtn').addEventListener('click', refreshEvents);
+  qs('#refreshSearchBtn').addEventListener('click', refreshEvents);
+  qs('#prevDayBtn').addEventListener('click', () => shiftSelectedDay(-1));
+  qs('#nextDayBtn').addEventListener('click', () => shiftSelectedDay(1));
+  qs('#jumpDate').addEventListener('change', event => { state.selectedDayKey = event.target.value || businessTodayKey(); state.currentView = 'day'; renderAll(); pushAppHistory('day'); });
+  qs('#prevPeriodBtn').addEventListener('click', () => shiftPeriod(state.currentView === 'month' || state.currentView === 'next-month' ? -30 : -7));
+  qs('#nextPeriodBtn').addEventListener('click', () => shiftPeriod(state.currentView === 'month' || state.currentView === 'next-month' ? 30 : 7));
+  qs('#jumpPeriodDate').addEventListener('change', event => { state.periodAnchorKey = event.target.value || businessTodayKey(); renderAll(); pushAppHistory(state.currentView); });
   qs('#addRugBtn').addEventListener('click', () => addRug());
   qs('#startTime').addEventListener('input', autoSetEndTime);
   qs('#startTime').addEventListener('change', autoSetEndTime);
@@ -1074,7 +1265,8 @@ document.addEventListener('DOMContentLoaded', () => {
       qs('#requestStatus').value = defaultStatusForVisit(qs('input[name="visitType"]:checked')?.value);
     }
   }));
-  qs('#cancelEditBtn').addEventListener('click', () => { resetForm(); setView('today'); });
+  qs('#cancelEditBtn').addEventListener('click', returnFromForm);
+  qs('#cancelReminderBtn').addEventListener('click', () => setView(state.returnView || 'today'));
   qs('#deleteEventBtn').addEventListener('click', () => {
     const id = qs('#eventId').value;
     if (!id) return showToast('Сначала откройте сохранённую заявку.', 'error');
@@ -1085,7 +1277,19 @@ document.addEventListener('DOMContentLoaded', () => {
     event.preventDefault();
     try { await saveRequest(getFormData(), false); } catch (error) { showToast(error.message, 'error'); }
   });
+  qs('#reminderForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+      await saveReminder({
+        date: qs('#reminderDate').value,
+        time: qs('#reminderTime').value,
+        duration: Number(qs('#reminderDuration').value || 30),
+        text: qs('#reminderText').value.trim(),
+      });
+    } catch (error) { showToast(error.message, 'error'); }
+  });
   qs('#saveSettingsBtn').addEventListener('click', () => {
+    const previousSettings = { ...state.settings };
     state.settings = {
       clientId: qs('#clientIdSetting').value.trim() || DEFAULT_SETTINGS.clientId,
       calendarId: qs('#calendarIdSetting').value.trim() || 'primary',
@@ -1093,13 +1297,25 @@ document.addEventListener('DOMContentLoaded', () => {
       minimumOrder: Number(qs('#minimumOrderSetting').value || 1800),
       duration: Number(qs('#durationSetting').value || 120),
       strictRoute: qs('#strictRouteSetting').checked,
+      theme: qs('#themeSetting').value || 'light',
+      districtHours: qs('#districtHoursSetting').value.trim(),
+      notificationsEnabled: qs('#notificationsSetting').checked,
+      soundEnabled: qs('#soundSetting').checked,
+      notifyMinutes: Number(qs('#notifyMinutesSetting').value || 30),
     };
-    saveSettings(); clearSavedToken(); state.tokenClient = null; state.autoReconnectTried = false; updateConnectionUI(); updatePreview();
+    const authChanged = previousSettings.clientId !== state.settings.clientId || previousSettings.calendarId !== state.settings.calendarId || previousSettings.timezone !== state.settings.timezone;
+    saveSettings(); applyTheme();
+    if (authChanged) { clearSavedToken(); state.tokenClient = null; state.autoReconnectTried = false; }
+    updateConnectionUI(); updatePreview();
     showToast('Настройки сохранены.', 'success');
   });
+  qs('#requestNotificationsBtn').addEventListener('click', requestNotificationPermission);
+  qs('#globalSearch').addEventListener('input', renderSearch);
   qsa('#requestForm input, #requestForm select, #requestForm textarea').forEach(el => el.addEventListener('input', updatePreview));
   qsa('[data-time-note]').forEach(button => button.addEventListener('click', () => {
     qs('#timeNote').value = button.dataset.timeNote || '';
     updatePreview();
   }));
+  qs('#reminderDate').value = businessTodayKey();
+  setInterval(checkUpcomingNotifications, 60000);
 });

@@ -39,7 +39,9 @@
         <button class="nav-item" data-view="month"><span>Месяц</span><b id="monthCount">0</b></button>
         <button class="nav-item" data-view="next-month"><span>След. месяц</span><b id="nextMonthCount">0</b></button>
         <button class="nav-item" data-view="delivery-waiting"><span>Ожидают доставки</span><b id="deliveryWaitingCount">0</b></button>
+        <button class="nav-item" data-view="search"><span>Поиск</span></button>
         <button class="nav-item nav-create" data-view="form"><span>＋ Новая заявка</span></button>
+        <button class="nav-item nav-reminder" data-view="reminder"><span>＋ Новое напоминание</span></button>
         <button class="nav-item" data-view="settings"><span>Настройки</span></button>
       </nav>
       <div class="sidebar-note">
@@ -60,6 +62,11 @@
           </div>
           <button class="button button-primary" data-open-form>＋ Добавить заявку</button>
         </div>
+        <div class="date-toolbar">
+          <button class="mini-button" id="prevDayBtn" type="button">← День</button>
+          <input type="date" id="jumpDate" />
+          <button class="mini-button" id="nextDayBtn" type="button">День →</button>
+        </div>
 
         <div class="summary-grid">
           <article class="summary-card"><span>Всего точек</span><strong id="summaryTotal">0</strong></article>
@@ -79,6 +86,9 @@
             <p id="periodSubtitle">Все заборы и доставки на ближайшие семь дней.</p>
           </div>
           <div class="heading-actions">
+            <button class="button button-secondary" id="prevPeriodBtn">← Назад</button>
+            <input class="period-picker" type="date" id="jumpPeriodDate" />
+            <button class="button button-secondary" id="nextPeriodBtn">Вперёд →</button>
             <button class="button button-secondary" id="refreshBtn">Обновить</button>
             <button class="button button-primary" data-open-form>＋ Добавить заявку</button>
           </div>
@@ -124,15 +134,6 @@
                 </label>
                 <div class="field-grid three">
                   <label class="field">Населённый пункт<input id="settlement" name="settlement" autocomplete="address-level2" placeholder="Нижний Новгород" /></label>
-                  <label class="field">Улица *<input id="street" name="street" autocomplete="street-address" required placeholder="Например, Большая Покровская" /></label>
-                  <label class="field">Дом *<input id="houseNumber" name="houseNumber" required placeholder="10 / 2А" /></label>
-                </div>
-                <div class="field-grid three">
-                  <label class="field">Квартира<input id="apartmentNumber" name="apartmentNumber" placeholder="45" /></label>
-                  <label class="field">Подъезд<input id="entrance" name="entrance" placeholder="2" /></label>
-                  <label class="field">Этаж<input id="floor" name="floor" placeholder="5" /></label>
-                </div>
-                <div class="field-grid two">
                   <label class="field">Район *
                     <select id="district" name="district" required>
                       <option value="">Выберите район</option>
@@ -141,6 +142,13 @@
                       <option>Советский</option><option>Приокский</option><option>За городом</option>
                     </select>
                   </label>
+                  <label class="field">Улица *<input id="street" name="street" autocomplete="street-address" required placeholder="Например, Большая Покровская" /></label>
+                </div>
+                <div class="field-grid four">
+                  <label class="field">Дом *<input id="houseNumber" name="houseNumber" required placeholder="10 / 2А" /></label>
+                  <label class="field">Квартира<input id="apartmentNumber" name="apartmentNumber" placeholder="45" /></label>
+                  <label class="field">Подъезд<input id="entrance" name="entrance" placeholder="2" /></label>
+                  <label class="field">Этаж<input id="floor" name="floor" placeholder="5" /></label>
                 </div>
               </section>
 
@@ -162,6 +170,7 @@
                     <option value="pending-pickup">Ожидает забора</option>
                     <option value="picked-up">Забрали</option>
                     <option value="pending-delivery">Ожидает доставки</option>
+                    <option value="completed">Выполнено</option>
                   </select>
                 </label>
                 <div id="routeHint" class="info-box">Выберите район и дату — появится проверка маршрута.</div>
@@ -213,6 +222,43 @@
         </form>
       </section>
 
+      <section id="view-reminder" class="view">
+        <div class="page-heading compact">
+          <div>
+            <p class="eyebrow">Быстрая заметка</p>
+            <h1>Новое напоминание</h1>
+            <p>Короткое событие без полной заявки.</p>
+          </div>
+          <button class="button button-ghost" id="cancelReminderBtn">Отмена</button>
+        </div>
+        <form id="reminderForm" class="form-card reminder-card" novalidate>
+          <div class="field-grid three">
+            <label class="field">Дата *<input type="date" id="reminderDate" required /></label>
+            <label class="field">Время *<input type="time" id="reminderTime" value="10:00" required /></label>
+            <label class="field">Длительность, минут<input type="number" id="reminderDuration" min="5" step="5" value="30" /></label>
+          </div>
+          <label class="field">Текст напоминания *<textarea id="reminderText" rows="4" required placeholder="Например: перезвонить клиенту по договору 1842"></textarea></label>
+          <div class="form-actions">
+            <button type="submit" class="button button-primary">Создать напоминание</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="view-search" class="view">
+        <div class="page-heading compact">
+          <div>
+            <p class="eyebrow">Вся история</p>
+            <h1>Поиск события</h1>
+            <p>Ищет по имени, телефону, адресу, договору, району, комментарию и тексту события.</p>
+          </div>
+          <button class="button button-secondary" id="refreshSearchBtn">Обновить</button>
+        </div>
+        <section class="form-card">
+          <label class="field search-field">Ключевое слово<input id="globalSearch" placeholder="Имя, телефон, адрес, договор..." /></label>
+          <div id="searchResults" class="event-list"></div>
+        </section>
+      </section>
+
       <section id="view-settings" class="view">
         <div class="page-heading">
           <div>
@@ -233,7 +279,21 @@
             <h2>Правила заявок</h2>
             <label class="field">Минимальный заказ, ₽<input type="number" id="minimumOrderSetting" value="1800" /></label>
             <label class="field">Стандартная длительность, минут<input type="number" id="durationSetting" value="30" /></label>
+            <label class="field">Тема интерфейса
+              <select id="themeSetting">
+                <option value="light">Светлая</option>
+                <option value="dark">Тёмная</option>
+              </select>
+            </label>
+            <label class="field">Рабочее время районов<textarea id="districtHoursSetting" rows="5" placeholder="Автозаводский 09:00-18:00&#10;Московский 10:00-20:00"></textarea></label>
             <label class="toggle-row"><input type="checkbox" id="strictRouteSetting" /><span><strong>Строго запрещать неподходящие дни</strong><small>По умолчанию приложение только предупреждает.</small></span></label>
+          </section>
+          <section class="form-card">
+            <h2>Уведомления</h2>
+            <label class="toggle-row"><input type="checkbox" id="notificationsSetting" /><span><strong>Пуш-уведомления</strong><small>Напоминать о ближайших событиях, пока приложение открыто или установлено.</small></span></label>
+            <label class="toggle-row"><input type="checkbox" id="soundSetting" /><span><strong>Звук</strong><small>Короткий сигнал вместе с уведомлением.</small></span></label>
+            <label class="field">За сколько минут предупреждать<input type="number" id="notifyMinutesSetting" min="1" step="1" value="30" /></label>
+            <button id="requestNotificationsBtn" type="button" class="button button-secondary">Разрешить уведомления</button>
           </section>
           <section class="form-card setup-help">
             <h2>Что потребуется для подключения</h2>
