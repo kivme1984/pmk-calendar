@@ -680,17 +680,40 @@ function comparableEventRange(event) {
   return { start: `${start.date}T${start.time}`, end: `${end.date}T${end.time}` };
 }
 
+function isSameRouteWindow(data, event, range) {
+  const eventData = eventMeta(event);
+  const formStart = `${data.visitDate}T${data.startTime}`;
+  const formEnd = `${data.visitDate}T${data.endTime}`;
+  return Boolean(
+    data.district &&
+    eventData.district &&
+    data.district.trim().toLowerCase() === eventData.district.trim().toLowerCase() &&
+    formStart === range.start &&
+    formEnd === range.end
+  );
+}
+
 function checkConflicts(data) {
   const box = qs('#conflictHint');
   box.className = 'info-box hidden';
   if (!data.visitDate || !data.startTime || !data.endTime) return true;
   const formStart = `${data.visitDate}T${data.startTime}`;
   const formEnd = `${data.visitDate}T${data.endTime}`;
+  let routeWindowCount = 0;
   const conflict = getAllEvents().find(event => {
     if (event.id === data.eventId) return false;
     const range = comparableEventRange(event);
+    if (isSameRouteWindow(data, event, range)) {
+      routeWindowCount += 1;
+      return false;
+    }
     return formStart < range.end && formEnd > range.start;
   });
+  if (!conflict && routeWindowCount) {
+    box.className = 'info-box good';
+    box.textContent = `В это окно уже есть ${routeWindowCount} ${pluralPoints(routeWindowCount)} по району ${data.district}. Можно добавить ещё заявку на это же время.`;
+    return true;
+  }
   if (!conflict) return true;
   box.className = 'info-box danger';
   box.textContent = `Есть пересечение: ${conflict.summary || 'другая заявка'} (${formatTime(conflict.start?.dateTime || conflict.start)}–${formatTime(conflict.end?.dateTime || conflict.end)}).`;
