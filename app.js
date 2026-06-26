@@ -1255,7 +1255,36 @@ function sourceBadge(data = {}) {
   const source = cleanShortField(data.orderSource || '');
   if (!source) return '';
   const isMax = /^(макс|max)$/i.test(source);
-  return `<span class="quick-badge source-badge${isMax ? ' max-badge' : ''}">${isMax ? 'MAX' : escapeHtml(source)}</span>`;
+  if (!isMax) return `<span class="quick-badge source-badge">${escapeHtml(source)}</span>`;
+  const phone = normalizePhone(data.phone || '');
+  if (!phone) return '<span class="quick-badge source-badge max-badge max-disabled" title="Телефон клиента не указан">MAX</span>';
+  return `<button type="button" class="quick-badge source-badge max-badge max-action" data-max-phone="${escapeHtml(phone)}" title="Скопировать номер и открыть MAX">MAX</button>`;
+}
+
+function copyTextFallback(value) {
+  const textarea = document.createElement('textarea');
+  textarea.value = value;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  try { document.execCommand('copy'); } catch {}
+  textarea.remove();
+}
+
+async function openMaxContact(phone) {
+  const normalized = normalizePhone(phone || '');
+  if (!normalized) return showToast('В заявке не указан телефон клиента.', 'error');
+  window.open('https://max.ru/', '_blank', 'noopener');
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(normalized);
+    else copyTextFallback(normalized);
+    showToast(`Номер ${normalized} скопирован. Вставьте его в поиск MAX.`, 'success');
+  } catch {
+    copyTextFallback(normalized);
+    showToast(`MAX открыт. Номер клиента: ${normalized}`, 'success');
+  }
 }
 
 function scheduleBadge(data = {}) {
@@ -1450,6 +1479,11 @@ function bindEventActions(root) {
     const editor = qsa('[data-contract-editor]', root).find(item => item.dataset.contractEditor === button.dataset.contractCancel);
     editor?.classList.add('hidden');
   }));
+  qsa('[data-max-phone]', root).forEach(button => button.addEventListener('click', event => {
+  event.preventDefault();
+  event.stopPropagation();
+  openMaxContact(button.dataset.maxPhone);
+}));
   qsa('[data-toggle-comment]', root).forEach(button => {
     const block = button.closest('.event-comment');
     const paragraph = qs('p', block);
