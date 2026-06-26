@@ -14,6 +14,28 @@ const DEFAULT_SETTINGS = {
   notifyMinutes: 30,
 };
 
+const DEFAULT_DISTRICT_HOURS = [
+  'Понедельник и четверг:',
+  '14:00-16:00 Автозаводский',
+  '16:00-17:00 Ленинский',
+  '17:00-18:00 Канавинский',
+  '18:00-19:00 Ленинский, вечерний выезд',
+  '19:00-20:00 Автозаводский, вечерний выезд',
+  '',
+  'Вторник и пятница:',
+  '15:00-17:00 Московский',
+  '17:00-19:00 Сормовский',
+  '19:00-20:00 Московский, вечерний выезд',
+  '',
+  'Среда и суббота:',
+  '15:00-16:00 Приокский',
+  '16:00-17:00 Советский',
+  '17:00-18:00 Нижегородский',
+  '18:00-19:00 Советский и Приокский, вечерний выезд',
+  '',
+  'Воскресенье: выходной',
+].join('\n');
+
 const ROUTES = {
   'Автозаводский': [1, 4],
   'Ленинский': [1, 4],
@@ -304,13 +326,41 @@ function formatPickupSlot(slot) {
   const [from, to, district, note] = slot;
   return `${from}-${to} ${district}${note ? ` (${note})` : ''}`;
 }
+function scheduleSlotsForDistrict(district = '', dateKey = '') {
+  const districtKey = String(district).trim().toLowerCase();
+  if (!districtKey || !dateKey) return [];
+  return pickupSlotsForDate(dateKey).filter(([, , slotDistrict]) => String(slotDistrict).trim().toLowerCase() === districtKey);
+}
 function districtWorkingHours(district = '', dateKey = businessTodayKey()) {
   const districtKey = String(district).trim().toLowerCase();
-  const scheduledSlots = pickupSlotsForDate(dateKey)
-    .filter(([, , slotDistrict]) => String(slotDistrict).trim().toLowerCase() === districtKey)
-    .map(formatPickupSlot);
+  const scheduledSlots = scheduleSlotsForDistrict(district, dateKey).map(formatPickupSlot);
   if (scheduledSlots.length) return scheduledSlots.join(', ');
   return parseDistrictHours()[districtKey] || '';
+}
+function scheduleSlotValue(slot) {
+  return `${slot[0]}|${slot[1]}|${slot[2]}|${slot[3] || ''}`;
+}
+function scheduleSlotLabel(slot) {
+  const [, , , note] = slot;
+  return `${slot[0]}-${slot[1]}${note ? ` (${note})` : ''}`;
+}
+function applyScheduleSlot(slot) {
+  if (!slot) return;
+  qs('#startTime').value = slot[0];
+  qs('#endTime').value = slot[1];
+  qs('#timeNote').value = `Ждёт по расписанию: ${scheduleSlotLabel(slot)}`;
+}
+function updateScheduleSlotOptions(force = false) {
+  const field = qs('#scheduleSlotField');
+  const select = qs('#scheduleSlotSelect');
+  if (!field || !select) return;
+  const slots = scheduleSlotsForDistrict(qs('#district').value, qs('#visitDate').value);
+  field.classList.toggle('hidden', slots.length <= 1);
+  select.innerHTML = slots.map(slot => `<option value="${escapeHtml(scheduleSlotValue(slot))}">${escapeHtml(scheduleSlotLabel(slot))}</option>`).join('');
+  if (!slots.length) return;
+  const current = slots.find(slot => slot[0] === qs('#startTime').value && slot[1] === qs('#endTime').value) || slots[0];
+  select.value = scheduleSlotValue(current);
+  if (force || !qs('#eventId').value) applyScheduleSlot(current);
 }
 function isScheduleNote(data = {}) {
   return /жд[её]т\s+по\s+расписанию/i.test(data.timeNote || '');
@@ -366,6 +416,7 @@ function initializeForm() {
   state.selectedDayKey = businessTodayKey();
   qs('#visitDate').value = businessTodayKey();
   addRug();
+  updateScheduleSlotOptions(false);
   updatePreview();
 }
 
@@ -1206,6 +1257,7 @@ function createEventForDay(dateKey) {
   state.selectedDayKey = dateKey;
   resetForm();
   qs('#visitDate').value = dateKey;
+  updateScheduleSlotOptions(true);
   setView('form');
 }
 
@@ -1270,6 +1322,7 @@ function fillForm(data) {
   normalizeRugs(data).forEach(addRug);
   qs('#deleteEventBtn').classList.remove('hidden');
   qs('#formTitle').textContent = 'Редактирование заявки';
+  updateScheduleSlotOptions(false);
   updateConnectionUI(); updatePreview();
 }
 
@@ -1285,6 +1338,7 @@ function resetForm(addDefaultRug = true) {
   if (addDefaultRug) addRug();
   qs('#deleteEventBtn').classList.add('hidden');
   qs('#formTitle').textContent = 'Новая заявка';
+  updateScheduleSlotOptions(true);
   updateConnectionUI(); updatePreview();
 }
 
@@ -1296,7 +1350,7 @@ function setupSettingsUI() {
   qs('#durationSetting').value = state.settings.duration;
   qs('#strictRouteSetting').checked = state.settings.strictRoute;
   qs('#themeSetting').value = state.settings.theme || 'light';
-  qs('#districtHoursSetting').value = state.settings.districtHours || '';
+  qs('#districtHoursSetting').value = state.settings.districtHours || DEFAULT_DISTRICT_HOURS;
   qs('#notificationsSetting').checked = Boolean(state.settings.notificationsEnabled);
   qs('#soundSetting').checked = Boolean(state.settings.soundEnabled);
   qs('#notifyMinutesSetting').value = Number(state.settings.notifyMinutes || 30);
@@ -1381,6 +1435,13 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#nextPeriodBtn').addEventListener('click', () => shiftPeriod(periodStepDays()));
   qs('#jumpPeriodDate').addEventListener('change', event => { state.periodAnchorKey = event.target.value || businessTodayKey(); if (state.currentView === 'day') state.selectedDayKey = state.periodAnchorKey; renderAll(); pushAppHistory(state.currentView); });
   qs('#addRugBtn').addEventListener('click', () => addRug());
+  qs('#district').addEventListener('change', () => { updateScheduleSlotOptions(true); updatePreview(); });
+  qs('#visitDate').addEventListener('change', () => { updateScheduleSlotOptions(true); updatePreview(); });
+  qs('#scheduleSlotSelect').addEventListener('change', event => {
+    const slot = scheduleSlotsForDistrict(qs('#district').value, qs('#visitDate').value).find(item => scheduleSlotValue(item) === event.target.value);
+    applyScheduleSlot(slot);
+    updatePreview();
+  });
   qs('#startTime').addEventListener('input', autoSetEndTime);
   qs('#startTime').addEventListener('change', autoSetEndTime);
   qsa('input[name="visitType"]').forEach(input => input.addEventListener('change', () => {
@@ -1421,7 +1482,7 @@ document.addEventListener('DOMContentLoaded', () => {
       duration: Number(qs('#durationSetting').value || 120),
       strictRoute: qs('#strictRouteSetting').checked,
       theme: qs('#themeSetting').value || 'light',
-      districtHours: qs('#districtHoursSetting').value.trim(),
+      districtHours: qs('#districtHoursSetting').value.trim() || DEFAULT_DISTRICT_HOURS,
       notificationsEnabled: qs('#notificationsSetting').checked,
       soundEnabled: qs('#soundSetting').checked,
       notifyMinutes: Number(qs('#notifyMinutesSetting').value || 30),

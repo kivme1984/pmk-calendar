@@ -161,6 +161,9 @@
                   <label class="field">Начало *<input type="time" id="startTime" name="startTime" required value="10:00" /></label>
                   <label class="field">Окончание *<input type="time" id="endTime" name="endTime" required value="10:30" /></label>
                 </div>
+                <label class="field hidden" id="scheduleSlotField">Окно по графику
+                  <select id="scheduleSlotSelect"></select>
+                </label>
                 <label class="field">Пометка по времени<input id="timeNote" name="timeNote" placeholder="Например: с 12 до 15, после 18:00" /></label>
                 <button type="button" class="mini-button quick-note" data-time-note="Ждёт по расписанию">Ждёт по расписанию</button>
                 <label class="field">Статус заявки
@@ -271,7 +274,6 @@
             <label class="field">OAuth Client ID<input id="clientIdSetting" placeholder="...apps.googleusercontent.com" /></label>
             <label class="field">Calendar ID<input id="calendarIdSetting" value="primary" /></label>
             <label class="field">Часовой пояс<input id="timezoneSetting" value="Europe/Moscow" /></label>
-            <button id="saveSettingsBtn" class="button button-primary">Сохранить настройки</button>
           </details>
           <section class="form-card">
             <h2>Правила заявок</h2>
@@ -283,7 +285,7 @@
                 <option value="dark">Тёмная</option>
               </select>
             </label>
-            <label class="field">Рабочее время районов<textarea id="districtHoursSetting" rows="5" placeholder="Автозаводский 09:00-18:00&#10;Московский 10:00-20:00"></textarea></label>
+            <label class="field">Рабочее время районов<textarea id="districtHoursSetting" rows="12" placeholder="Автозаводский 14:00-16:00&#10;Московский 15:00-17:00"></textarea></label>
             <label class="toggle-row"><input type="checkbox" id="strictRouteSetting" /><span><strong>Строго запрещать неподходящие дни</strong><small>По умолчанию приложение только предупреждает.</small></span></label>
           </section>
           <section class="form-card">
@@ -293,6 +295,10 @@
             <label class="field">За сколько минут предупреждать<input type="number" id="notifyMinutesSetting" min="1" step="1" value="30" /></label>
             <button id="requestNotificationsBtn" type="button" class="button button-secondary">Разрешить уведомления</button>
           </section>
+        </div>
+        <div class="settings-actions">
+          <a class="button button-secondary" href="https://kivme1984.github.io/pmk-calendar/reset.html">Обновить приложение</a>
+          <button id="saveSettingsBtn" class="button button-primary">Сохранить настройки</button>
         </div>
       </section>
     </main>
