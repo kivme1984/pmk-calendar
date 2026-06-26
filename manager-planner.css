@@ -1,20 +1,55 @@
 /* Manager-only planning tools inside create/edit form */
+html {
+  max-width: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body,
+.app-shell,
+.main-content,
+.view,
+.form-layout,
+.form-column,
+.form-card,
+.manager-slot-planner,
+.route-exception-panel {
+  min-width: 0;
+  max-width: 100%;
+}
+body { overflow-x: hidden; }
+.field,
+.field-grid,
+.field-grid > *,
+.route-exception-fields > * {
+  min-width: 0;
+}
+.field input,
+.field select,
+.field textarea {
+  min-width: 0;
+  max-width: 100%;
+}
 .manager-slot-planner {
+  width: 100%;
   margin: 4px 0 16px;
   padding: 15px;
   border: 1px solid #ead89b;
   border-radius: 15px;
   background: #fffbec;
+  overflow: hidden;
 }
 .manager-slot-heading {
+  min-width: 0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 12px;
 }
+.manager-slot-heading > div { min-width: 0; }
 .manager-slot-heading strong,
-.manager-slot-heading small { display: block; }
+.manager-slot-heading small { display: block; overflow-wrap: anywhere; }
 .manager-slot-heading small {
   margin-top: 3px;
   color: var(--muted);
@@ -31,6 +66,8 @@
   text-transform: uppercase;
 }
 .recommended-slots {
+  width: 100%;
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
@@ -38,6 +75,7 @@
 .manager-slot-card {
   position: relative;
   min-width: 0;
+  max-width: 100%;
   display: grid;
   gap: 4px;
   padding: 13px 12px;
@@ -46,8 +84,10 @@
   color: var(--text);
   background: var(--surface);
   text-align: left;
+  overflow: hidden;
   box-shadow: 0 5px 14px rgba(0,0,0,.04);
 }
+.manager-slot-card * { min-width: 0; overflow-wrap: anywhere; }
 .manager-slot-card strong { font-size: 13px; }
 .manager-slot-card b { font-size: 18px; }
 .manager-slot-card small,
@@ -69,6 +109,7 @@
 .manager-slot-card.loaded { border-color: #e8a09a; }
 .slot-recommend-label {
   width: max-content;
+  max-width: 100%;
   padding: 3px 6px;
   border-radius: 999px;
   color: #171717 !important;
@@ -78,6 +119,7 @@
   text-transform: uppercase;
 }
 .manager-slot-empty {
+  min-width: 0;
   padding: 12px;
   border-radius: 11px;
   color: var(--muted);
@@ -91,21 +133,27 @@
   font-weight: 750;
 }
 .route-exception-panel {
+  width: 100%;
   margin-top: 12px;
   padding: 15px;
   border: 1px solid #e6a09a;
   border-radius: 14px;
   background: #fff0ee;
+  overflow: hidden;
 }
 .route-exception-title strong,
-.route-exception-title span { display: block; }
+.route-exception-title span { display: block; overflow-wrap: anywhere; }
 .route-exception-title strong { color: #a62f27; }
 .route-exception-title span {
   margin-top: 3px;
   color: #7e5753;
   font-size: 12px;
 }
-.route-exception-fields { margin-top: 6px; }
+.route-exception-fields {
+  min-width: 0;
+  margin-top: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 .exception-badge,
 .detail-exception {
   color: #fff !important;
@@ -128,6 +176,7 @@
   background: #fff0ee;
   font-size: 12px;
   font-weight: 750;
+  overflow-wrap: anywhere;
 }
 :root[data-theme="dark"] .manager-slot-planner {
   border-color: #6a5721;
@@ -140,16 +189,51 @@
   color: #ffaaa2;
 }
 @media (max-width: 760px) {
+  body,
+  .app-shell,
+  .main-content,
+  .view,
+  .form-layout,
+  .form-column,
+  .form-card {
+    width: 100%;
+    max-width: 100%;
+  }
+  .main-content { overflow-x: hidden; }
+  .manager-slot-planner,
+  .route-exception-panel {
+    width: 100%;
+    max-width: 100%;
+    padding: 13px;
+  }
   .recommended-slots {
     display: flex;
+    gap: 9px;
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
     padding-bottom: 4px;
   }
   .manager-slot-card {
-    flex: 0 0 78%;
+    flex: 0 0 min(84%, 310px);
+    width: min(84%, 310px);
+    max-width: calc(100% - 18px);
     scroll-snap-align: start;
   }
   .manager-slot-heading { align-items: center; }
-  .route-exception-fields { grid-template-columns: 1fr; }
+  .manager-slot-heading strong { font-size: 14px; }
+  .manager-only-badge { font-size: 9px; white-space: nowrap; }
+  .route-exception-fields.field-grid.two,
+  .route-exception-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 16px;
+  }
+  .field select { text-overflow: ellipsis; }
 }
