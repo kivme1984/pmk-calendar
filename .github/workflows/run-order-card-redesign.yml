@@ -1,37 +1,10 @@
-name: Run PMK order card redesign
+name: Archived PMK card redesign helper
 
 on:
-  push:
-    paths:
-      - '.github/workflows/run-order-card-redesign.yml'
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
-  patch:
+  archived:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Apply patch
-        run: python3 tools/apply_order_card_redesign.py
-      - name: Validate JavaScript and required UI
-        run: |
-          node --check app.js
-          grep -q 'view-details' index.html
-          grep -q 'data-contract-edit' app.js
-          grep -q 'card-more-menu' app.js
-          grep -q 'PMK ORDER CARD REDESIGN' styles.css
-          grep -q 'pmk-calendar-v22' sw.js
-      - name: Commit result
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm .github/workflows/apply-order-card-redesign.yml || true
-          git rm .github/workflows/run-order-card-redesign.yml
-          git rm tools/apply_order_card_redesign.py
-          git add app.js index.html styles.css sw.js
-          git commit -m "Implement PMK order card redesign"
-          git push
+      - run: echo "The PMK order card redesign is already deployed."
