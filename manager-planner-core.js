@@ -1,7 +1,5 @@
 'use strict';
 
-const MANAGER_SLOT_CAPACITY = 5;
-
 function managerRouteMatch(data = {}) {
   const district = String(data.district || '').trim();
   const dateKey = data.visitDate || '';
@@ -102,7 +100,7 @@ function renderManagerSlotPlanner() {
     container.innerHTML = '<div class="manager-slot-empty">Укажите дату и время вручную.</div>';
     return;
   }
-  const recommended = candidates.find(item => item.load < MANAGER_SLOT_CAPACITY) || candidates[0];
+  const recommended = candidates[0];
   hint.textContent = `Ближайшие окна для района ${district}.`;
   const selectedDate = qs('#visitDate')?.value || '';
   const selectedStart = qs('#startTime')?.value || '';
@@ -110,14 +108,12 @@ function renderManagerSlotPlanner() {
   container.innerHTML = candidates.map(item => {
     const selected = item.dateKey === selectedDate && item.startTime === selectedStart && item.endTime === selectedEnd;
     const loadText = item.load ? `${item.load} ${pluralPoints(item.load)} уже в окне` : 'Окно свободно';
-    const capacityText = item.load >= MANAGER_SLOT_CAPACITY ? 'Высокая загрузка' : `Ориентир: ещё ${MANAGER_SLOT_CAPACITY - item.load}`;
-    return `<button type="button" class="manager-slot-card${item === recommended ? ' recommended' : ''}${selected ? ' selected' : ''}${item.load >= MANAGER_SLOT_CAPACITY ? ' loaded' : ''}" data-manager-slot data-date="${escapeHtml(item.dateKey)}" data-start="${escapeHtml(item.startTime)}" data-end="${escapeHtml(item.endTime)}" data-note="${escapeHtml(item.note)}">
-      ${item === recommended ? '<span class="slot-recommend-label">Рекомендуем</span>' : ''}
+    return `<button type="button" class="manager-slot-card${item === recommended ? ' recommended' : ''}${selected ? ' selected' : ''}" data-manager-slot data-date="${escapeHtml(item.dateKey)}" data-start="${escapeHtml(item.startTime)}" data-end="${escapeHtml(item.endTime)}" data-note="${escapeHtml(item.note)}">
+      ${item === recommended ? '<span class="slot-recommend-label">Ближайшее</span>' : ''}
       <strong>${escapeHtml(managerDateLabel(item.dateKey))}</strong>
       <b>${escapeHtml(item.startTime)}–${escapeHtml(item.endTime)}</b>
       ${item.note ? `<small>${escapeHtml(item.note)}</small>` : ''}
       <span>${escapeHtml(loadText)}</span>
-      <em>${escapeHtml(capacityText)}</em>
     </button>`;
   }).join('');
 }
