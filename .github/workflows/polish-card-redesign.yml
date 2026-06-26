@@ -1,0 +1,28 @@
+name: Polish request card redesign
+
+on:
+  push:
+    paths:
+      - '.github/scripts/polish-card-redesign.py'
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    if: github.event.head_commit.message != 'Polish request card redesign'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: python3 .github/scripts/polish-card-redesign.py
+      - run: node --check app.js
+      - name: Commit polish and remove one-time files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/polish-card-redesign.yml .github/scripts/polish-card-redesign.py
+          git add app.js styles.css sw.js
+          git commit -m "Polish request card redesign"
+          git push
