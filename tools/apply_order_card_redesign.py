@@ -1,0 +1,487 @@
+from pathlib import Path
+
+
+def replace_once(text: str, old: str, new: str, label: str) -> str:
+    if old not in text:
+        raise SystemExit(f"Could not find {label}")
+    return text.replace(old, new, 1)
+
+
+app_path = Path("app.js")
+app = app_path.read_text(encoding="utf-8")
+
+app = replace_once(
+    app,
+    "  allEventsCache: [],\n};",
+    "  allEventsCache: [],\n  detailEventId: '',\n  detailsReturnView: 'day',\n};",
+    "state insertion point",
+)
+
+app = replace_once(
+    app,
+    'class="day-event status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}"',
+    'class="day-event status-${currentStatus.className}" data-open-event="${escapeHtml(event.id)}"',
+    "planner event attribute",
+)
+
+render_start = app.index("function renderEventCard(event) {")
+render_end = app.index("\nfunction displayAddress(", render_start)
+new_render = r'''function formatAreaValue(value) {
+  const number = Number(value || 0);
+  return number.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function rugCardSummary(data = {}) {
+  const rugs = data.rugs?.length ? normalizeRugs(data) : [];
+  if (!rugs.length) return 'Ковры не указаны';
+  let totalArea = 0;
+  let unknownCount = 0;
+  rugs.forEach(rug => {
+    const length = Number(rug.length || 0);
+    const width = Number(rug.width || 0);
+    if (length > 0 && width > 0) totalArea += length * width;
+    else unknownCount += 1;
+  });
+  const rugText = `${rugs.length} ${pluralRugs(rugs.length)}`;
+  if (!totalArea) return `${rugText} • площадь не указана`;
+  if (unknownCount) return `${rugText} • ${formatAreaValue(totalArea)} м² + ${unknownCount} без размера`;
+  return `${rugText} • ${formatAreaValue(totalArea)} м²`;
+}
+
+function orderSourceBadge(data = {}) {
+  if (!data.orderSource) return '';
+  const isMax = /^(макс|max)$/i.test(String(data.orderSource).trim());
+  return `<span class="info-chip source-chip${isMax ? ' max-chip' : ''}">${isMax ? 'MAX' : escapeHtml(data.orderSource)}</span>`;
+}
+
+function contractControl(event, data = {}) {
+  const id = escapeHtml(event.id);
+  const value = escapeHtml(data.contractNumber || '');
+  const label = data.contractNumber ? `№ ${value}` : '№ договора ✎';
+  return `<div class="contract-control">
+    <button type="button" class="contract-chip" data-contract-edit="${id}" title="${data.contractNumber ? 'Изменить номер договора' : 'Ввести номер договора'}">${label}</button>
+    <div class="contract-editor hidden" data-contract-editor="${id}">
+      <input data-contract-input="${id}" value="${value}" placeholder="Номер договора" inputmode="numeric" aria-label="Номер договора" />
+      <button type="button" class="mini-button contract-save" data-contract-save="${id}">Сохранить</button>
+      <button type="button" class="mini-button contract-cancel" data-contract-cancel="${id}" aria-label="Закрыть">×</button>
+    </div>
+  </div>`;
+}
+
+function eventCommentMarkup(data = {}) {
+  const parts = [data.timeNote, data.managerComment].filter(Boolean);
+  if (!parts.length) return '';
+  const text = parts.join(' · ');
+  const needsToggle = text.length > 115;
+  return `<div class="event-comment${needsToggle ? ' is-clamped' : ''}">
+    <span class="comment-icon" aria-hidden="true">◯</span>
+    <p>${escapeHtml(text)}</p>
+    ${needsToggle ? '<button type="button" class="comment-toggle" data-comment-toggle>Ещё</button>' : ''}
+  </div>`;
+}
+
+function renderEventCard(event) {
+  const data = eventMeta(event);
+  const start = event.start?.dateTime || event.start;
+  const end = event.end?.dateTime || event.end;
+  const currentStatus = statusInfo(data.requestStatus, data.visitType);
+  const title = data.customerName || event.summary || 'Заявка';
+  const dateKey = eventDateKey(event);
+  const weekday = WEEKDAY_SHORT[dateKeyForDisplay(dateKey).getUTCDay()];
+  const callBadge = data.callAhead
+    ? `<span class="info-chip call-chip">Позвонить ${escapeHtml(formatCallAhead(getCallAheadMinutes(data)))}</span>`
+    : (isScheduleNote(data) ? '<span class="info-chip call-chip">Ждёт по расписанию</span>' : '');
+  return `<article class="event-card status-${currentStatus.className}">
+    <div class="event-time">
+      <span class="route-icon" aria-hidden="true">▣</span>
+      <small class="event-date">${formatDateShort(dateKey)}</small>
+      <small class="event-weekday">${weekday}</small>
+      <span class="time-icon" aria-hidden="true">◷</span>
+      <strong>${formatTime(start)}–${formatTime(end)}</strong>
+      <span class="visit-kind">${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span>
+    </div>
+    <div class="event-main">
+      <div class="event-topline">
+        ${contractControl(event, data)}
+        <h3>${escapeHtml(title)}</h3>
+      </div>
+      <div class="event-badges">
+        ${orderSourceBadge(data)}
+        <span class="info-chip rugs-chip">${escapeHtml(rugCardSummary(data))}</span>
+        ${callBadge}
+      </div>
+      <div class="event-address-wrap">${addressCapsule(data, event)}</div>
+      ${eventCommentMarkup(data)}
+    </div>
+    <div class="event-actions">
+      <div class="action-row status-row">${statusButtons(event.id, data.requestStatus)}</div>
+      <div class="action-row manage-row">
+        ${data.phone ? `<a class="mini-button call-button" href="${phoneLink(data.phone)}">Позвонить</a>` : '<button class="mini-button call-button" type="button" disabled>Нет телефона</button>'}
+        <button type="button" class="mini-button open-button" data-open-event="${escapeHtml(event.id)}">Открыть</button>
+        <details class="card-more">
+          <summary aria-label="Дополнительные действия" title="Дополнительные действия">⋮</summary>
+          <div class="card-more-menu">
+            <button type="button" data-edit-event="${escapeHtml(event.id)}">Редактировать заявку</button>
+            <button type="button" class="danger-item" data-delete-event="${escapeHtml(event.id)}">Удалить заявку</button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </article>`;
+}
+'''
+app = app[:render_start] + new_render + app[render_end:]
+
+address_start = app.index("function addressCapsule(data, event) {")
+address_end = app.index("\nfunction statusButtons(", address_start)
+new_address = r'''function addressCapsule(data, event) {
+  const address = displayAddress(data, event);
+  if (!address) return '<span class="address-empty">Адрес не указан</span>';
+  return `<a class="address-card" target="_blank" rel="noopener" href="${yandexMapLinkForData(data, event)}" title="Открыть в Яндекс Картах">
+    <span class="address-icon" aria-hidden="true">⌖</span>
+    <span class="address-text">${escapeHtml(address)}</span>
+    <span class="address-arrow" aria-hidden="true">›</span>
+  </a>`;
+}
+'''
+app = app[:address_start] + new_address + app[address_end:]
+
+bind_start = app.index("function bindEventActions(root) {")
+bind_end = app.index("\nfunction fillForm(data) {", bind_start)
+new_bind = r'''function bindEventActions(root) {
+  qsa('[data-open-event]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    openEventDetails(button.dataset.openEvent);
+  }));
+  qsa('[data-edit-event]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    openEventEditor(button.dataset.editEvent);
+  }));
+  qsa('[data-delete-event]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    deleteEvent(button.dataset.deleteEvent);
+  }));
+  qsa('[data-status-event]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    updateEventStatus(button.dataset.statusEvent, button.dataset.status);
+  }));
+  qsa('[data-contract-input]', root).forEach(input => input.addEventListener('click', event => event.stopPropagation()));
+  qsa('[data-contract-edit]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    const editor = qsa('[data-contract-editor]', root).find(item => item.dataset.contractEditor === button.dataset.contractEdit);
+    qsa('[data-contract-editor]', root).forEach(item => {
+      if (item !== editor) item.classList.add('hidden');
+    });
+    editor?.classList.toggle('hidden');
+    const input = editor?.querySelector('[data-contract-input]');
+    if (editor && !editor.classList.contains('hidden')) {
+      input?.focus();
+      input?.select();
+    }
+  }));
+  qsa('[data-contract-cancel]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    const editor = qsa('[data-contract-editor]', root).find(item => item.dataset.contractEditor === button.dataset.contractCancel);
+    editor?.classList.add('hidden');
+  }));
+  qsa('[data-contract-save]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    const input = qsa('[data-contract-input]', root).find(item => item.dataset.contractInput === button.dataset.contractSave);
+    updateEventContract(button.dataset.contractSave, input?.value || '');
+  }));
+  qsa('[data-comment-toggle]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    const box = button.closest('.event-comment');
+    box?.classList.toggle('expanded');
+    button.textContent = box?.classList.contains('expanded') ? 'Свернуть' : 'Ещё';
+  }));
+}
+
+function detailRow(label, value) {
+  if (value === undefined || value === null || value === '') return '';
+  return `<div class="detail-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
+}
+
+function renderEventDetails(event) {
+  const container = qs('#detailsContent');
+  if (!container) return;
+  const data = eventMeta(event);
+  const currentStatus = statusInfo(data.requestStatus, data.visitType);
+  const dateKey = eventDateKey(event);
+  const rugs = data.rugs?.length ? normalizeRugs(data) : [];
+  const rugsHtml = rugs.length ? rugs.map((rug, index) => {
+    const length = Number(rug.length || 0);
+    const width = Number(rug.width || 0);
+    const size = length > 0 && width > 0
+      ? `${formatAreaValue(length)} × ${formatAreaValue(width)} м · ${formatAreaValue(length * width)} м²`
+      : 'Размер не указан';
+    return `<article class="rug-detail-card">
+      <div class="rug-detail-title"><strong>Ковёр ${index + 1}</strong><span>${escapeHtml(size)}</span></div>
+      ${detailRow('Материал', rug.material || 'Не указан')}
+      ${detailRow('Ворс', rug.pile || 'Не указан')}
+      ${detailRow('Загрязнения', rug.issues?.length ? rug.issues.join(', ') : 'Не указаны')}
+      ${detailRow('Дополнительные услуги', rug.services?.length ? rug.services.join(', ') : 'Не указаны')}
+    </article>`;
+  }).join('') : '<div class="details-empty">Ковры в заявке не указаны.</div>';
+  const address = displayAddress(data, event);
+  const phoneAction = data.phone ? `<a class="button details-call" href="${phoneLink(data.phone)}">Позвонить</a>` : '';
+  container.innerHTML = `<article class="details-shell status-${currentStatus.className}">
+    <header class="details-hero">
+      <div>
+        <div class="details-badges">
+          <span class="contract-chip static">${data.contractNumber ? `№ ${escapeHtml(data.contractNumber)}` : 'Договор не указан'}</span>
+          ${orderSourceBadge(data)}
+          <span class="status-view-pill">${escapeHtml(currentStatus.label)}</span>
+        </div>
+        <h2>${escapeHtml(data.customerName || event.summary || 'Заявка')}</h2>
+        <p>${escapeHtml(rugCardSummary(data))}</p>
+      </div>
+      ${phoneAction}
+    </header>
+
+    <div class="details-grid">
+      <section class="details-section">
+        <h3>Клиент</h3>
+        ${detailRow('Телефон', data.phone || 'Не указан')}
+        ${detailRow('Источник заказа', data.orderSource || 'Не указан')}
+        ${detailRow('Клиент', data.regularCustomer ? 'Постоянный' : 'Новый')}
+      </section>
+
+      <section class="details-section">
+        <h3>Визит</h3>
+        ${detailRow('Тип', data.visitType === 'delivery' ? 'Доставка' : 'Забор')}
+        ${detailRow('Дата', formatDateLong(dateKey))}
+        ${detailRow('Время', `${formatTime(event.start?.dateTime || event.start)}–${formatTime(event.end?.dateTime || event.end)}`)}
+        ${detailRow('Звонок', data.callAhead ? `Позвонить ${formatCallAhead(getCallAheadMinutes(data))}` : 'Без напоминания')}
+        ${detailRow('Пометка по времени', data.timeNote || '')}
+      </section>
+
+      <section class="details-section details-address-section">
+        <h3>Адрес</h3>
+        ${address ? addressCapsule(data, event) : '<span class="address-empty">Адрес не указан</span>'}
+        ${detailRow('Район', data.district || 'Не указан')}
+      </section>
+
+      <section class="details-section">
+        <h3>Стоимость и договорённости</h3>
+        ${detailRow('Предварительная стоимость', data.estimatedPrice ? formatMoney(data.estimatedPrice) : 'Не указана')}
+        ${detailRow('Скидка', `${Number(data.discount || 0)}%`)}
+        ${detailRow('Комментарий менеджера', data.managerComment || 'Нет комментария')}
+      </section>
+    </div>
+
+    <section class="details-section details-rugs">
+      <div class="details-section-heading"><h3>Ковры</h3><span>${escapeHtml(rugCardSummary(data))}</span></div>
+      <div class="rug-details-list">${rugsHtml}</div>
+    </section>
+  </article>`;
+}
+
+function openEventDetails(id) {
+  const event = getAllEvents().find(item => item.id === id);
+  if (!event) return showToast('Заявка не найдена.', 'error');
+  state.detailEventId = id;
+  state.detailsReturnView = ['day','three-days','week','month','delivery-waiting','search'].includes(state.currentView)
+    ? state.currentView
+    : (state.returnView || 'day');
+  renderEventDetails(event);
+  setView('details');
+}
+
+function closeEventDetails() {
+  setView(state.detailsReturnView || 'day');
+}
+
+function openEventEditor(id, returnView = '') {
+  const event = getAllEvents().find(item => item.id === id);
+  if (!event) return showToast('Заявка не найдена.', 'error');
+  const data = decodePmkData(event);
+  const targetReturnView = returnView || (state.currentView === 'details' ? state.detailsReturnView : state.currentView) || 'day';
+  fillForm({ ...(data || eventMeta(event)), eventId: event.id, externalEvent: !data });
+  setView('form', { returnView: targetReturnView });
+}
+'''
+app = app[:bind_start] + new_bind + app[bind_end:]
+
+app = replace_once(
+    app,
+    "async function deleteEvent(id) {\n  if (!confirm('Удалить эту заявку?')) return;",
+    "async function deleteEvent(id) {\n  const targetEvent = getAllEvents().find(item => item.id === id);\n  const customerName = targetEvent ? eventMeta(targetEvent).customerName : '';\n  if (!confirm(`Удалить заявку${customerName ? ` «${customerName}»` : ''}?`)) return;",
+    "delete confirmation block",
+)
+
+app = replace_once(
+    app,
+    "  qs('#cancelEditBtn').addEventListener('click', returnFromForm);",
+    "  qs('#detailsBackBtn')?.addEventListener('click', closeEventDetails);\n  qs('#detailsEditBtn')?.addEventListener('click', () => {\n    if (!state.detailEventId) return showToast('Заявка не выбрана.', 'error');\n    openEventEditor(state.detailEventId, state.detailsReturnView);\n  });\n  qs('#cancelEditBtn').addEventListener('click', returnFromForm);",
+    "details button listener insertion point",
+)
+
+app_path.write_text(app, encoding="utf-8")
+
+index_path = Path("index.html")
+index = index_path.read_text(encoding="utf-8")
+form_marker = '      <section id="view-form" class="view">'
+details_markup = '''      <section id="view-details" class="view">
+        <div class="page-heading compact details-page-heading">
+          <div>
+            <p class="eyebrow">Просмотр заявки</p>
+            <h1>Карточка заказа</h1>
+            <p>Все данные собраны на одном экране без случайного редактирования.</p>
+          </div>
+          <button type="button" class="button button-ghost" id="detailsBackBtn">← Назад</button>
+        </div>
+        <div id="detailsContent"></div>
+        <div class="details-actions">
+          <button type="button" class="button button-primary" id="detailsEditBtn">Редактировать заявку</button>
+        </div>
+      </section>
+
+'''
+index = replace_once(index, form_marker, details_markup + form_marker, "form section in index.html")
+index_path.write_text(index, encoding="utf-8")
+
+styles_path = Path("styles.css")
+styles = styles_path.read_text(encoding="utf-8")
+if "/* PMK ORDER CARD REDESIGN */" in styles:
+    raise SystemExit("Redesign styles already exist")
+styles += r'''
+
+/* PMK ORDER CARD REDESIGN */
+.event-list { gap: 16px; }
+.event-card {
+  grid-template-columns: 102px minmax(0, 1fr);
+  grid-template-areas: "time main" "time actions";
+  gap: 0 18px;
+  align-items: start;
+  padding: 0;
+  overflow: visible;
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(20, 30, 45, .11);
+}
+.event-time { grid-area: time; align-self: stretch; padding: 18px 12px; border-right: 1px solid rgba(0,0,0,.06); }
+.event-time .route-icon, .event-time .time-icon { display: block; margin-bottom: 6px; color: var(--muted); font-size: 17px; }
+.event-time .time-icon { margin-top: 20px; }
+.event-weekday { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+.event-time strong { font-size: 15px; line-height: 1.35; }
+.event-time .visit-kind { margin-top: 12px; color: var(--text); font-weight: 750; }
+.event-main { grid-area: main; min-width: 0; padding: 17px 17px 0 0; }
+.event-topline { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 8px 10px; min-width: 0; }
+.event-main h3 { flex: 1 1 180px; min-width: 0; margin: 2px 0 0; font-size: 19px; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.contract-control { position: relative; flex: 0 0 auto; z-index: 8; }
+.contract-chip { display: inline-flex; align-items: center; min-height: 32px; padding: 6px 12px; border: 0; border-radius: 999px; color: #171717; background: var(--accent); font-size: 13px; font-weight: 900; white-space: nowrap; }
+.contract-chip.static { cursor: default; }
+.contract-editor { position: absolute; z-index: 30; top: calc(100% + 8px); left: 0; width: min(330px, 82vw); display: grid; grid-template-columns: minmax(0, 1fr) auto 38px; gap: 7px; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: 0 16px 42px rgba(0,0,0,.18); }
+.contract-editor input { min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 9px; color: var(--text); background: var(--surface); font-weight: 800; }
+.contract-save { color: #171717; border-color: var(--accent); background: var(--accent); }
+.contract-cancel { padding-inline: 8px; font-size: 18px; }
+.event-badges { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.info-chip { display: inline-flex; align-items: center; min-height: 28px; padding: 5px 9px; border-radius: 9px; color: #41413d; background: #f1f1ed; font-size: 11px; font-weight: 800; }
+.max-chip { color: #5937a4; background: #f0eaff; }
+.rugs-chip { color: #17644d; background: #e7f6ef; }
+.call-chip { color: #805800; background: #fff3cc; }
+.event-address-wrap { margin-top: 11px; }
+.address-card { width: 100%; display: grid; grid-template-columns: 22px minmax(0,1fr) 18px; align-items: center; gap: 9px; padding: 12px 13px; border: 1px solid #bfd9e8; border-radius: 23px; color: #0b5f86; background: #eaf7fd; font-weight: 850; line-height: 1.4; text-decoration: none; }
+.address-card:hover { border-color: #2296d3; background: #dff3fc; }
+.address-icon { font-size: 19px; }
+.address-text { min-width: 0; overflow-wrap: anywhere; }
+.address-arrow { justify-self: end; font-size: 26px; font-weight: 400; }
+.event-comment { position: relative; display: grid; grid-template-columns: 22px minmax(0,1fr) auto; align-items: start; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 12px; color: #555550; background: #f2f2ee; }
+.event-comment p { margin: 0; color: inherit; font-size: 13px; line-height: 1.45; }
+.event-comment.is-clamped:not(.expanded) p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.comment-icon { margin-top: 1px; font-size: 14px; }
+.comment-toggle { border: 0; padding: 0; color: #0b5f86; background: transparent; font-size: 12px; font-weight: 800; }
+.event-actions { grid-area: actions; min-width: 0; padding: 12px 17px 17px 0; }
+.status-row { gap: 7px; }
+.status-action { min-height: 45px; border-radius: 14px; }
+.manage-row { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) 48px; gap: 8px; align-items: stretch; }
+.manage-row .mini-button { min-height: 45px; display: grid; place-items: center; text-decoration: none; }
+.open-button { background: #fff; }
+.card-more { position: relative; }
+.card-more summary { width: 48px; height: 45px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 11px; color: var(--text); background: #fafaf8; font-size: 24px; font-weight: 900; list-style: none; cursor: pointer; }
+.card-more summary::-webkit-details-marker { display: none; }
+.card-more-menu { position: absolute; z-index: 25; right: 0; bottom: calc(100% + 7px); width: 210px; padding: 7px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); box-shadow: 0 15px 40px rgba(0,0,0,.17); }
+.card-more-menu button { width: 100%; border: 0; border-radius: 9px; padding: 11px 12px; color: var(--text); background: transparent; text-align: left; font-weight: 750; }
+.card-more-menu button:hover { background: #f2f2ee; }
+.card-more-menu .danger-item { color: var(--danger); }
+.details-shell { overflow: hidden; border: 1px solid var(--line); border-left: 6px solid var(--accent); border-radius: 22px; background: var(--surface); box-shadow: 0 18px 52px rgba(20,30,45,.11); }
+.details-shell.status-pending-pickup { border-left-color: #2296d3; }
+.details-shell.status-picked-up { border-left-color: var(--accent); }
+.details-shell.status-pending-delivery { border-left-color: var(--danger); }
+.details-shell.status-completed { border-left-color: var(--success); }
+.details-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 25px; background: linear-gradient(135deg, rgba(247,181,0,.10), transparent 60%); border-bottom: 1px solid var(--line); }
+.details-hero h2 { margin: 12px 0 5px; font-size: clamp(25px, 4vw, 37px); line-height: 1.15; }
+.details-hero p { margin: 0; color: var(--muted); font-weight: 750; }
+.details-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.status-view-pill { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; background: #ecece7; font-size: 12px; font-weight: 850; }
+.details-call { color: #fff; background: #18a957; text-decoration: none; white-space: nowrap; }
+.details-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; padding: 20px; }
+.details-section { padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: #fafaf8; }
+.details-section h3 { margin: 0 0 14px; font-size: 18px; }
+.detail-row { display: grid; grid-template-columns: minmax(120px, .75fr) minmax(0,1.25fr); gap: 12px; padding: 9px 0; border-top: 1px solid rgba(0,0,0,.06); }
+.detail-row:first-of-type { border-top: 0; }
+.detail-row span { color: var(--muted); font-size: 13px; }
+.detail-row strong { min-width: 0; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.details-address-section .address-card { margin-bottom: 10px; }
+.details-rugs { margin: 0 20px 20px; }
+.details-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.details-section-heading h3 { margin: 0; }
+.details-section-heading span { color: var(--muted); font-size: 13px; font-weight: 750; }
+.rug-details-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.rug-detail-card { padding: 15px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.rug-detail-title { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.rug-detail-title span { color: var(--muted); font-size: 12px; }
+.details-empty { color: var(--muted); }
+.details-actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+:root[data-theme="dark"] .info-chip, :root[data-theme="dark"] .event-comment, :root[data-theme="dark"] .details-section { background: #171b1f; color: var(--muted); }
+:root[data-theme="dark"] .address-card { color: #a9ddf5; border-color: #245b75; background: #123044; }
+:root[data-theme="dark"] .card-more summary { background: #171b1f; }
+@media (max-width: 760px) {
+  .event-card { grid-template-columns: 78px minmax(0,1fr); gap: 0 12px; border-radius: 18px; }
+  .event-time { padding: 15px 8px; }
+  .event-main { padding: 14px 12px 0 0; }
+  .event-main h3 { flex-basis: 140px; font-size: 18px; }
+  .contract-chip { min-height: 30px; padding: 5px 10px; font-size: 12px; }
+  .event-badges { margin-top: 8px; gap: 6px; }
+  .info-chip { padding: 5px 7px; font-size: 10px; }
+  .address-card { padding: 11px 10px; border-radius: 22px; font-size: 13px; }
+  .event-comment { grid-template-columns: 18px minmax(0,1fr); }
+  .event-comment .comment-toggle { grid-column: 2; justify-self: start; }
+  .event-actions { grid-column: 2; padding: 11px 12px 14px 0; }
+  .status-row { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  .status-action { min-height: 48px; padding: 6px 3px; font-size: 9px; line-height: 1.15; }
+  .manage-row { grid-template-columns: minmax(0,1.3fr) minmax(0,1fr) 45px; }
+  .manage-row .mini-button, .card-more summary { min-height: 45px; height: 45px; font-size: 12px; }
+  .card-more summary { width: 45px; font-size: 22px; }
+  .card-more-menu { width: 205px; }
+  .details-page-heading { gap: 12px; }
+  .details-page-heading .button { width: auto; }
+  .details-hero { flex-direction: column; padding: 19px; }
+  .details-call { width: 100%; text-align: center; }
+  .details-grid { grid-template-columns: 1fr; padding: 14px; }
+  .details-rugs { margin: 0 14px 14px; }
+  .rug-details-list { grid-template-columns: 1fr; }
+  .detail-row { grid-template-columns: 1fr; gap: 4px; }
+  .details-actions { position: sticky; bottom: 0; z-index: 20; margin: 14px -14px -50px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); background: rgba(243,243,241,.95); backdrop-filter: blur(10px); }
+  .details-actions .button { width: 100%; }
+}
+@media (max-width: 390px) {
+  .event-card { grid-template-columns: 72px minmax(0,1fr); gap: 0 9px; }
+  .event-main { padding-right: 9px; }
+  .event-actions { padding-right: 9px; }
+  .status-action { font-size: 8.5px; }
+  .manage-row { grid-template-columns: minmax(0,1fr) minmax(0,.9fr) 43px; gap: 6px; }
+  .card-more summary { width: 43px; }
+}
+'''
+styles_path.write_text(styles, encoding="utf-8")
+
+sw_path = Path("sw.js")
+sw = sw_path.read_text(encoding="utf-8")
+sw = replace_once(sw, "const CACHE = 'pmk-calendar-v21';", "const CACHE = 'pmk-calendar-v22';", "service worker cache version")
+sw_path.write_text(sw, encoding="utf-8")
+
+print("PMK order card redesign applied")
