@@ -1276,18 +1276,29 @@ function copyTextFallback(value) {
   textarea.remove();
 }
 
-async function openMaxContact(phone) {
+function openMaxContact(phone) {
   const normalized = normalizePhone(phone || '');
   if (!normalized) return showToast('В заявке не указан телефон клиента.', 'error');
-  window.open('https://max.ru/', '_blank', 'noopener');
+
   try {
-    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(normalized);
-    else copyTextFallback(normalized);
-    showToast(`Номер ${normalized} скопирован. Вставьте его в поиск MAX.`, 'success');
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(normalized).catch(() => copyTextFallback(normalized));
+    } else copyTextFallback(normalized);
   } catch {
     copyTextFallback(normalized);
-    showToast(`MAX открыт. Номер клиента: ${normalized}`, 'success');
   }
+
+  showToast(`Номер ${normalized} скопирован. Вставьте его в поиск MAX.`, 'success');
+
+  const shareUrl = `https://max.ru/:share?text=${encodeURIComponent(normalized)}`;
+  if (/Android/i.test(navigator.userAgent)) {
+    const fallback = encodeURIComponent(shareUrl);
+    const text = encodeURIComponent(normalized);
+    window.location.href = `intent://max.ru/:share?text=${text}#Intent;scheme=https;package=ru.oneme.app;S.browser_fallback_url=${fallback};end`;
+    return;
+  }
+
+  window.location.href = shareUrl;
 }
 
 function scheduleBadge(data = {}) {
