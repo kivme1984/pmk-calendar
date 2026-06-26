@@ -960,7 +960,9 @@ function appendExternalContract(description = '', contractNumber = '') {
 }
 
 async function deleteEvent(id) {
-  if (!confirm('Удалить эту заявку?')) return;
+  const targetEvent = getAllEvents().find(item => item.id === id);
+  const targetName = targetEvent ? (eventMeta(targetEvent).customerName || 'эту заявку') : 'эту заявку';
+  if (!confirm(`Удалить заявку ${targetName}?`)) return;
   try {
     if (id.startsWith('local-')) {
       state.localEvents = state.localEvents.filter(event => event.id !== id);
@@ -1227,30 +1229,106 @@ function renderToday(events) {
   bindEventActions(container);
 }
 
+function eventRugs(data = {}) {
+  return Array.isArray(data.rugs) ? data.rugs : [];
+}
+
+function formatAreaValue(value) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number) || number <= 0) return '';
+  return number.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+}
+
+function rugSummary(data = {}) {
+  const rugs = eventRugs(data);
+  if (!rugs.length) return 'Ковры не указаны';
+  const known = rugs.filter(rug => Number(rug.length) > 0 && Number(rug.width) > 0);
+  const unknownCount = rugs.length - known.length;
+  const totalArea = known.reduce((sum, rug) => sum + Number(rug.length) * Number(rug.width), 0);
+  const countText = `${rugs.length} ${pluralRugs(rugs.length)}`;
+  if (!known.length) return `${countText} • площадь не указана`;
+  const areaText = `${formatAreaValue(totalArea)} м²`;
+  return unknownCount ? `${countText} • ${areaText} + ${unknownCount} без размера` : `${countText} • ${areaText}`;
+}
+
+function sourceBadge(data = {}) {
+  const source = cleanShortField(data.orderSource || '');
+  if (!source) return '';
+  const isMax = /^(макс|max)$/i.test(source);
+  return `<span class="quick-badge source-badge${isMax ? ' max-badge' : ''}">${isMax ? 'MAX' : escapeHtml(source)}</span>`;
+}
+
+function scheduleBadge(data = {}) {
+  if (data.callAhead) return `<span class="quick-badge schedule-badge">◷ Позвонить ${escapeHtml(formatCallAhead(getCallAheadMinutes(data)))}</span>`;
+  if (isScheduleNote(data)) return '<span class="quick-badge schedule-badge">◷ Ждёт по расписанию</span>';
+  return '';
+}
+
+function eventCommentText(data = {}) {
+  return [data.timeNote, data.managerComment]
+    .map(value => String(value || '').trim())
+    .filter(Boolean)
+    .filter((value, index, list) => list.indexOf(value) === index)
+    .join('\n');
+}
+
+function renderContractControl(event, data = {}) {
+  const id = escapeHtml(event.id);
+  const number = cleanShortField(data.contractNumber || '');
+  return `<div class="contract-control">
+    <button type="button" class="contract-chip${number ? '' : ' empty'}" data-contract-toggle="${id}" aria-label="${number ? 'Изменить номер договора' : 'Добавить номер договора'}">
+      ${number ? `№ ${escapeHtml(number)}` : '№ договора <span aria-hidden="true">✎</span>'}
+    </button>
+    <div class="contract-editor hidden" data-contract-editor="${id}">
+      <input data-contract-input="${id}" value="${escapeHtml(number)}" placeholder="Номер договора" inputmode="numeric" aria-label="Номер договора" />
+      <button type="button" class="mini-button contract-save" data-contract-save="${id}">Сохранить</button>
+      <button type="button" class="mini-button contract-cancel" data-contract-cancel="${id}" aria-label="Закрыть">×</button>
+    </div>
+  </div>`;
+}
+
 function renderEventCard(event) {
   const data = eventMeta(event);
   const start = event.start?.dateTime || event.start;
   const end = event.end?.dateTime || event.end;
   const currentStatus = statusInfo(data.requestStatus, data.visitType);
   const title = data.customerName || event.summary || 'Заявка';
-  const metaLine = [data.district, data.phone].filter(Boolean).map(escapeHtml).join(' · ');
   const dateKey = eventDateKey(event);
-  return `<article class="event-card status-${currentStatus.className}">
-      <div class="event-time">${data.contractNumber ? `<small class="contract-line top">№ ${escapeHtml(data.contractNumber)}</small>` : ''}<small class="event-date">${formatDateShort(dateKey)}</small><strong>${formatTime(start)}–${formatTime(end)}</strong><span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span><em class="status-pill">${currentStatus.label}</em></div>
+  const date = dateKeyForDisplay(dateKey);
+  const comment = eventCommentText(data);
+  const id = escapeHtml(event.id);
+  return `<article class="event-card status-${currentStatus.className}" data-event-card="${id}">
+      <div class="event-time">
+        <small class="event-date">${formatDateShort(dateKey)}</small>
+        <small class="event-weekday">${WEEKDAY_SHORT[date.getUTCDay()]}, ${escapeHtml(date.toLocaleDateString('ru-RU', { weekday: 'long', timeZone: 'UTC' }))}</small>
+        <strong>${formatTime(start)}–${formatTime(end)}</strong>
+        <span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span>
+      </div>
       <div class="event-main">
-        <h3>${data.contractNumber ? `<span class="inline-contract">№ ${escapeHtml(data.contractNumber)}</span>` : ''}${escapeHtml(title)}</h3>
-        ${metaLine ? `<p class="event-meta-line">${metaLine}</p>` : ''}
-        <p>${addressCapsule(data, event)}</p>
-        ${data.timeNote ? `<p class="event-note">Время: ${escapeHtml(data.timeNote)}</p>` : ''}
-        ${data.managerComment ? `<p class="event-note">${escapeHtml(data.managerComment)}</p>` : ''}
+        <div class="event-card-header">
+          ${renderContractControl(event, data)}
+          <h3 title="${escapeHtml(title)}">${escapeHtml(title)}</h3>
+        </div>
+        <div class="event-quick-badges">
+          ${sourceBadge(data)}
+          <span class="quick-badge rug-badge">▦ ${escapeHtml(rugSummary(data))}</span>
+          ${scheduleBadge(data)}
+        </div>
+        ${addressCapsule(data, event)}
+        ${comment ? `<div class="event-comment"><span aria-hidden="true">◯</span><p>${escapeHtml(comment)}</p><button type="button" data-toggle-comment="${id}">Ещё</button></div>` : ''}
       </div>
       <div class="event-actions">
-        <div class="contract-quick"><input data-contract-input="${escapeHtml(event.id)}" value="${escapeHtml(data.contractNumber || '')}" placeholder="Договор №" inputmode="numeric" /><button class="mini-button" data-contract-save="${escapeHtml(event.id)}">ОК</button></div>
         <div class="action-row status-row">${statusButtons(event.id, data.requestStatus)}</div>
         <div class="action-row manage-row">
-          ${data.phone ? `<a class="mini-button call-button" href="${phoneLink(data.phone)}">Позвонить</a>` : ''}
-          <button class="mini-button open-button" data-open-event="${escapeHtml(event.id)}">Открыть</button>
-          <button class="mini-button" data-delete-event="${escapeHtml(event.id)}">Удалить</button>
+          ${data.phone ? `<a class="mini-button call-button primary-card-action" href="${phoneLink(data.phone)}">☎ Позвонить</a>` : '<button type="button" class="mini-button primary-card-action" disabled>Телефон не указан</button>'}
+          <button type="button" class="mini-button open-button secondary-card-action" data-open-event="${id}">Открыть</button>
+          <details class="card-menu">
+            <summary class="mini-button menu-button" aria-label="Дополнительные действия">⋮</summary>
+            <div class="card-menu-popover">
+              <button type="button" data-edit-event="${id}">Редактировать заявку</button>
+              <button type="button" class="danger-menu-item" data-delete-event="${id}">Удалить заявку</button>
+            </div>
+          </details>
         </div>
       </div>
     </article>`;
@@ -1264,8 +1342,12 @@ function displayAddress(data = {}, event = {}) {
 
 function addressCapsule(data, event) {
   const address = displayAddress(data, event);
-  if (!address) return '<span class="address-empty">Адрес не указан</span>';
-  return `<a class="address-pill" target="_blank" rel="noopener" href="${yandexMapLinkForData(data, event)}" title="Открыть в Яндекс Картах">${escapeHtml(address)}</a>`;
+  if (!address) return '<div class="address-block address-empty">Адрес не указан</div>';
+  return `<a class="address-block" target="_blank" rel="noopener" href="${yandexMapLinkForData(data, event)}" title="Открыть в Яндекс Картах">
+    <span class="address-icon" aria-hidden="true">⌖</span>
+    <span class="address-text">${escapeHtml(address)}</span>
+    <span class="address-arrow" aria-hidden="true">›</span>
+  </a>`;
 }
 
 function statusButtons(id, currentStatus) {
@@ -1287,7 +1369,7 @@ function renderPeriod(events, dateKeys, period = 'week') {
       ${dayEvents.map(event => {
         const data = eventMeta(event);
         const currentStatus = statusInfo(data.requestStatus, data.visitType);
-        return `<button class="day-event status-${currentStatus.className}" data-edit-event="${escapeHtml(event.id)}"><b>${formatTime(event.start?.dateTime || event.start)} · ${escapeHtml(data.customerName || event.summary || 'Заявка')}</b><span>${currentStatus.label}${data.district ? ` · ${escapeHtml(data.district)}` : ''}</span>${data.contractNumber ? `<span>Договор № ${escapeHtml(data.contractNumber)}</span>` : ''}<span>${escapeHtml(displayAddress(data, event) || 'Адрес не указан')}</span>${data.timeNote ? `<span>Время: ${escapeHtml(data.timeNote)}</span>` : ''}${data.managerComment ? `<span>${escapeHtml(data.managerComment)}</span>` : ''}</button>`;
+        return `<button class="day-event status-${currentStatus.className}" data-open-event="${escapeHtml(event.id)}"><b>${formatTime(event.start?.dateTime || event.start)} · ${escapeHtml(data.customerName || event.summary || 'Заявка')}</b><span>${currentStatus.label}${data.district ? ` · ${escapeHtml(data.district)}` : ''}</span>${data.contractNumber ? `<span>Договор № ${escapeHtml(data.contractNumber)}</span>` : ''}<span>${escapeHtml(displayAddress(data, event) || 'Адрес не указан')}</span>${data.timeNote ? `<span>Время: ${escapeHtml(data.timeNote)}</span>` : ''}${data.managerComment ? `<span>${escapeHtml(data.managerComment)}</span>` : ''}</button>`;
       }).join('') || '<div class="empty-state">Свободно</div>'}
     </section>`;
   }).join('');
@@ -1318,20 +1400,197 @@ function pluralPoints(number) {
 }
 
 function bindEventActions(root) {
-  qsa('[data-open-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); openEvent(button.dataset.openEvent); }));
-  qsa('.day-event[data-edit-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); openEvent(button.dataset.editEvent); }));
-  qsa('[data-delete-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); deleteEvent(button.dataset.deleteEvent); }));
-  qsa('[data-status-event]', root).forEach(button => button.addEventListener('click', event => { event.preventDefault(); updateEventStatus(button.dataset.statusEvent, button.dataset.status); }));
-  qsa('[data-contract-input]', root).forEach(input => input.addEventListener('click', event => event.stopPropagation()));
+  qsa('[data-open-event]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    openEventDetails(button.dataset.openEvent);
+  }));
+  qsa('[data-edit-event]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    button.closest('details')?.removeAttribute('open');
+    openEvent(button.dataset.editEvent);
+  }));
+  qsa('[data-delete-event]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    button.closest('details')?.removeAttribute('open');
+    deleteEvent(button.dataset.deleteEvent);
+  }));
+  qsa('[data-status-event]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    updateEventStatus(button.dataset.statusEvent, button.dataset.status);
+  }));
+  qsa('[data-contract-toggle]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    const editor = qsa('[data-contract-editor]', root).find(item => item.dataset.contractEditor === button.dataset.contractToggle);
+    if (!editor) return;
+    editor.classList.toggle('hidden');
+    if (!editor.classList.contains('hidden')) {
+      const input = qs('[data-contract-input]', editor);
+      input?.focus();
+      input?.select();
+    }
+  }));
+  qsa('[data-contract-input]', root).forEach(input => {
+    input.addEventListener('click', event => event.stopPropagation());
+    input.addEventListener('keydown', event => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      updateEventContract(input.dataset.contractInput, input.value || '');
+    });
+  });
   qsa('[data-contract-save]', root).forEach(button => button.addEventListener('click', event => {
     event.preventDefault();
     event.stopPropagation();
     const input = qsa('[data-contract-input]', root).find(item => item.dataset.contractInput === button.dataset.contractSave);
     updateEventContract(button.dataset.contractSave, input?.value || '');
   }));
+  qsa('[data-contract-cancel]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    const editor = qsa('[data-contract-editor]', root).find(item => item.dataset.contractEditor === button.dataset.contractCancel);
+    editor?.classList.add('hidden');
+  }));
+  qsa('[data-toggle-comment]', root).forEach(button => button.addEventListener('click', event => {
+    event.preventDefault();
+    const block = button.closest('.event-comment');
+    const expanded = block?.classList.toggle('expanded');
+    button.textContent = expanded ? 'Свернуть' : 'Ещё';
+  }));
+}
+
+function renderDetailValue(label, value, options = {}) {
+  const content = value || '—';
+  return `<div class="detail-value${options.wide ? ' wide' : ''}"><span>${escapeHtml(label)}</span><strong>${options.html ? content : escapeHtml(content)}</strong></div>`;
+}
+
+function renderRugDetails(data = {}) {
+  const rugs = eventRugs(data);
+  if (!rugs.length) return '<div class="details-empty">Информация о коврах не указана.</div>';
+  return rugs.map((rug, index) => {
+    const hasSize = Number(rug.length) > 0 && Number(rug.width) > 0;
+    const area = hasSize ? Number(rug.length) * Number(rug.width) : 0;
+    const size = hasSize ? `${rug.length} × ${rug.width} м · ${formatAreaValue(area)} м²` : 'Размер не указан';
+    const issues = Array.isArray(rug.issues) && rug.issues.length ? rug.issues.join(', ') : 'Не указаны';
+    const services = Array.isArray(rug.services) && rug.services.length ? rug.services.join(', ') : 'Не указаны';
+    return `<article class="details-rug-card">
+      <div class="details-rug-title"><strong>Ковёр ${index + 1}</strong><span>${escapeHtml(size)}</span></div>
+      <div class="details-rug-grid">
+        ${renderDetailValue('Материал', rug.material || 'Не указан')}
+        ${renderDetailValue('Ворс', rug.pile || 'Не указан')}
+        ${renderDetailValue('Загрязнения', issues, { wide: true })}
+        ${renderDetailValue('Дополнительные услуги', services, { wide: true })}
+      </div>
+    </article>`;
+  }).join('');
+}
+
+function renderEventDetailsHtml(event) {
+  const data = eventMeta(event);
+  const status = statusInfo(data.requestStatus, data.visitType);
+  const address = displayAddress(data, event);
+  const phoneHtml = data.phone ? `<a href="${phoneLink(data.phone)}">${escapeHtml(data.phone)}</a>` : '—';
+  const addressHtml = address ? `<a target="_blank" rel="noopener" href="${yandexMapLinkForData(data, event)}">${escapeHtml(address)} <span aria-hidden="true">›</span></a>` : '—';
+  const comment = eventCommentText(data);
+  const source = data.orderSource || 'Не указан';
+  const contract = data.contractNumber ? `№ ${data.contractNumber}` : 'Не указан';
+  const visitDate = eventDateKey(event);
+  return `<div class="details-header">
+      <div>
+        <p class="eyebrow">Просмотр заявки</p>
+        <h2>${escapeHtml(data.customerName || event.summary || 'Заявка')}</h2>
+        <div class="details-header-badges"><span class="detail-status status-${status.className}">${escapeHtml(status.label)}</span><span>${escapeHtml(rugSummary(data))}</span></div>
+      </div>
+      <button type="button" class="details-close" data-details-close aria-label="Закрыть">×</button>
+    </div>
+    <section class="details-section">
+      <h3>Клиент</h3>
+      <div class="details-grid">
+        ${renderDetailValue('Имя', data.customerName || '—')}
+        ${renderDetailValue('Телефон', phoneHtml, { html: true })}
+        ${renderDetailValue('Договор', contract)}
+        ${renderDetailValue('Источник', source)}
+        ${renderDetailValue('Клиент', data.regularCustomer ? 'Постоянный' : 'Новый')}
+      </div>
+    </section>
+    <section class="details-section">
+      <h3>Визит</h3>
+      <div class="details-grid">
+        ${renderDetailValue('Тип', data.visitType === 'delivery' ? 'Доставка' : 'Забор')}
+        ${renderDetailValue('Дата', formatDateLong(visitDate))}
+        ${renderDetailValue('Время', `${formatTime(event.start?.dateTime || event.start)}–${formatTime(event.end?.dateTime || event.end)}`)}
+        ${renderDetailValue('Статус', status.label)}
+        ${renderDetailValue('Напоминание', data.callAhead ? `Позвонить ${formatCallAhead(getCallAheadMinutes(data))}` : 'Нет')}
+      </div>
+    </section>
+    <section class="details-section">
+      <h3>Адрес</h3>
+      <div class="details-address">${addressHtml}</div>
+      <div class="details-grid compact-details-grid">
+        ${renderDetailValue('Населённый пункт', data.settlement || '—')}
+        ${renderDetailValue('Район', data.district || '—')}
+        ${renderDetailValue('Подъезд', data.entrance || '—')}
+        ${renderDetailValue('Этаж', data.floor || '—')}
+      </div>
+    </section>
+    <section class="details-section">
+      <div class="details-section-heading"><h3>Ковры</h3><span>${escapeHtml(rugSummary(data))}</span></div>
+      <div class="details-rug-list">${renderRugDetails(data)}</div>
+    </section>
+    <section class="details-section">
+      <h3>Стоимость и договорённости</h3>
+      <div class="details-grid">
+        ${renderDetailValue('Стоимость', data.estimatedPrice ? formatMoney(data.estimatedPrice) : 'Не указана')}
+        ${renderDetailValue('Скидка', `${Number(data.discount || 0)}%`)}
+      </div>
+      ${comment ? `<div class="details-comment"><span>Комментарий</span><p>${escapeHtml(comment)}</p></div>` : ''}
+    </section>
+    <div class="details-actions">
+      ${data.phone ? `<a class="button details-call" href="${phoneLink(data.phone)}">☎ Позвонить</a>` : ''}
+      <button type="button" class="button button-primary" data-details-edit="${escapeHtml(event.id)}">Редактировать заявку</button>
+    </div>`;
+}
+
+function ensureEventDetailsDialog() {
+  let dialog = qs('#eventDetailsDialog');
+  if (dialog) return dialog;
+  dialog = document.createElement('dialog');
+  dialog.id = 'eventDetailsDialog';
+  dialog.className = 'event-details-dialog';
+  dialog.innerHTML = '<div id="eventDetailsContent" class="event-details-content"></div>';
+  dialog.addEventListener('click', event => {
+    if (event.target === dialog) closeEventDetails();
+  });
+  document.body.appendChild(dialog);
+  return dialog;
+}
+
+function closeEventDetails() {
+  const dialog = qs('#eventDetailsDialog');
+  if (!dialog) return;
+  if (typeof dialog.close === 'function' && dialog.open) dialog.close();
+  else dialog.removeAttribute('open');
+}
+
+function openEventDetails(id) {
+  const event = getAllEvents().find(item => item.id === id);
+  if (!event) return showToast('Заявка не найдена.', 'error');
+  const dialog = ensureEventDetailsDialog();
+  qs('#eventDetailsContent', dialog).innerHTML = renderEventDetailsHtml(event);
+  qs('[data-details-close]', dialog)?.addEventListener('click', closeEventDetails);
+  qs('[data-details-edit]', dialog)?.addEventListener('click', buttonEvent => {
+    buttonEvent.preventDefault();
+    const eventId = buttonEvent.currentTarget.dataset.detailsEdit;
+    closeEventDetails();
+    openEvent(eventId);
+  });
+  if (typeof dialog.showModal === 'function') {
+    if (dialog.open) dialog.close();
+    dialog.showModal();
+  } else dialog.setAttribute('open', '');
 }
 
 function openEvent(id) {
+  closeEventDetails();
   const event = getAllEvents().find(item => item.id === id);
   if (!event) return showToast('Заявка не найдена.', 'error');
   const data = decodePmkData(event);
