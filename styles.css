@@ -181,10 +181,7 @@ button { cursor: pointer; }
 :root[data-theme="dark"] .rug-card { background: #171b1f; }
 .rug-card-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
 .rug-card-actions { display: flex; align-items: center; gap: 8px; }
-.edit-rug-size { border: 1px solid #d6bf54; border-radius: 999px; padding: 7px 10px; color: #171717; background: #fff2bd; font-size: 12px; font-weight: 850; }
 .remove-rug { border: 0; color: var(--danger); background: transparent; font-size: 12px; }
-.rug-size-locked .range-value, .rug-size-locked input[type="range"] { opacity: .58; cursor: not-allowed; }
-.rug-size-locked .range-value { border-color: #deded8 !important; background: #f1f1ed !important; }
 .rug-total { color: var(--muted); font-size: 12px; text-align: right; }
 .rug-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 4px; }
 .rug-details-grid .chip-grid { margin-bottom: 10px; }

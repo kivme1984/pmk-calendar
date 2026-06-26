@@ -118,6 +118,12 @@ const state = {
   autoReconnectTried: false,
   silentReconnect: false,
   notifiedEvents: new Set(),
+  previewTimer: null,
+  conflictCacheKey: '',
+  conflictCacheResult: null,
+  scheduleSlotSignature: '',
+  allEventsSignature: '',
+  allEventsCache: [],
 };
 
 const qs = (selector, root = document) => root.querySelector(selector);
@@ -143,6 +149,14 @@ function loadLocalEvents() {
 
 function persistLocalEvents() {
   localStorage.setItem('pmk-local-events', JSON.stringify(state.localEvents));
+  invalidateEventCaches();
+}
+
+function invalidateEventCaches() {
+  state.conflictCacheKey = '';
+  state.conflictCacheResult = null;
+  state.allEventsSignature = '';
+  state.allEventsCache = [];
 }
 
 function loadSavedToken() {
@@ -354,6 +368,9 @@ function updateScheduleSlotOptions(force = false) {
   const field = qs('#scheduleSlotField');
   const select = qs('#scheduleSlotSelect');
   if (!field || !select) return;
+  const signature = `${qs('#district').value}|${qs('#visitDate').value}|${qs('#startTime').value}|${qs('#endTime').value}|${force ? 'force' : ''}`;
+  if (state.scheduleSlotSignature === signature) return;
+  state.scheduleSlotSignature = signature;
   const slots = scheduleSlotsForDistrict(qs('#district').value, qs('#visitDate').value);
   field.classList.toggle('hidden', slots.length <= 1);
   select.innerHTML = slots.map(slot => `<option value="${escapeHtml(scheduleSlotValue(slot))}">${escapeHtml(scheduleSlotLabel(slot))}</option>`).join('');
@@ -417,7 +434,7 @@ function initializeForm() {
   qs('#visitDate').value = businessTodayKey();
   addRug();
   updateScheduleSlotOptions(false);
-  updatePreview();
+  schedulePreviewUpdate();
 }
 
 function addRug(data = {}) {
@@ -425,25 +442,20 @@ function addRug(data = {}) {
   const card = qs('.rug-card', fragment);
   qs('.rug-length', card).value = clampDimension(data.length || 1, 1, 5);
   qs('.rug-width', card).value = data.width || 0;
-  qs('.rug-length-value', card).value = Number(qs('.rug-length', card).value).toFixed(1);
-  qs('.rug-width-value', card).value = Number(qs('.rug-width', card).value).toFixed(1);
   qs('.rug-material', card).value = data.material || '';
   qs('.rug-pile', card).value = data.pile || '';
   setRugChecked(card, '.rug-issues', data.issues || []);
   setRugChecked(card, '.rug-services', data.services || []);
-  qs('.edit-rug-size', card).addEventListener('click', () => setRugSizeEditing(card, card.classList.contains('rug-size-locked')));
   qs('.remove-rug', card).addEventListener('click', () => {
     if (qsa('.rug-card').length <= 1) return showToast('В заявке должен остаться хотя бы один ковёр.', 'error');
     card.remove();
-    renumberRugs(); updatePreview();
+    renumberRugs(); schedulePreviewUpdate();
   });
   qsa('input,select', card).forEach(el => el.addEventListener('input', () => {
-    syncRugDimension(card, el);
-    if (el.type === 'range') vibrateTick();
-    updateRugTotal(card); updatePreview();
+    normalizeRugDimensionInput(el);
+    updateRugTotal(card); schedulePreviewUpdate();
   }));
   qs('#rugsContainer').appendChild(fragment);
-  setRugSizeEditing(card, false);
   renumberRugs(); updateRugTotal(card);
 }
 
@@ -451,17 +463,9 @@ function renumberRugs() {
   qsa('.rug-card').forEach((card, index) => qs('.rug-number', card).textContent = index + 1);
 }
 
-function setRugSizeEditing(card, enabled) {
-  card.classList.toggle('rug-size-locked', !enabled);
-  qsa('.rug-length,.rug-width,.rug-length-value,.rug-width-value', card).forEach(input => input.disabled = !enabled);
-  qs('.edit-rug-size', card).textContent = enabled ? 'Готово' : 'Изменить размеры';
-}
-
 function updateRugTotal(card) {
   const length = Number(qs('.rug-length', card).value || 0);
   const width = Number(qs('.rug-width', card).value || 0);
-  if (document.activeElement !== qs('.rug-length-value', card)) qs('.rug-length-value', card).value = length.toFixed(1);
-  if (document.activeElement !== qs('.rug-width-value', card)) qs('.rug-width-value', card).value = width.toFixed(1);
   qs('.rug-total strong', card).textContent = `${(length * width).toFixed(2).replace('.00','')} м²`;
 }
 
@@ -471,24 +475,12 @@ function clampDimension(value, min, max) {
   return Math.min(max, Math.max(min, number));
 }
 
-function syncRugDimension(card, source) {
-  const pairs = [
-    { range: qs('.rug-length', card), input: qs('.rug-length-value', card), min: 1, max: 5 },
-    { range: qs('.rug-width', card), input: qs('.rug-width-value', card), min: 0, max: 4 },
-  ];
-  pairs.forEach(pair => {
-    if (source === pair.range) pair.input.value = Number(pair.range.value).toFixed(1);
-    if (source === pair.input) {
-      const value = clampDimension(pair.input.value, pair.min, pair.max);
-      pair.range.value = value;
-    }
-  });
-}
-
-function vibrateTick() {
-  if (!navigator.vibrate) return;
-  clearTimeout(vibrateTick.timer);
-  vibrateTick.timer = setTimeout(() => navigator.vibrate(8), 35);
+function normalizeRugDimensionInput(input) {
+  if (!input.classList.contains('rug-length') && !input.classList.contains('rug-width')) return;
+  const min = input.classList.contains('rug-length') ? 1 : 0;
+  const max = input.classList.contains('rug-length') ? 5 : 4;
+  const value = clampDimension(input.value, min, max);
+  if (input.value !== '' && document.activeElement !== input) input.value = value.toFixed(1);
 }
 
 function collectRugs() {
@@ -618,6 +610,11 @@ function updatePreview() {
   checkConflicts(data);
 }
 
+function schedulePreviewUpdate() {
+  clearTimeout(state.previewTimer);
+  state.previewTimer = setTimeout(updatePreview, 120);
+}
+
 function checkRoute(data) {
   const box = qs('#routeHint');
   box.className = 'info-box';
@@ -699,10 +696,25 @@ function checkConflicts(data) {
   if (!data.visitDate || !data.startTime || !data.endTime) return true;
   const formStart = `${data.visitDate}T${data.startTime}`;
   const formEnd = `${data.visitDate}T${data.endTime}`;
+  const events = getAllEvents();
+  const cacheKey = [
+    data.eventId || '',
+    data.district || '',
+    formStart,
+    formEnd,
+    events.length,
+    events[events.length - 1]?.updated || '',
+  ].join('|');
+  if (state.conflictCacheKey === cacheKey && state.conflictCacheResult) {
+    box.className = state.conflictCacheResult.className;
+    box.textContent = state.conflictCacheResult.text;
+    return state.conflictCacheResult.ok;
+  }
   let routeWindowCount = 0;
-  const conflict = getAllEvents().find(event => {
+  const conflict = events.find(event => {
     if (event.id === data.eventId) return false;
     const range = comparableEventRange(event);
+    if (!range.start.startsWith(`${data.visitDate}T`) && !range.end.startsWith(`${data.visitDate}T`)) return false;
     if (isSameRouteWindow(data, event, range)) {
       routeWindowCount += 1;
       return false;
@@ -710,13 +722,21 @@ function checkConflicts(data) {
     return formStart < range.end && formEnd > range.start;
   });
   if (!conflict && routeWindowCount) {
-    box.className = 'info-box good';
-    box.textContent = `В это окно уже есть ${routeWindowCount} ${pluralPoints(routeWindowCount)} по району ${data.district}. Можно добавить ещё заявку на это же время.`;
+    state.conflictCacheKey = cacheKey;
+    state.conflictCacheResult = { ok: true, className: 'info-box good', text: `В это окно уже есть ${routeWindowCount} ${pluralPoints(routeWindowCount)} по району ${data.district}. Можно добавить ещё заявку на это же время.` };
+    box.className = state.conflictCacheResult.className;
+    box.textContent = state.conflictCacheResult.text;
     return true;
   }
-  if (!conflict) return true;
-  box.className = 'info-box danger';
-  box.textContent = `Есть пересечение: ${conflict.summary || 'другая заявка'} (${formatTime(conflict.start?.dateTime || conflict.start)}–${formatTime(conflict.end?.dateTime || conflict.end)}).`;
+  if (!conflict) {
+    state.conflictCacheKey = cacheKey;
+    state.conflictCacheResult = { ok: true, className: 'info-box hidden', text: '' };
+    return true;
+  }
+  state.conflictCacheKey = cacheKey;
+  state.conflictCacheResult = { ok: false, className: 'info-box danger', text: `Есть пересечение: ${conflict.summary || 'другая заявка'} (${formatTime(conflict.start?.dateTime || conflict.start)}–${formatTime(conflict.end?.dateTime || conflict.end)}).` };
+  box.className = state.conflictCacheResult.className;
+  box.textContent = state.conflictCacheResult.text;
   return false;
 }
 
@@ -997,13 +1017,18 @@ async function refreshEvents() {
       const result = await googleRequest(`/calendars/${calendarId}/events?${params}`);
       state.events = result.items || [];
     }
+    invalidateEventCaches();
     renderAll();
     checkUpcomingNotifications();
-  } catch (error) { showToast(error.message, 'error'); renderAll(); }
+  } catch (error) { invalidateEventCaches(); showToast(error.message, 'error'); renderAll(); }
 }
 
 function getAllEvents() {
-  return [...state.events, ...state.localEvents].sort((a,b) => new Date(a.start?.dateTime || a.start) - new Date(b.start?.dateTime || b.start));
+  const signature = `${state.events.length}:${state.events[state.events.length - 1]?.id || ''}:${state.localEvents.length}:${state.localEvents[state.localEvents.length - 1]?.id || ''}`;
+  if (state.allEventsSignature === signature) return state.allEventsCache;
+  state.allEventsSignature = signature;
+  state.allEventsCache = [...state.events, ...state.localEvents].sort((a,b) => new Date(a.start?.dateTime || a.start) - new Date(b.start?.dateTime || b.start));
+  return state.allEventsCache;
 }
 
 function startOfDay(date) { const value = new Date(date); value.setHours(0,0,0,0); return value; }
@@ -1049,7 +1074,7 @@ function addMinutesToTime(time, minutes) {
 }
 function autoSetEndTime() {
   qs('#endTime').value = addMinutesToTime(qs('#startTime').value || '10:00', REQUEST_DURATION_MINUTES);
-  updatePreview();
+  schedulePreviewUpdate();
 }
 
 function eventMeta(event) {
@@ -1346,7 +1371,7 @@ function fillForm(data) {
   qs('#deleteEventBtn').classList.remove('hidden');
   qs('#formTitle').textContent = 'Редактирование заявки';
   updateScheduleSlotOptions(false);
-  updateConnectionUI(); updatePreview();
+  updateConnectionUI(); schedulePreviewUpdate();
 }
 
 function resetForm(addDefaultRug = true) {
@@ -1362,7 +1387,7 @@ function resetForm(addDefaultRug = true) {
   qs('#deleteEventBtn').classList.add('hidden');
   qs('#formTitle').textContent = 'Новая заявка';
   updateScheduleSlotOptions(true);
-  updateConnectionUI(); updatePreview();
+  updateConnectionUI(); schedulePreviewUpdate();
 }
 
 function setupSettingsUI() {
@@ -1458,12 +1483,12 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#nextPeriodBtn').addEventListener('click', () => shiftPeriod(periodStepDays()));
   qs('#jumpPeriodDate').addEventListener('change', event => { state.periodAnchorKey = event.target.value || businessTodayKey(); if (state.currentView === 'day') state.selectedDayKey = state.periodAnchorKey; renderAll(); pushAppHistory(state.currentView); });
   qs('#addRugBtn').addEventListener('click', () => addRug());
-  qs('#district').addEventListener('change', () => { updateScheduleSlotOptions(true); updatePreview(); });
-  qs('#visitDate').addEventListener('change', () => { updateScheduleSlotOptions(true); updatePreview(); });
+  qs('#district').addEventListener('change', () => { updateScheduleSlotOptions(true); schedulePreviewUpdate(); });
+  qs('#visitDate').addEventListener('change', () => { updateScheduleSlotOptions(true); schedulePreviewUpdate(); });
   qs('#scheduleSlotSelect').addEventListener('change', event => {
     const slot = scheduleSlotsForDistrict(qs('#district').value, qs('#visitDate').value).find(item => scheduleSlotValue(item) === event.target.value);
     applyScheduleSlot(slot);
-    updatePreview();
+    schedulePreviewUpdate();
   });
   qs('#startTime').addEventListener('input', autoSetEndTime);
   qs('#startTime').addEventListener('change', autoSetEndTime);
@@ -1513,15 +1538,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const authChanged = previousSettings.clientId !== state.settings.clientId || previousSettings.calendarId !== state.settings.calendarId || previousSettings.timezone !== state.settings.timezone;
     saveSettings(); applyTheme();
     if (authChanged) { clearSavedToken(); state.tokenClient = null; state.autoReconnectTried = false; }
-    updateConnectionUI(); updatePreview();
+    updateConnectionUI(); schedulePreviewUpdate();
     showToast('Настройки сохранены.', 'success');
   });
   qs('#requestNotificationsBtn').addEventListener('click', requestNotificationPermission);
   qs('#globalSearch').addEventListener('input', renderSearch);
-  qsa('#requestForm input, #requestForm select, #requestForm textarea').forEach(el => el.addEventListener('input', updatePreview));
+  qsa('#requestForm input, #requestForm select, #requestForm textarea').forEach(el => el.addEventListener('input', schedulePreviewUpdate));
   qsa('[data-time-note]').forEach(button => button.addEventListener('click', () => {
     qs('#timeNote').value = button.dataset.timeNote || '';
-    updatePreview();
+    schedulePreviewUpdate();
   }));
   qs('#reminderDate').value = businessTodayKey();
   setInterval(checkUpcomingNotifications, 60000);
