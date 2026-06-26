@@ -467,3 +467,9 @@ button { cursor: pointer; }
   .details-actions { bottom: -18px; margin: 16px -14px -18px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); }
   .details-actions .button { flex: 1; padding-left: 10px; padding-right: 10px; }
 }
+
+
+/* PMK request card polish v1 */
+.event-card { position: relative; }
+.event-card:has(.card-menu[open]) { z-index: 45; }
+.event-comment button[hidden] { display: none; }

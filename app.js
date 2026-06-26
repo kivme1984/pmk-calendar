@@ -1300,7 +1300,7 @@ function renderEventCard(event) {
   return `<article class="event-card status-${currentStatus.className}" data-event-card="${id}">
       <div class="event-time">
         <small class="event-date">${formatDateShort(dateKey)}</small>
-        <small class="event-weekday">${WEEKDAY_SHORT[date.getUTCDay()]}, ${escapeHtml(date.toLocaleDateString('ru-RU', { weekday: 'long', timeZone: 'UTC' }))}</small>
+        <small class="event-weekday">${escapeHtml(date.toLocaleDateString('ru-RU', { weekday: 'long', timeZone: 'UTC' }))}</small>
         <strong>${formatTime(start)}–${formatTime(end)}</strong>
         <span>${data.visitType === 'delivery' ? 'Доставка' : 'Забор'}</span>
       </div>
@@ -1450,12 +1450,18 @@ function bindEventActions(root) {
     const editor = qsa('[data-contract-editor]', root).find(item => item.dataset.contractEditor === button.dataset.contractCancel);
     editor?.classList.add('hidden');
   }));
-  qsa('[data-toggle-comment]', root).forEach(button => button.addEventListener('click', event => {
-    event.preventDefault();
+  qsa('[data-toggle-comment]', root).forEach(button => {
     const block = button.closest('.event-comment');
-    const expanded = block?.classList.toggle('expanded');
-    button.textContent = expanded ? 'Свернуть' : 'Ещё';
-  }));
+    const paragraph = qs('p', block);
+    requestAnimationFrame(() => {
+      if (paragraph && paragraph.scrollHeight <= paragraph.clientHeight + 2) button.hidden = true;
+    });
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      const expanded = block?.classList.toggle('expanded');
+      button.textContent = expanded ? 'Свернуть' : 'Ещё';
+    });
+  });
 }
 
 function renderDetailValue(label, value, options = {}) {
