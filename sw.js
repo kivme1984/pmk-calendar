@@ -1,10 +1,10 @@
-const CACHE = 'pmk-calendar-v31';
+const CACHE = 'pmk-calendar-v32';
 const ASSETS = [
   './',
   './index.html',
   './reset.html',
   './styles.css?v=30',
-  './manager-planner.css',
+  './manager-planner.css?v=32',
   './app.js?v=30',
   './manager-planner-core.js',
   './manager-planner-hooks.js',
@@ -64,7 +64,7 @@ self.addEventListener('fetch', event => {
       try {
         const [base, manager] = await Promise.all([
           networkText('./styles.css?v=30'),
-          networkText('./manager-planner.css'),
+          networkText('./manager-planner.css?v=32'),
         ]);
         return new Response(`${base}\n\n${manager}`, {
           headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'no-store' },
