@@ -1,0 +1,57 @@
+name: Force MAX asset refresh v27
+
+on:
+  push:
+    paths:
+      - '.github/workflows/force-max-assets-v27.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Version application assets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          index_path = Path('index.html')
+          index = index_path.read_text(encoding='utf-8')
+          index = index.replace('href="styles.css"', 'href="styles.css?v=27"')
+          index = index.replace('src="app.js" defer', 'src="app.js?v=27" defer')
+          index_path.write_text(index, encoding='utf-8')
+
+          reset_path = Path('reset.html')
+          reset = reset_path.read_text(encoding='utf-8')
+          reset = reset.replace("location.replace('./?reset=' + Date.now());", "location.replace('./?v=27&reset=' + Date.now());")
+          reset_path.write_text(reset, encoding='utf-8')
+
+          sw_path = Path('sw.js')
+          sw = sw_path.read_text(encoding='utf-8')
+          sw = sw.replace("const CACHE = 'pmk-calendar-v26';", "const CACHE = 'pmk-calendar-v27';")
+          sw = sw.replace("'./styles.css', './app.js'", "'./styles.css?v=27', './app.js?v=27'")
+          sw_path.write_text(sw, encoding='utf-8')
+          PY
+
+      - name: Validate
+        run: |
+          node --check app.js
+          grep -q 'styles.css?v=27' index.html
+          grep -q 'app.js?v=27' index.html
+          grep -q 'data-max-phone' app.js
+          grep -q 'pmk-calendar-v27' sw.js
+
+      - name: Commit and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/force-max-assets-v27.yml
+          git add index.html reset.html sw.js
+          git commit -m "Force MAX asset refresh v27"
+          git push
