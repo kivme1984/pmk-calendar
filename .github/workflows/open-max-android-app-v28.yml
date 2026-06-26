@@ -1,0 +1,105 @@
+name: Open installed MAX Android app
+
+on:
+  push:
+    paths:
+      - '.github/workflows/open-max-android-app-v28.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Replace MAX web link with Android intent
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          app_path = Path('app.js')
+          app = app_path.read_text(encoding='utf-8')
+
+          old = '''async function openMaxContact(phone) {
+            const normalized = normalizePhone(phone || '');
+            if (!normalized) return showToast('В заявке не указан телефон клиента.', 'error');
+            window.open('https://max.ru/', '_blank', 'noopener');
+            try {
+              if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(normalized);
+              else copyTextFallback(normalized);
+              showToast(`Номер ${normalized} скопирован. Вставьте его в поиск MAX.`, 'success');
+            } catch {
+              copyTextFallback(normalized);
+              showToast(`MAX открыт. Номер клиента: ${normalized}`, 'success');
+            }
+          }'''
+
+          new = '''function openMaxContact(phone) {
+            const normalized = normalizePhone(phone || '');
+            if (!normalized) return showToast('В заявке не указан телефон клиента.', 'error');
+
+            try {
+              if (navigator.clipboard?.writeText) {
+                navigator.clipboard.writeText(normalized).catch(() => copyTextFallback(normalized));
+              } else copyTextFallback(normalized);
+            } catch {
+              copyTextFallback(normalized);
+            }
+
+            showToast(`Номер ${normalized} скопирован. Вставьте его в поиск MAX.`, 'success');
+
+            const shareUrl = `https://max.ru/:share?text=${encodeURIComponent(normalized)}`;
+            if (/Android/i.test(navigator.userAgent)) {
+              const fallback = encodeURIComponent(shareUrl);
+              const text = encodeURIComponent(normalized);
+              window.location.href = `intent://max.ru/:share?text=${text}#Intent;scheme=https;package=ru.oneme.app;S.browser_fallback_url=${fallback};end`;
+              return;
+            }
+
+            window.location.href = shareUrl;
+          }'''
+
+          if old not in app:
+              raise SystemExit('Current openMaxContact function not found')
+          app = app.replace(old, new, 1)
+          app_path.write_text(app, encoding='utf-8')
+
+          index_path = Path('index.html')
+          index = index_path.read_text(encoding='utf-8')
+          index = index.replace('styles.css?v=27', 'styles.css?v=28')
+          index = index.replace('app.js?v=27', 'app.js?v=28')
+          index_path.write_text(index, encoding='utf-8')
+
+          reset_path = Path('reset.html')
+          reset = reset_path.read_text(encoding='utf-8')
+          reset = reset.replace('?v=27&reset=', '?v=28&reset=')
+          reset_path.write_text(reset, encoding='utf-8')
+
+          sw_path = Path('sw.js')
+          sw = sw_path.read_text(encoding='utf-8')
+          sw = sw.replace("pmk-calendar-v27", "pmk-calendar-v28")
+          sw = sw.replace("styles.css?v=27", "styles.css?v=28")
+          sw = sw.replace("app.js?v=27", "app.js?v=28")
+          sw_path.write_text(sw, encoding='utf-8')
+          PY
+
+      - name: Validate
+        run: |
+          node --check app.js
+          grep -q 'package=ru.oneme.app' app.js
+          grep -q 'intent://max.ru/:share' app.js
+          grep -q 'app.js?v=28' index.html
+          grep -q 'pmk-calendar-v28' sw.js
+
+      - name: Commit and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/open-max-android-app-v28.yml
+          git add app.js index.html reset.html sw.js
+          git commit -m "Open installed MAX Android app"
+          git push
