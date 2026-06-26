@@ -1253,12 +1253,15 @@ function rugSummary(data = {}) {
 
 function sourceBadge(data = {}) {
   const source = cleanShortField(data.orderSource || '');
-  if (!source) return '';
-  const isMax = /^(макс|max)$/i.test(source);
-  if (!isMax) return `<span class="quick-badge source-badge">${escapeHtml(source)}</span>`;
+  const isMaxSource = /^(макс|max)$/i.test(source);
+  const sourceHtml = source && !isMaxSource
+    ? `<span class="quick-badge source-badge">${escapeHtml(source)}</span>`
+    : '';
   const phone = normalizePhone(data.phone || '');
-  if (!phone) return '<span class="quick-badge source-badge max-badge max-disabled" title="Телефон клиента не указан">MAX</span>';
-  return `<button type="button" class="quick-badge source-badge max-badge max-action" data-max-phone="${escapeHtml(phone)}" title="Скопировать номер и открыть MAX">MAX</button>`;
+  const maxHtml = phone
+    ? `<button type="button" class="quick-badge source-badge max-badge max-action" data-max-phone="${escapeHtml(phone)}" title="Скопировать номер и открыть MAX">MAX</button>`
+    : '<span class="quick-badge source-badge max-badge max-disabled" title="Телефон клиента не указан">MAX</span>';
+  return `${sourceHtml}${maxHtml}`;
 }
 
 function copyTextFallback(value) {
