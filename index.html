@@ -156,6 +156,11 @@
                   <label><input type="radio" name="visitType" value="pickup" checked /><span>Забор</span></label>
                   <label><input type="radio" name="visitType" value="delivery" /><span>Доставка</span></label>
                 </div>
+                <div id="managerSlotPlanner" class="manager-slot-planner">
+                  <div class="manager-slot-heading"><div><strong>Подходящие окна по району</strong><small id="managerSlotHint">Сначала выберите район клиента.</small></div><span class="manager-only-badge">Для менеджера</span></div>
+                  <div id="recommendedSlots" class="recommended-slots"></div>
+                </div>
+                <p class="manual-time-label">Или укажите дату и время вручную</p>
                 <div class="field-grid three">
                   <label class="field">Дата *<input type="date" id="visitDate" name="visitDate" required /></label>
                   <label class="field">Начало *<input type="time" id="startTime" name="startTime" required value="10:00" /></label>
@@ -176,6 +181,16 @@
                 </label>
                 <div id="routeHint" class="info-box">Выберите район и дату — появится проверка маршрута.</div>
                 <div id="conflictHint" class="info-box hidden"></div>
+                <div id="routeExceptionPanel" class="route-exception-panel hidden">
+                  <div class="route-exception-title"><strong>Время вне районного маршрута</strong><span>Можно сохранить как согласованное исключение.</span></div>
+                  <label class="toggle-row"><input type="checkbox" id="routeException" /><span><strong>Сохранить как исключение</strong><small>Курьер увидит отметку «Вне маршрута».</small></span></label>
+                  <div class="field-grid two route-exception-fields">
+                    <label class="field">Причина<select id="routeExceptionReason"><option value="">Выберите причину</option><option>По просьбе клиента</option><option>Перенос ранее оформленной заявки</option><option>Попутный адрес</option><option>Срочный заказ</option><option>Согласовано с курьером</option><option>Отдельная договорённость</option><option>Другое</option></select></label>
+                    <label class="field">Доплата<input type="number" id="routeExceptionFee" min="0" step="50" placeholder="0" /></label>
+                    <label class="field">Кто согласовал<input id="routeExceptionApprovedBy" placeholder="Например, Игорь" /></label>
+                    <label class="field">Комментарий<input id="routeExceptionComment" placeholder="Что важно знать курьеру" /></label>
+                  </div>
+                </div>
               </section>
 
               <section class="form-card">
