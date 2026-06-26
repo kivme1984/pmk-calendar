@@ -398,7 +398,7 @@ function showToast(message, type = '') {
 function setView(view, options = {}) {
   const previousView = state.currentView;
   state.currentView = view;
-  const targetView = view === 'delivery-waiting' ? 'today' : (['day','three-days','week','month'].includes(view) ? 'week' : view);
+  const targetView = (view === 'day' || view === 'delivery-waiting') ? 'today' : (['three-days','week','month'].includes(view) ? 'week' : view);
   if (view === 'day' && !state.selectedDayKey) state.selectedDayKey = businessTodayKey();
   if (view === 'form' || view === 'reminder') state.returnView = options.returnView || (previousView === 'form' || previousView === 'reminder' ? state.returnView : previousView);
   qsa('.view').forEach(el => el.classList.toggle('active', el.id === `view-${targetView}`));
@@ -891,6 +891,7 @@ async function saveRequest(data, localOnly = false) {
   }
   state.selectedDayKey = data.visitDate || state.selectedDayKey;
   state.periodAnchorKey = state.selectedDayKey;
+  if (state.token && !localOnly) await refreshEvents();
   resetForm();
   setView(['three-days','week','month','delivery-waiting','search'].includes(state.returnView) ? state.returnView : 'day');
 }
