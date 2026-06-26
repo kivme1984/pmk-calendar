@@ -1290,14 +1290,12 @@ function openMaxContact(phone) {
 
   showToast(`Номер ${normalized} скопирован. Вставьте его в поиск MAX.`, 'success');
 
-  const maxHomeUrl = 'https://max.ru/';
   if (/Android/i.test(navigator.userAgent)) {
-    const fallback = encodeURIComponent(maxHomeUrl);
-    window.location.href = `intent://max.ru/#Intent;scheme=https;package=ru.oneme.app;S.browser_fallback_url=${fallback};end`;
+    window.location.href = 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=ru.oneme.app;end';
     return;
   }
 
-  window.location.href = maxHomeUrl;
+  window.location.href = 'https://max.ru/';
 }
 
 function scheduleBadge(data = {}) {
