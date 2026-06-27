@@ -145,3 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#routeException')?.addEventListener('change', schedulePreviewUpdate);
   qsa('#routeExceptionReason, #routeExceptionFee, #routeExceptionApprovedBy, #routeExceptionComment').forEach(element => element.addEventListener('input', schedulePreviewUpdate));
 });
+
+const pmkHotfixLoader = document.createElement('script');
+pmkHotfixLoader.src = './hotfix-loader.js?v=34';
+pmkHotfixLoader.async = false;
+document.head.appendChild(pmkHotfixLoader);
