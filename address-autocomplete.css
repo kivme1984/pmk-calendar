@@ -1,0 +1,98 @@
+/* Address autocomplete shown only in manager create/edit form */
+.address-search-wrap {
+  position: relative;
+  min-width: 0;
+  margin: 0 0 14px;
+}
+.address-search-field { margin: 0; }
+.address-search-input-wrap {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+.address-search-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  padding-right: 44px;
+}
+.address-search-icon {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 23px;
+  pointer-events: none;
+}
+.address-suggestions {
+  position: absolute;
+  z-index: 70;
+  top: calc(100% - 24px);
+  left: 0;
+  right: 0;
+  max-height: min(340px, 48vh);
+  overflow-y: auto;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 18px 45px rgba(0,0,0,.18);
+}
+.address-suggestion {
+  width: 100%;
+  display: grid;
+  gap: 3px;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+}
+.address-suggestion:hover,
+.address-suggestion.active {
+  background: #fff3c7;
+}
+.address-suggestion strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.address-suggestion small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.address-suggestion-empty {
+  padding: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.address-search-status {
+  min-height: 18px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.address-search-status.loading { color: #8a6500; }
+.address-search-status.success { color: var(--success); font-weight: 750; }
+.address-search-status.warning { color: var(--warning); font-weight: 750; }
+.address-search-status.error { color: var(--danger); font-weight: 750; }
+.address-search-status.pending { color: #8a6500; }
+.address-search-field input:disabled {
+  opacity: .7;
+  cursor: not-allowed;
+}
+:root[data-theme="dark"] .address-suggestion:hover,
+:root[data-theme="dark"] .address-suggestion.active {
+  color: #171717;
+  background: #ffe397;
+}
+@media (max-width: 760px) {
+  .address-suggestions {
+    top: calc(100% - 22px);
+    max-height: 44vh;
+  }
+  .address-search-input-wrap input { font-size: 16px; }
+}
