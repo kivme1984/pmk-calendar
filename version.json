@@ -1,0 +1,12 @@
+{
+  "version": "34",
+  "release": "manager-stability",
+  "date": "2026-06-27",
+  "features": [
+    "cached-google-events",
+    "faster-rendering",
+    "request-copy",
+    "automatic-draft-recovery",
+    "non-blocking-route-warning"
+  ]
+}
