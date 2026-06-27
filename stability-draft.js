@@ -30,20 +30,24 @@ function pmkDraftRestore() {
 const pmkSaveOriginal = saveRequest;
 saveRequest = async (data, localOnly = false) => {
   const button = qs('#submitBtn');
-  const oldText = button.textContent;
-  button.disabled = true;
-  button.textContent = 'Сохраняем…';
+  const oldText = button?.textContent || '';
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Сохраняем…';
+  }
   try {
     await pmkSaveOriginal(data, localOnly);
     if (state.currentView !== 'form') localStorage.removeItem(PMK_DRAFT_KEY);
   } finally {
-    button.disabled = false;
-    button.textContent = oldText;
+    if (button) {
+      button.disabled = false;
+      button.textContent = oldText;
+    }
     updateConnectionUI();
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+function pmkDraftInit() {
   if (!PMK_ADDRESS_API_URL) qs('#addressSearchWrap')?.remove();
   const form = qs('#requestForm');
   form?.addEventListener('input', pmkDraftSave);
@@ -59,4 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   updateConnectionUI();
   renderAll();
-});
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pmkDraftInit, { once: true });
+else pmkDraftInit();
