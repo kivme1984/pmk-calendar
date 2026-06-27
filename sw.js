@@ -1,13 +1,15 @@
-const CACHE = 'pmk-calendar-v32';
+const CACHE = 'pmk-calendar-v33';
 const ASSETS = [
   './',
   './index.html',
   './reset.html',
   './styles.css?v=30',
   './manager-planner.css?v=32',
+  './address-autocomplete.css?v=33',
   './app.js?v=30',
   './manager-planner-core.js',
   './manager-planner-hooks.js',
+  './address-autocomplete.js?v=33',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -44,12 +46,13 @@ self.addEventListener('fetch', event => {
   if (requestUrl.pathname.endsWith('/app.js')) {
     event.respondWith((async () => {
       try {
-        const [app, core, hooks] = await Promise.all([
+        const [app, core, hooks, address] = await Promise.all([
           networkText('./app.js?v=30'),
           networkText('./manager-planner-core.js'),
           networkText('./manager-planner-hooks.js'),
+          networkText('./address-autocomplete.js?v=33'),
         ]);
-        return new Response(`${app}\n\n${core}\n\n${hooks}`, {
+        return new Response(`${app}\n\n${core}\n\n${hooks}\n\n${address}`, {
           headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-store' },
         });
       } catch {
@@ -62,11 +65,12 @@ self.addEventListener('fetch', event => {
   if (requestUrl.pathname.endsWith('/styles.css')) {
     event.respondWith((async () => {
       try {
-        const [base, manager] = await Promise.all([
+        const [base, manager, address] = await Promise.all([
           networkText('./styles.css?v=30'),
           networkText('./manager-planner.css?v=32'),
+          networkText('./address-autocomplete.css?v=33'),
         ]);
-        return new Response(`${base}\n\n${manager}`, {
+        return new Response(`${base}\n\n${manager}\n\n${address}`, {
           headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'no-store' },
         });
       } catch {
