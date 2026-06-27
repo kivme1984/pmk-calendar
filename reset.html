@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PMK Calendar Reset</title>
+  <title>Обновление ПМК Календаря</title>
   <style>
     body {
       margin: 0;
@@ -28,13 +28,11 @@
 <body>
   <main>
     <h1>Обновляем приложение</h1>
-    <p>Сбрасываем старые настройки подключения Google и обновляем кэш. Локальные заявки не удаляются.</p>
+    <p>Очищаем только старые файлы приложения. Настройки Google, локальные заявки и незавершённый черновик сохраняются.</p>
   </main>
   <script>
     (async () => {
       try {
-        localStorage.removeItem('pmk-settings');
-
         if ('serviceWorker' in navigator) {
           const registrations = await navigator.serviceWorker.getRegistrations();
           await Promise.all(registrations.map(registration => registration.unregister()));
@@ -45,7 +43,7 @@
           await Promise.all(keys.map(key => caches.delete(key)));
         }
       } finally {
-        location.replace('./?v=33&reset=' + Date.now());
+        location.replace('./?v=34&reset=' + Date.now());
       }
     })();
   </script>
