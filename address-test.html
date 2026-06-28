@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Проверка адресного сервиса ПМК</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, system-ui, sans-serif; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f3f3f1; color: #191919; }
+    main { width: min(620px, calc(100vw - 28px)); padding: 24px; border: 1px solid #deded8; border-radius: 20px; background: #fff; box-shadow: 0 16px 45px rgba(20,20,18,.08); }
+    h1 { margin: 0 0 8px; font-size: 27px; }
+    p { color: #6c6c67; line-height: 1.5; }
+    input, button { width: 100%; box-sizing: border-box; border-radius: 12px; padding: 13px 14px; font: inherit; }
+    input { border: 1px solid #d8d8d2; }
+    button { margin-top: 10px; border: 0; background: #f7b500; font-weight: 850; cursor: pointer; }
+    pre { min-height: 90px; margin: 16px 0 0; padding: 14px; overflow: auto; border-radius: 12px; white-space: pre-wrap; background: #171717; color: #e8e8e3; font: 13px/1.5 ui-monospace, monospace; }
+    .ok { color: #b7f1ce; }
+    .bad { color: #ffaca4; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Проверка адресного сервиса</h1>
+    <p>Страница проверяет связь календаря с Cloudflare Worker и DaData. API-ключ здесь не отображается и не передаётся в браузер.</p>
+    <input id="query" value="Нижний Новгород, Космическая улица, 10" />
+    <button id="test">Проверить подключение</button>
+    <pre id="result">Нажмите «Проверить подключение».</pre>
+  </main>
+  <script>
+    const endpoint = 'https://lucky-math-8e63pmk-address.standart-media.workers.dev/suggest';
+    const result = document.querySelector('#result');
+    document.querySelector('#test').addEventListener('click', async () => {
+      result.className = '';
+      result.textContent = 'Отправляем проверочный запрос…';
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: document.querySelector('#query').value, count: 3 }),
+        });
+        const text = await response.text();
+        let payload;
+        try { payload = JSON.parse(text); } catch { payload = { raw: text }; }
+        if (response.ok && Array.isArray(payload.suggestions)) {
+          result.className = 'ok';
+          result.textContent = payload.suggestions.length
+            ? `Сервис работает. Найдено вариантов: ${payload.suggestions.length}\n\n${payload.suggestions.map(item => item.value).join('\n')}`
+            : 'Сервис работает, но по этому запросу ничего не найдено.';
+          return;
+        }
+        result.className = 'bad';
+        result.textContent = `Ошибка ${response.status}\n${JSON.stringify(payload, null, 2)}`;
+      } catch (error) {
+        result.className = 'bad';
+        result.textContent = `Ошибка соединения\n${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
