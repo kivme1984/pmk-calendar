@@ -10,14 +10,13 @@
     wool: 400,
     highPile: 450,
     delicate: 800,
-    conditioner: 350,
+    conditioner: 300,
     odorSmall: 700,
     odorLarge: 1000,
     hair: 150,
-    stain: 600,
+    stain: 500,
     pileLift: 150,
     disinfection: 700,
-    slimePlasticine: 500,
     ozonation: 300,
     express: 1000,
     minimum: 1800,
@@ -29,16 +28,21 @@
   const clampDiscount = value => Math.max(0, Math.min(100, Number(value) || 0));
   const money = value => formatMoney(Math.round(Number(value) || 0));
   const areaText = value => Number(value || 0).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+  const clean = value => String(value || '').trim();
 
   function baseRate(rug = {}) {
-    const material = rug.material || '';
-    const pile = rug.pile || '';
+    const material = clean(rug.material);
+    const pile = clean(rug.pile);
     const width = Number(rug.width || 0);
+
+    if (!material) return 0;
     if (['Вискоза', 'Шёлк', 'Хлопок'].includes(material)) return PRICE.delicate;
+    if (material === 'Безворсный') return PRICE.noPile;
+    if (!pile) return 0;
     if (pile === 'Более 1 см') return PRICE.highPile;
     if (material === 'Шерсть') return PRICE.wool;
-    if (material === 'Безворсный' || (material === 'Синтетика' && pile === 'Без ворса')) return PRICE.noPile;
-    if (material === 'Синтетика') return width >= 3 ? PRICE.syntheticWide : PRICE.synthetic;
+    if (material === 'Синтетика' && pile === 'Без ворса') return PRICE.noPile;
+    if (material === 'Синтетика' && pile === 'До 1 см') return width > 3 ? PRICE.syntheticWide : PRICE.synthetic;
     return 0;
   }
 
@@ -51,7 +55,7 @@
     if (!toggle) {
       const row = document.createElement('label');
       row.className = 'toggle-row auto-price-toggle';
-      row.innerHTML = '<input type="checkbox" id="autoPrice"><span><strong>Рассчитать стоимость автоматически</strong><small>Используется один стабильный расчёт без скидки за количество ковров.</small></span>';
+      row.innerHTML = '<input type="checkbox" id="autoPrice"><span><strong>Рассчитать стоимость автоматически</strong><small>Расчёт по утверждённому прайсу без скидки за количество ковров.</small></span>';
       priceGrid.parentNode.insertBefore(row, priceGrid);
       toggle = qs('#autoPrice');
     }
@@ -69,22 +73,19 @@
 
   function updateServiceLabels() {
     const labels = {
-      'Удаление пятен': 'Удаление пятен · 600 ₽/ковёр',
+      'Удаление пятен': 'Пятна / слайм / пластилин / маркеры · 500 ₽/ковёр',
       'Вычёсывание шерсти и волос': 'Вычёсывание шерсти и волос · 150 ₽/м²',
       'Удаление запаха мочи': 'Удаление запаха мочи · 700 ₽ до 6 м² / 1000 ₽ свыше 6 м²',
-      'Дезинфекция': 'Дезинфекция · 700 ₽/ковёр',
-      'Удаление слайма / пластилина': 'Удаление слайма / пластилина · 500 ₽/ковёр',
+      'Дезинфекция': 'Дезинфекция / ковёр после потопа · 700 ₽/ковёр',
       'Подъём ворса': 'Расчёсывание / подъём ворса · 150 ₽/м²',
       'Озонация': 'Озонация · 300 ₽/ковёр',
-      'Кондиционер': 'Кондиционер · 350 ₽/ковёр',
+      'Кондиционер': 'Кондиционер · 300 ₽/ковёр',
       'Экспресс-стирка': 'Экспресс-стирка · 1000 ₽/заказ',
     };
 
     Object.entries(labels).forEach(([value, text]) => {
       document.querySelectorAll(`.rug-services input[value="${value}"]`).forEach(input => {
-        if (input.nextElementSibling && input.nextElementSibling.textContent !== text) {
-          input.nextElementSibling.textContent = text;
-        }
+        if (input.nextElementSibling && input.nextElementSibling.textContent !== text) input.nextElementSibling.textContent = text;
       });
     });
   }
@@ -138,14 +139,14 @@
       const width = Number(rug.width || 0);
       const area = length * width;
       const rate = baseRate(rug);
-      const services = Array.isArray(rug.services) ? rug.services : [];
+      const services = Array.isArray(rug.services) ? [...new Set(rug.services)] : [];
 
       if (!(length > 0 && width > 0)) {
         errors.push(`Ковёр ${index + 1}: укажите длину и ширину`);
         return;
       }
       if (!rate) {
-        errors.push(`Ковёр ${index + 1}: укажите материал и ворс`);
+        errors.push(`Ковёр ${index + 1}: проверьте материал и ворс`);
         return;
       }
 
@@ -165,18 +166,17 @@
         lines.push(`${label}: ${areaText(area)} м² × ${price} ₽ = ${money(value)}`);
       };
 
-      addFixed('Кондиционер', PRICE.conditioner, 'Кондиционер');
+      addFixed('Удаление пятен', PRICE.stain, 'Пятна / слайм / пластилин / маркеры');
+      addArea('Вычёсывание шерсти и волос', PRICE.hair, 'Вычёсывание шерсти и волос');
       if (services.includes('Удаление запаха мочи')) {
         const value = area <= 6 ? PRICE.odorSmall : PRICE.odorLarge;
         subtotal += value;
         lines.push(`Удаление запаха мочи: ${money(value)}`);
       }
-      addArea('Вычёсывание шерсти и волос', PRICE.hair, 'Вычёсывание шерсти и волос');
-      addFixed('Удаление пятен', PRICE.stain, 'Удаление пятен');
+      addFixed('Дезинфекция', PRICE.disinfection, 'Дезинфекция / ковёр после потопа');
       addArea('Подъём ворса', PRICE.pileLift, 'Расчёсывание / подъём ворса');
-      addFixed('Дезинфекция', PRICE.disinfection, 'Дезинфекция');
-      addFixed('Удаление слайма / пластилина', PRICE.slimePlasticine, 'Удаление слайма / пластилина');
       addFixed('Озонация', PRICE.ozonation, 'Озонация');
+      addFixed('Кондиционер', PRICE.conditioner, 'Кондиционер');
       if (services.includes('Экспресс-стирка') && !expressAdded) {
         expressAdded = true;
         subtotal += PRICE.express;
@@ -225,12 +225,8 @@
     form.dataset.pricingV48 = '1';
 
     form.addEventListener('input', event => {
-      if (event.target?.id === 'discount' && !applyingCalculatedValues) {
-        event.target.dataset.manualDiscount = '1';
-      }
-      if (event.target?.matches('.rug-length, .rug-width, .rug-material, .rug-pile, .rug-services input, #discount')) {
-        scheduleCalculation();
-      }
+      if (event.target?.id === 'discount' && !applyingCalculatedValues) event.target.dataset.manualDiscount = '1';
+      if (event.target?.matches('.rug-length, .rug-width, .rug-material, .rug-pile, .rug-services input, #discount')) scheduleCalculation();
     });
 
     form.addEventListener('change', event => {
@@ -246,9 +242,7 @@
         calculatePrice();
         return;
       }
-      if (event.target?.matches('.rug-length, .rug-width, .rug-material, .rug-pile, .rug-services input, #discount')) {
-        scheduleCalculation();
-      }
+      if (event.target?.matches('.rug-length, .rug-width, .rug-material, .rug-pile, .rug-services input, #discount')) scheduleCalculation();
     });
 
     const rugs = qs('#rugsContainer');
@@ -313,7 +307,7 @@
     calculatePrice();
   }
 
-  window.PMK_PRICING_V48 = { calculatePrice, scheduleCalculation, baseRate };
+  window.PMK_PRICING_V48 = { PRICE, calculatePrice, scheduleCalculation, baseRate };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
 })();
