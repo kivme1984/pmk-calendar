@@ -23,7 +23,13 @@ h1{margin:0 0 12px;font-size:24px}p{margin:0;color:#c9c9c9;line-height:1.5}.stat
   const manual=document.querySelector('#manualOpen');
   const target='./?v=52&reset='+Date.now();
   const redirect=()=>location.replace(target);
-  const watchdog=setTimeout(()=>{status.textContent='Открываем исправленную версию…';manual.hidden=false;redirect();},8000);
+  const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  const watchdog=setTimeout(()=>{
+    status.textContent='Открываем исправленную версию…';
+    manual.hidden=false;
+    redirect();
+  },10000);
+
   try{
     if('serviceWorker' in navigator){
       const registrations=await navigator.serviceWorker.getRegistrations();
@@ -37,16 +43,16 @@ h1{margin:0 0 12px;font-size:24px}p{margin:0;color:#c9c9c9;line-height:1.5}.stat
     if('serviceWorker' in navigator){
       status.textContent='Устанавливаем исправленную сборку v52…';
       const registration=await navigator.serviceWorker.register('./sw.js?v=52-'+Date.now(),{updateViaCache:'none'});
-      await Promise.race([
-        registration.update().catch(()=>null),
-        new Promise(resolve=>setTimeout(resolve,3000)),
-      ]);
+      await registration.update().catch(()=>null);
+      status.textContent='Активируем новую сборку…';
+      await Promise.race([navigator.serviceWorker.ready,delay(4500)]);
     }
 
     clearTimeout(watchdog);
     status.textContent='Исправление установлено. Открываем приложение…';
     manual.hidden=false;
-    setTimeout(redirect,250);
+    await delay(300);
+    redirect();
   }catch(error){
     clearTimeout(watchdog);
     status.className='status error';
