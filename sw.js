@@ -1,4 +1,4 @@
-const CACHE = 'pmk-calendar-v41';
+const CACHE = 'pmk-calendar-v42';
 const ASSETS = [
   './',
   './index.html',
@@ -23,6 +23,7 @@ const ASSETS = [
   './smart-paste-v38.js',
   './smart-paste-lifecycle-v38.js',
   './auto-pricing-v40.js?v=41',
+  './empty-rug-dimensions-v42.js',
   './manifest.webmanifest',
   './version.json',
   './icons/icon-192.png',
@@ -84,12 +85,13 @@ self.addEventListener('fetch', event => {
           networkText('./smart-paste-v38.js'),
           networkText('./smart-paste-lifecycle-v38.js'),
           networkText('./auto-pricing-v40.js?v=41'),
+          networkText('./empty-rug-dimensions-v42.js'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
             'Content-Type': 'application/javascript; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '41',
+            'X-PMK-Version': '42',
           },
         });
         return cacheResponse(event.request, response);
@@ -114,7 +116,7 @@ self.addEventListener('fetch', event => {
           headers: {
             'Content-Type': 'text/css; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '41',
+            'X-PMK-Version': '42',
           },
         });
         return cacheResponse(event.request, response);
