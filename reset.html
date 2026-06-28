@@ -3,13 +3,55 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Обновление ПМК Календаря</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(520px,calc(100vw - 32px));padding:24px;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:#181818}h1{margin:0 0 12px;font-size:24px}p{margin:0;color:#c9c9c9;line-height:1.5}</style>
+<title>Обновление ПМК Календаря до v49</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
+main{width:min(520px,calc(100vw - 32px));padding:24px;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:#181818;box-sizing:border-box}
+h1{margin:0 0 12px;font-size:24px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:14px;color:#ffd15c}.error{color:#ff9b90}
+</style>
 </head>
 <body>
-<main><h1>Устанавливаем версию v47</h1><p>Улучшаем распознавание имени и распределение характеристик и услуг между первым, вторым и следующими коврами. Скидка за количество ковров отключена.</p></main>
+<main>
+  <h1>Устанавливаем версию v49</h1>
+  <p>Обновляем распознавание имени, адреса, времени и нескольких ковров. Настройки Google, локальные заявки и черновик сохранятся.</p>
+  <p id="status" class="status">Удаляем старый кеш…</p>
+</main>
 <script>
-(async()=>{try{if('serviceWorker'in navigator){const r=await navigator.serviceWorker.getRegistrations();await Promise.all(r.map(x=>x.unregister()))}if('caches'in window){const k=await caches.keys();await Promise.all(k.map(x=>caches.delete(x)))}}finally{location.replace('./?v=47&reset='+Date.now())}})();
+(async()=>{
+  const status=document.querySelector('#status');
+  const redirect=()=>location.replace('./?v=49&reset='+Date.now());
+  try{
+    if('serviceWorker' in navigator){
+      const registrations=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(item=>item.unregister()));
+    }
+    if('caches' in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.map(key=>caches.delete(key)));
+    }
+
+    if(!('serviceWorker' in navigator)){
+      status.textContent='Обновление готово. Запускаем приложение…';
+      redirect();
+      return;
+    }
+
+    status.textContent='Устанавливаем новую сборку v49…';
+    const registration=await navigator.serviceWorker.register('./sw.js?v=49',{updateViaCache:'none'});
+    await registration.update();
+
+    const ready=Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise(resolve=>setTimeout(resolve,4500)),
+    ]);
+    await ready;
+    status.textContent='Версия v49 установлена. Запускаем приложение…';
+    redirect();
+  }catch(error){
+    status.className='status error';
+    status.textContent='Не удалось завершить обновление: '+(error?.message||error)+'. Повторите ещё раз.';
+  }
+})();
 </script>
 </body>
 </html>
