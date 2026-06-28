@@ -3,7 +3,7 @@
 (() => {
   if (window.PMK_PRICING_V48) return;
 
-  const PRICE = Object.freeze({
+  const DEFAULT_PRICE = Object.freeze({
     noPile: 300,
     synthetic: 350,
     syntheticWide: 450,
@@ -20,6 +20,9 @@
     ozonation: 300,
     express: 1000,
     minimum: 1800,
+    regularDiscount: 10,
+    wideThreshold: 3,
+    odorAreaThreshold: 6,
   });
 
   let calculationTimer = 0;
@@ -30,19 +33,32 @@
   const areaText = value => Number(value || 0).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
   const clean = value => String(value || '').trim();
 
+  function priceTable() {
+    let custom = {};
+    try { custom = state?.settings?.pricing || {}; } catch {}
+    const table = {};
+    Object.entries(DEFAULT_PRICE).forEach(([key, fallback]) => {
+      const value = Number(custom?.[key]);
+      table[key] = Number.isFinite(value) && value >= 0 ? value : fallback;
+    });
+    table.regularDiscount = Math.min(100, table.regularDiscount);
+    return table;
+  }
+
   function baseRate(rug = {}) {
+    const price = priceTable();
     const material = clean(rug.material);
     const pile = clean(rug.pile);
     const width = Number(rug.width || 0);
 
     if (!material) return 0;
-    if (['Вискоза', 'Шёлк', 'Хлопок'].includes(material)) return PRICE.delicate;
-    if (material === 'Безворсный') return PRICE.noPile;
+    if (['Вискоза', 'Шёлк', 'Хлопок'].includes(material)) return price.delicate;
+    if (material === 'Безворсный') return price.noPile;
     if (!pile) return 0;
-    if (pile === 'Более 1 см') return PRICE.highPile;
-    if (material === 'Шерсть') return PRICE.wool;
-    if (material === 'Синтетика' && pile === 'Без ворса') return PRICE.noPile;
-    if (material === 'Синтетика' && pile === 'До 1 см') return width > 3 ? PRICE.syntheticWide : PRICE.synthetic;
+    if (pile === 'Более 1 см') return price.highPile;
+    if (material === 'Шерсть') return price.wool;
+    if (material === 'Синтетика' && pile === 'Без ворса') return price.noPile;
+    if (material === 'Синтетика' && pile === 'До 1 см') return width > price.wideThreshold ? price.syntheticWide : price.synthetic;
     return 0;
   }
 
@@ -55,7 +71,7 @@
     if (!toggle) {
       const row = document.createElement('label');
       row.className = 'toggle-row auto-price-toggle';
-      row.innerHTML = '<input type="checkbox" id="autoPrice"><span><strong>Рассчитать стоимость автоматически</strong><small>Расчёт по утверждённому прайсу без скидки за количество ковров.</small></span>';
+      row.innerHTML = '<input type="checkbox" id="autoPrice"><span><strong>Рассчитать стоимость автоматически</strong><small>Расчёт по прайсу из настроек без скидки за количество ковров.</small></span>';
       priceGrid.parentNode.insertBefore(row, priceGrid);
       toggle = qs('#autoPrice');
     }
@@ -72,19 +88,20 @@
   }
 
   function updateServiceLabels() {
+    const price = priceTable();
     const labels = {
-      'Удаление пятен': 'Пятна / слайм / пластилин / маркеры · 500 ₽/ковёр',
-      'Вычёсывание шерсти и волос': 'Вычёсывание шерсти и волос · 150 ₽/м²',
-      'Удаление запаха мочи': 'Удаление запаха мочи · 700 ₽ до 6 м² / 1000 ₽ свыше 6 м²',
-      'Дезинфекция': 'Дезинфекция / ковёр после потопа · 700 ₽/ковёр',
-      'Подъём ворса': 'Расчёсывание / подъём ворса · 150 ₽/м²',
-      'Озонация': 'Озонация · 300 ₽/ковёр',
-      'Кондиционер': 'Кондиционер · 300 ₽/ковёр',
-      'Экспресс-стирка': 'Экспресс-стирка · 1000 ₽/заказ',
+      'Удаление пятен': `Пятна / слайм / пластилин / маркеры · ${money(price.stain)}/ковёр`,
+      'Вычёсывание шерсти и волос': `Вычёсывание шерсти и волос · ${money(price.hair)}/м²`,
+      'Удаление запаха мочи': `Удаление запаха мочи · ${money(price.odorSmall)} до ${areaText(price.odorAreaThreshold)} м² / ${money(price.odorLarge)} свыше`,
+      'Дезинфекция': `Дезинфекция / ковёр после потопа · ${money(price.disinfection)}/ковёр`,
+      'Подъём ворса': `Расчёсывание / подъём ворса · ${money(price.pileLift)}/м²`,
+      'Озонация': `Озонация · ${money(price.ozonation)}/ковёр`,
+      'Кондиционер': `Кондиционер · ${money(price.conditioner)}/ковёр`,
+      'Экспресс-стирка': `Экспресс-стирка · ${money(price.express)}/заказ`,
     };
 
     Object.entries(labels).forEach(([value, text]) => {
-      document.querySelectorAll(`.rug-services input[value="${value}"]`).forEach(input => {
+      document.querySelectorAll(`.rug-services input[value="${value}"], .v51-services input[value="${value}"]`).forEach(input => {
         if (input.nextElementSibling && input.nextElementSibling.textContent !== text) input.nextElementSibling.textContent = text;
       });
     });
@@ -100,7 +117,7 @@
 
   function currentDiscount() {
     const input = qs('#discount');
-    if (!input) return qs('#regularCustomer')?.checked ? 10 : 0;
+    if (!input) return qs('#regularCustomer')?.checked ? priceTable().regularDiscount : 0;
     const value = clampDiscount(input.value);
     if (String(value) !== input.value) input.value = String(value);
     return value;
@@ -110,7 +127,7 @@
     const regular = qs('#regularCustomer');
     const discount = qs('#discount');
     if (!regular || !discount) return;
-    if (regular.checked && (force || discount.dataset.manualDiscount !== '1')) discount.value = '10';
+    if (regular.checked && (force || discount.dataset.manualDiscount !== '1')) discount.value = String(priceTable().regularDiscount);
     if (!regular.checked && force) discount.value = '0';
   }
 
@@ -118,6 +135,7 @@
     if (!ensurePricingUI()) return;
     updateServiceLabels();
 
+    const price = priceTable();
     const toggle = qs('#autoPrice');
     const priceInput = qs('#estimatedPrice');
     const breakdown = qs('#autoPriceBreakdown');
@@ -154,33 +172,33 @@
       subtotal += base;
       lines.push(`Ковёр ${index + 1}: ${areaText(area)} м² × ${rate} ₽ = ${money(base)}`);
 
-      const addFixed = (service, price, label) => {
+      const addFixed = (service, value, label) => {
         if (!services.includes(service)) return;
-        subtotal += price;
-        lines.push(`${label}: ${money(price)}`);
-      };
-      const addArea = (service, price, label) => {
-        if (!services.includes(service)) return;
-        const value = Math.round(area * price);
         subtotal += value;
-        lines.push(`${label}: ${areaText(area)} м² × ${price} ₽ = ${money(value)}`);
+        lines.push(`${label}: ${money(value)}`);
+      };
+      const addArea = (service, value, label) => {
+        if (!services.includes(service)) return;
+        const amount = Math.round(area * value);
+        subtotal += amount;
+        lines.push(`${label}: ${areaText(area)} м² × ${value} ₽ = ${money(amount)}`);
       };
 
-      addFixed('Удаление пятен', PRICE.stain, 'Пятна / слайм / пластилин / маркеры');
-      addArea('Вычёсывание шерсти и волос', PRICE.hair, 'Вычёсывание шерсти и волос');
+      addFixed('Удаление пятен', price.stain, 'Пятна / слайм / пластилин / маркеры');
+      addArea('Вычёсывание шерсти и волос', price.hair, 'Вычёсывание шерсти и волос');
       if (services.includes('Удаление запаха мочи')) {
-        const value = area <= 6 ? PRICE.odorSmall : PRICE.odorLarge;
+        const value = area <= price.odorAreaThreshold ? price.odorSmall : price.odorLarge;
         subtotal += value;
         lines.push(`Удаление запаха мочи: ${money(value)}`);
       }
-      addFixed('Дезинфекция', PRICE.disinfection, 'Дезинфекция / ковёр после потопа');
-      addArea('Подъём ворса', PRICE.pileLift, 'Расчёсывание / подъём ворса');
-      addFixed('Озонация', PRICE.ozonation, 'Озонация');
-      addFixed('Кондиционер', PRICE.conditioner, 'Кондиционер');
+      addFixed('Дезинфекция', price.disinfection, 'Дезинфекция / ковёр после потопа');
+      addArea('Подъём ворса', price.pileLift, 'Расчёсывание / подъём ворса');
+      addFixed('Озонация', price.ozonation, 'Озонация');
+      addFixed('Кондиционер', price.conditioner, 'Кондиционер');
       if (services.includes('Экспресс-стирка') && !expressAdded) {
         expressAdded = true;
-        subtotal += PRICE.express;
-        lines.push(`Экспресс-заказ: ${money(PRICE.express)}`);
+        subtotal += price.express;
+        lines.push(`Экспресс-заказ: ${money(price.express)}`);
       }
     });
 
@@ -202,11 +220,11 @@
 
     const discount = currentDiscount();
     const discounted = Math.round(subtotal * (100 - discount) / 100);
-    const total = Math.max(discounted, PRICE.minimum);
+    const total = Math.max(discounted, price.minimum);
     setCalculatedPrice(total);
 
     if (discount) lines.push(`Скидка ${discount}%: −${money(subtotal - discounted)}`);
-    if (total > discounted) lines.push(`Минимальный заказ: ${money(PRICE.minimum)}`);
+    if (total > discounted) lines.push(`Минимальный заказ: ${money(price.minimum)}`);
     lines.push(`Итого: ${money(total)}`);
 
     breakdown.className = 'auto-price-breakdown success';
@@ -226,7 +244,7 @@
 
     form.addEventListener('input', event => {
       if (event.target?.id === 'discount' && !applyingCalculatedValues) event.target.dataset.manualDiscount = '1';
-      if (event.target?.matches('.rug-length, .rug-width, .rug-material, .rug-pile, .rug-services input, #discount')) scheduleCalculation();
+      if (event.target?.matches('.rug-length, .rug-width, .rug-material, .rug-pile, .rug-services input, .v51-services input, #discount')) scheduleCalculation();
     });
 
     form.addEventListener('change', event => {
@@ -242,7 +260,7 @@
         calculatePrice();
         return;
       }
-      if (event.target?.matches('.rug-length, .rug-width, .rug-material, .rug-pile, .rug-services input, #discount')) scheduleCalculation();
+      if (event.target?.matches('.rug-length, .rug-width, .rug-material, .rug-pile, .rug-services input, .v51-services input, #discount')) scheduleCalculation();
     });
 
     const rugs = qs('#rugsContainer');
@@ -251,8 +269,15 @@
       new MutationObserver(() => {
         updateServiceLabels();
         scheduleCalculation();
-      }).observe(rugs, { childList: true });
+      }).observe(rugs, { childList: true, subtree: true });
     }
+
+    window.addEventListener('pmk-pricing-updated', () => {
+      const discount = qs('#discount');
+      if (qs('#regularCustomer')?.checked && discount?.dataset.manualDiscount !== '1') syncRegularCustomerDiscount(true);
+      updateServiceLabels();
+      calculatePrice();
+    });
   }
 
   ensurePricingUI();
@@ -307,7 +332,7 @@
     calculatePrice();
   }
 
-  window.PMK_PRICING_V48 = { PRICE, calculatePrice, scheduleCalculation, baseRate };
+  window.PMK_PRICING_V48 = { DEFAULT_PRICE, priceTable, calculatePrice, scheduleCalculation, baseRate };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
 })();
