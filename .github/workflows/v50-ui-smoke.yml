@@ -1,0 +1,33 @@
+name: V50 Chrome smoke
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install driver
+        run: |
+          npm init -y
+          npm install playwright-core@1.53.0
+      - name: Start site
+        run: |
+          mkdir -p artifacts
+          python3 -m http.server 4173 > /tmp/pmk-http.log 2>&1 &
+          sleep 2
+      - name: Check mobile UI
+        run: node tests/v50_ui_smoke.mjs
+      - name: Upload screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v50-smoke
+          path: artifacts/*.png
+          if-no-files-found: ignore
