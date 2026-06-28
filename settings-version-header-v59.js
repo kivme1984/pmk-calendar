@@ -12,7 +12,7 @@
       if (!response.ok) throw new Error('version unavailable');
       return await response.json();
     } catch {
-      return { version: '59', release: 'settings-layout-update', date: '2026-06-28' };
+      return { version: '62', release: 'remove-planning-refresh-button', date: '2026-06-28' };
     }
   }
 
@@ -29,10 +29,10 @@
     panel.innerHTML = `
       <div class="settings-version-info">
         <span class="settings-version-label">Версия приложения</span>
-        <strong id="settingsVersionValue">v59</strong>
+        <strong id="settingsVersionValue">v62</strong>
         <small id="settingsVersionRelease">Основная версия</small>
       </div>
-      <a id="settingsUpdateButton" class="button button-primary settings-update-button" href="./reset.html?v=59-settings">
+      <a id="settingsUpdateButton" class="button button-primary settings-update-button" href="./reset.html?v=62-settings">
         Обновить приложение
       </a>`;
 
@@ -40,7 +40,7 @@
     oldUpdate?.remove();
 
     const info = await loadVersion();
-    const version = String(info?.version || '59');
+    const version = String(info?.version || '62');
     $('#settingsVersionValue').textContent = `v${version}`;
     $('#settingsVersionRelease').textContent = info?.date
       ? `Установленная сборка · ${info.date}`
