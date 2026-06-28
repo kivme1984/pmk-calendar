@@ -1,6 +1,6 @@
 {
-  "version": "38",
-  "release": "smart-paste",
+  "version": "39",
+  "release": "address-autocomplete",
   "date": "2026-06-28",
   "features": [
     "stable-service-worker",
@@ -15,6 +15,9 @@
     "smart-paste-draft-recovery",
     "returning-client-search",
     "mobile-width-before-length",
-    "google-freeform-event-import"
+    "google-freeform-event-import",
+    "cloudflare-address-proxy",
+    "dadata-address-suggestions",
+    "automatic-district-selection"
   ]
 }
