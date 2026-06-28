@@ -1,4 +1,4 @@
-const CACHE = 'pmk-calendar-v33';
+const CACHE = 'pmk-calendar-v37';
 const ASSETS = [
   './',
   './index.html',
@@ -6,11 +6,20 @@ const ASSETS = [
   './styles.css?v=30',
   './manager-planner.css?v=32',
   './address-autocomplete.css?v=33',
-  './app.js?v=30',
+  './mobile-rug-layout.css?v=36',
+  './app.js?v=37',
   './manager-planner-core.js',
   './manager-planner-hooks.js',
   './address-autocomplete.js?v=33',
+  './stability-route.js?v=34',
+  './stability-cache.js?v=34',
+  './stability-copy.js?v=34',
+  './stability-draft.js?v=34',
+  './returning-client-search.js?v=35',
+  './google-freeform-import.js?v=36',
+  './runtime-stability-v37.js',
   './manifest.webmanifest',
+  './version.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
 ];
@@ -28,8 +37,12 @@ self.addEventListener('activate', event => {
     const keys = await caches.keys();
     await Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)));
     await self.clients.claim();
+
+    // Перезагрузка разрешена только после явного перехода через reset.html.
     const clients = await self.clients.matchAll({ type: 'window' });
-    await Promise.all(clients.map(client => client.navigate(client.url)));
+    await Promise.all(clients
+      .filter(client => /[?&]reset=/.test(client.url))
+      .map(client => client.navigate(client.url)));
   })());
 });
 
@@ -39,6 +52,12 @@ async function networkText(url) {
   return response.text();
 }
 
+async function cacheResponse(request, response) {
+  const cache = await caches.open(CACHE);
+  await cache.put(request, response.clone());
+  return response;
+}
+
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) return;
   const requestUrl = new URL(event.request.url);
@@ -46,15 +65,27 @@ self.addEventListener('fetch', event => {
   if (requestUrl.pathname.endsWith('/app.js')) {
     event.respondWith((async () => {
       try {
-        const [app, core, hooks, address] = await Promise.all([
-          networkText('./app.js?v=30'),
+        const parts = await Promise.all([
+          networkText('./app.js?v=37'),
           networkText('./manager-planner-core.js'),
           networkText('./manager-planner-hooks.js'),
           networkText('./address-autocomplete.js?v=33'),
+          networkText('./stability-route.js?v=34'),
+          networkText('./stability-cache.js?v=34'),
+          networkText('./stability-copy.js?v=34'),
+          networkText('./stability-draft.js?v=34'),
+          networkText('./returning-client-search.js?v=35'),
+          networkText('./google-freeform-import.js?v=36'),
+          networkText('./runtime-stability-v37.js'),
         ]);
-        return new Response(`${app}\n\n${core}\n\n${hooks}\n\n${address}`, {
-          headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-store' },
+        const response = new Response(parts.join('\n\n'), {
+          headers: {
+            'Content-Type': 'application/javascript; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-PMK-Version': '37',
+          },
         });
+        return cacheResponse(event.request, response);
       } catch {
         return caches.match(event.request);
       }
@@ -65,14 +96,20 @@ self.addEventListener('fetch', event => {
   if (requestUrl.pathname.endsWith('/styles.css')) {
     event.respondWith((async () => {
       try {
-        const [base, manager, address] = await Promise.all([
+        const parts = await Promise.all([
           networkText('./styles.css?v=30'),
           networkText('./manager-planner.css?v=32'),
           networkText('./address-autocomplete.css?v=33'),
+          networkText('./mobile-rug-layout.css?v=36'),
         ]);
-        return new Response(`${base}\n\n${manager}\n\n${address}`, {
-          headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'no-store' },
+        const response = new Response(parts.join('\n\n'), {
+          headers: {
+            'Content-Type': 'text/css; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-PMK-Version': '37',
+          },
         });
+        return cacheResponse(event.request, response);
       } catch {
         return caches.match(event.request);
       }
@@ -80,19 +117,13 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  const networkFirst = event.request.mode === 'navigate' || /\.(?:html)$/.test(requestUrl.pathname);
+  const networkFirst = event.request.mode === 'navigate' || /\.(?:html|js|css|json|webmanifest)$/.test(requestUrl.pathname);
   if (networkFirst) {
-    event.respondWith(fetch(event.request).then(response => {
-      const clone = response.clone();
-      caches.open(CACHE).then(cache => cache.put(event.request, clone));
-      return response;
-    }).catch(() => caches.match(event.request)));
+    event.respondWith(fetch(event.request, { cache: 'no-store' })
+      .then(response => cacheResponse(event.request, response))
+      .catch(() => caches.match(event.request)));
     return;
   }
 
-  event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-    const clone = response.clone();
-    caches.open(CACHE).then(cache => cache.put(event.request, clone));
-    return response;
-  })));
+  event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => cacheResponse(event.request, response))));
 });
