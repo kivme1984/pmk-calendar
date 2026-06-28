@@ -1,15 +1,15 @@
 {
-  "version": "63",
-  "release": "safe-service-worker-recovery",
+  "version": "64",
+  "release": "instant-local-bundle-and-safe-mode",
   "date": "2026-06-28",
   "features": [
-    "main-release-v62-features",
-    "safe-update-without-deleting-working-cache-first",
-    "recovery-page-for-stuck-installed-app",
-    "partial-cache-failures-no-longer-block-activation",
-    "optional-modules-no-longer-break-main-app-bundle",
-    "preserve-local-data-google-settings-events-and-drafts",
-    "remove-update-button-from-planning",
-    "conditional-collapsible-client-note"
+    "main-release-v63-features",
+    "prebuilt-local-javascript-bundle",
+    "prebuilt-local-css-bundle",
+    "instant-cache-first-app-launch",
+    "network-timeouts-during-installation",
+    "safe-mode-without-service-worker",
+    "safe-client-note-without-global-mutation-observer",
+    "preserve-local-data-google-settings-events-and-drafts"
   ]
 }
