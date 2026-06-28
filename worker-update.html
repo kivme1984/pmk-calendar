@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Обновление адресного Worker ПМК</title>
+  <style>
+    body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:Arial,sans-serif;background:#111;color:#f5f5f5}
+    main{width:min(720px,calc(100vw - 28px));padding:22px;border:1px solid #333;border-radius:16px;background:#1a1a1a;box-sizing:border-box}
+    h1{margin:0 0 10px;font-size:24px}p{color:#c7c7c7;line-height:1.5}button{width:100%;padding:14px;border:0;border-radius:12px;background:#f7b500;font-weight:800;font-size:16px;cursor:pointer}pre{max-height:42vh;overflow:auto;white-space:pre-wrap;padding:14px;border-radius:12px;background:#0c0c0c;color:#d7d7d7;font:12px/1.45 monospace}.ok{color:#99e5b5}.bad{color:#ff9b90}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Исправленный Worker для мобильного адреса</h1>
+  <p>Нажмите кнопку, затем вставьте код целиком в редактор Cloudflare Worker вместо старого кода и нажмите Deploy. Секрет DADATA_API_KEY останется сохранённым.</p>
+  <button id="copy">Скопировать исправленный Worker</button>
+  <p id="status"></p>
+  <pre id="code">Загрузка кода…</pre>
+</main>
+<script>
+(async()=>{
+  const code=document.querySelector('#code'),status=document.querySelector('#status'),button=document.querySelector('#copy');
+  try{
+    const response=await fetch('./cloudflare-worker-dadata-compact.js?v=46',{cache:'no-store'});
+    if(!response.ok)throw new Error('Не удалось загрузить код');
+    code.textContent=await response.text();
+    button.onclick=async()=>{
+      try{await navigator.clipboard.writeText(code.textContent);status.className='ok';status.textContent='Код скопирован. Вставьте его в Cloudflare Worker и нажмите Deploy.'}
+      catch{status.className='bad';status.textContent='Автокопирование заблокировано. Выделите код ниже вручную и скопируйте.'}
+    };
+  }catch(error){code.textContent='Ошибка загрузки';status.className='bad';status.textContent=error.message;button.disabled=true}
+})();
+</script>
+</body>
+</html>
