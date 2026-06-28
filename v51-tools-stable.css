@@ -1,4 +1,11 @@
-.v51-tools-stable{display:grid;gap:10px;margin:0 0 14px}
+.v51-tools-stable{display:grid;gap:10px;margin:0 0 14px;position:relative;z-index:105}
 .v51-tools-stable .v51-tools-panel{display:none}
 .v51-tools-stable.is-open .v51-tools-panel{display:grid}
 .v51-tools-stable.is-open .v51-tools-toggle span{transform:rotate(180deg)}
+body.v51-tools-open .v50-sticky-actions{display:none!important}
+body.v51-tools-open{padding-bottom:18px!important}
+.v51-draft-notice{display:grid;gap:12px;margin:0 0 14px;padding:14px;border:1px solid #efc94c;border-radius:16px;background:#fff7d4;color:#4b3a00}
+.v51-draft-text{display:flex;align-items:flex-start;gap:10px}.v51-draft-text>span{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#f4b900;color:white;font-weight:900;flex:0 0 auto}
+.v51-draft-text div{display:grid;gap:2px}.v51-draft-text strong{font-size:17px}.v51-draft-text small{font-size:13px;color:#765f16}
+.v51-draft-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}.v51-draft-buttons button{min-height:44px;border-radius:12px;font:inherit;font-weight:800}
+.v51-draft-buttons button:first-child{border:0;background:#ffc400;color:#111}.v51-draft-buttons button:last-child{border:1px solid #d9b23a;background:#fff;color:#8b4f00}
