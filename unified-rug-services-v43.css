@@ -1,0 +1,18 @@
+/* Unified rug services v43 */
+.rug-details-grid.rug-services-only {
+  grid-template-columns: 1fr;
+}
+.rug-service-section {
+  min-width: 0;
+}
+.rug-services-only .chip-grid {
+  margin-bottom: 6px;
+}
+@media (max-width: 760px) {
+  .rug-services-only .chip-grid {
+    gap: 7px;
+  }
+  .rug-services-only .chip-grid span {
+    padding: 8px 10px;
+  }
+}
