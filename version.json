@@ -1,6 +1,6 @@
 {
-  "version": "40",
-  "release": "auto-pricing-and-rug-types",
+  "version": "41",
+  "release": "pile-combing-and-address-diagnostics",
   "date": "2026-06-28",
   "features": [
     "stable-service-worker",
@@ -22,6 +22,10 @@
     "compact-address-fields",
     "shaggy-and-fiber-type-recognition",
     "optional-automatic-price-calculation",
-    "automatic-regular-customer-discount"
+    "automatic-regular-customer-discount",
+    "pile-combing-keyword-recognition",
+    "pile-combing-150-per-square-meter",
+    "address-service-exact-error-messages",
+    "address-service-test-page"
   ]
 }
