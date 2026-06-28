@@ -1,0 +1,4 @@
+.v51-tools-stable{display:grid;gap:10px;margin:0 0 14px}
+.v51-tools-stable .v51-tools-panel{display:none}
+.v51-tools-stable.is-open .v51-tools-panel{display:grid}
+.v51-tools-stable.is-open .v51-tools-toggle span{transform:rotate(180deg)}
