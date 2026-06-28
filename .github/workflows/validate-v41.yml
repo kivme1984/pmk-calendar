@@ -1,0 +1,37 @@
+name: Validate PMK Calendar v41
+
+on:
+  push:
+    paths:
+      - '.github/workflows/validate-v41.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate syntax and release wiring
+        run: |
+          node --check app.js
+          node --check address-autocomplete.js
+          node --check auto-pricing-v40.js
+          node --check sw.js
+          grep -q "pmk-calendar-v41" sw.js
+          grep -q "150" auto-pricing-v40.js
+          grep -q "Расчёсывание ворса" auto-pricing-v40.js
+          grep -q "addressErrorMessage" address-autocomplete.js
+          grep -q '"version": "41"' version.json
+
+      - name: Remove one-time workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/validate-v41.yml
+          git commit -m "Complete v41 validation"
+          git push
