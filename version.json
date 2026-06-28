@@ -1,6 +1,6 @@
 {
-  "version": "45",
-  "release": "extended-smart-parser-and-complete-pricing",
+  "version": "46",
+  "release": "mobile-address-manual-discount-compact-services",
   "date": "2026-06-28",
   "features": [
     "stable-service-worker",
@@ -39,6 +39,10 @@
     "disinfection-700-per-rug",
     "slime-plasticine-500-per-rug",
     "ozonation-300-per-rug",
-    "express-1000-per-order"
+    "express-1000-per-order",
+    "mobile-pwa-address-get-transport",
+    "cloudflare-null-origin-cors-fix",
+    "manual-discount-override",
+    "two-row-rug-services"
   ]
 }
