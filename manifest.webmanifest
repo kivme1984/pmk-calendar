@@ -1,8 +1,9 @@
 {
-  "name": "ПМК Календарь",
+  "name": "ПМК Календарь v49",
   "short_name": "ПМК",
   "description": "Оформление заявок Промой Ковер через Google Calendar",
-  "start_url": "./",
+  "start_url": "./?v=49",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f3f3f1",
   "theme_color": "#171717",
