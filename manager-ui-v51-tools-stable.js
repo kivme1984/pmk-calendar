@@ -3,7 +3,15 @@
 (() => {
   const $ = (selector, root = document) => root.querySelector(selector);
 
-  function openEditor(action) {
+  function setOpen(section, open) {
+    section.classList.toggle('is-open', open);
+    section.querySelector('.v51-tools-toggle')?.setAttribute('aria-expanded', String(open));
+    document.body.classList.toggle('v51-tools-open', open);
+    if (open) requestAnimationFrame(() => section.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+  }
+
+  function openEditor(action, section) {
+    setOpen(section, false);
     const summary = $('#v50Summary');
     if (!summary) return;
     const proxy = summary.querySelector(`[data-v50-action="${action}"]`);
@@ -37,13 +45,10 @@
       </div>`;
 
     const toggle = section.querySelector('.v51-tools-toggle');
-    toggle.addEventListener('click', () => {
-      const open = section.classList.toggle('is-open');
-      toggle.setAttribute('aria-expanded', String(open));
-    });
+    toggle.addEventListener('click', () => setOpen(section, !section.classList.contains('is-open')));
     section.addEventListener('click', event => {
       const button = event.target.closest('[data-v51-action]');
-      if (button) openEditor(button.dataset.v51Action);
+      if (button) openEditor(button.dataset.v51Action, section);
     });
     return section;
   }
