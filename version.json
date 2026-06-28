@@ -1,12 +1,12 @@
 {
-  "version": "53",
-  "release": "android-autofill-save-prompt-disabled",
+  "version": "54",
+  "release": "selected-time-only-in-event-preview",
   "date": "2026-06-28",
   "features": [
-    "main-release-v52-features",
-    "disable-android-address-save-prompts",
-    "disable-browser-personal-data-autofill",
-    "preserve-internal-dadata-address-search",
+    "main-release-v53-features",
+    "show-only-selected-visit-time-in-event-description",
+    "remove-other-district-windows-from-event-preview",
+    "preserve-android-autofill-save-prompt-fix",
     "preserve-google-settings-local-events-and-drafts",
     "editable-calculator-price-list",
     "no-freeze-after-update"
