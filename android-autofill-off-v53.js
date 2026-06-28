@@ -29,11 +29,6 @@
     input.setAttribute('autocorrect', 'off');
     input.setAttribute('autocapitalize', input.id === 'customerName' ? 'words' : 'none');
     input.spellcheck = false;
-
-    if (input.hasAttribute('name')) {
-      input.dataset.pmkOriginalName = input.getAttribute('name') || '';
-      input.removeAttribute('name');
-    }
   }
 
   function addAutofillDecoys(form) {
