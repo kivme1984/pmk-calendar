@@ -1,4 +1,4 @@
-const CACHE = 'pmk-calendar-v46';
+const CACHE = 'pmk-calendar-v47';
 const ASSETS = [
   './',
   './index.html',
@@ -27,10 +27,11 @@ const ASSETS = [
   './smart-paste-lifecycle-v38.js',
   './smart-parser-v45.js',
   './smart-parser-v45-runtime-fix.js',
+  './smart-parser-v47.js',
   './auto-pricing-v40.js?v=44',
   './empty-rug-dimensions-v42.js',
   './unified-rug-services-v43.js?v=45',
-  './complete-pricing-v45.js?v=46',
+  './complete-pricing-v45.js?v=47',
   './manifest.webmanifest',
   './version.json',
   './icons/icon-192.png',
@@ -94,16 +95,17 @@ self.addEventListener('fetch', event => {
           networkText('./smart-paste-lifecycle-v38.js'),
           networkText('./smart-parser-v45.js'),
           networkText('./smart-parser-v45-runtime-fix.js'),
+          networkText('./smart-parser-v47.js'),
           networkText('./auto-pricing-v40.js?v=44'),
           networkText('./empty-rug-dimensions-v42.js'),
           networkText('./unified-rug-services-v43.js?v=45'),
-          networkText('./complete-pricing-v45.js?v=46'),
+          networkText('./complete-pricing-v45.js?v=47'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
             'Content-Type': 'application/javascript; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '46',
+            'X-PMK-Version': '47',
           },
         });
         return cacheResponse(event.request, response);
@@ -129,7 +131,7 @@ self.addEventListener('fetch', event => {
           headers: {
             'Content-Type': 'text/css; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '46',
+            'X-PMK-Version': '47',
           },
         });
         return cacheResponse(event.request, response);
