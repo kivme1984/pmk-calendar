@@ -49,30 +49,29 @@
     return '';
   }
 
-  function assignmentMarkers(text = '') {
-    const pattern = /(^|[\s,.;:—–-])(?:на|для|у)\s+(перв(?:ом|ого|ому|ый)|втор(?:ом|ого|ому|ой)|трет(?:ьем|ьего|ьему|ий)|четв[её]рт(?:ом|ого|ому|ый)|пят(?:ом|ого|ому|ый))(?=$|[\s,.;:—–-])/gim;
+  function explicitAssignments(text = '') {
+    const ordinal = 'перв(?:ом|ого|ому|ый)|втор(?:ом|ого|ому|ой)|трет(?:ьем|ьего|ьему|ий)|четв[её]рт(?:ом|ого|ому|ый)|пят(?:ом|ого|ому|ый)';
+    const pattern = new RegExp(`(?:на|для|у)\\s+(${ordinal})\\s+([\\s\\S]*?)(?=(?:на|для|у)\\s+(?:${ordinal})\\s+|$)`, 'gi');
     const result = [];
     let match;
     while ((match = pattern.exec(text))) {
-      const index = ordinalIndex(match[2]);
-      if (index >= 0) result.push({ index, start: match.index + (match[1]?.length || 0), end: pattern.lastIndex });
+      const index = ordinalIndex(match[1]);
+      const segment = clean(match[2]);
+      if (index >= 0 && segment) result.push({ index, segment });
     }
     return result;
   }
 
   function applyAssignments(text, rugs = []) {
-    const markers = assignmentMarkers(text);
-    if (!markers.length) return rugs;
+    const assignments = explicitAssignments(text);
+    if (!assignments.length) return rugs;
     const result = rugs.map(rug => ({ ...rug, services: unique(rug.services || []) }));
 
-    markers.forEach((marker, position) => {
-      while (result.length <= marker.index) {
+    assignments.forEach(({ index, segment }) => {
+      while (result.length <= index) {
         result.push({ length: 0, width: 0, material: '', pile: '', issues: [], services: [] });
       }
-      const next = markers[position + 1];
-      const segment = clean(text.slice(marker.end, next?.start ?? text.length));
-      if (!segment) return;
-      const rug = result[marker.index];
+      const rug = result[index];
       rug.material = material(segment) || rug.material || '';
       rug.pile = pile(segment) || rug.pile || '';
       rug.services = unique([...(rug.services || []), ...services(segment)]);
@@ -83,8 +82,7 @@
 
   function clearDimensionTime(parsed, text) {
     const note = clean(parsed.timeNote || '').toLowerCase();
-    const looksLikeDimension = /^(?:на\s+)?(?:\d+(?:[.,]\d+)?|один|два|три|четыре|пять|полтора)$/i.test(note)
-      || /^на\s+(?:\d+(?:[.,]\d+)?|один|два|три|четыре|пять|полтора)$/i.test(note);
+    const looksLikeDimension = /^(?:на\s+)?(?:\d+(?:[.,]\d+)?|один|два|три|четыре|пять|полтора)$/i.test(note);
     const hasDimensionContext = /(?:размер|ков[её]р)[^.!?\n]{0,80}(?:\d+(?:[.,]\d+)?|один|два|три|четыре|пять|полтора)\s+на\s+(?:\d+(?:[.,]\d+)?|один|два|три|четыре|пять|полтора)/i.test(text);
     if (looksLikeDimension && hasDimensionContext) {
       parsed.startTime = '';
@@ -102,5 +100,5 @@
     return result;
   };
 
-  window.PMK_SMART_ASSIGNMENTS_V47 = { applyAssignments, clearDimensionTime };
+  window.PMK_SMART_ASSIGNMENTS_V47 = { applyAssignments, clearDimensionTime, explicitAssignments };
 })();
