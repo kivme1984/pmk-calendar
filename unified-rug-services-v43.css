@@ -1,18 +1,59 @@
-/* Unified rug services v43 */
+/* Unified rug services v46 */
 .rug-details-grid.rug-services-only {
   grid-template-columns: 1fr;
 }
+
 .rug-service-section {
   min-width: 0;
 }
-.rug-services-only .chip-grid {
+
+.rug-services-only .rug-services {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
   margin-bottom: 6px;
 }
+
+.rug-services-only .rug-services label {
+  min-width: 0;
+  margin: 0;
+}
+
+.rug-services-only .rug-services span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  height: 100%;
+  padding: 8px 9px;
+  text-align: center;
+  line-height: 1.2;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
 @media (max-width: 760px) {
-  .rug-services-only .chip-grid {
+  .rug-services-only .rug-services {
+    grid-template-columns: none;
+    grid-template-rows: repeat(2, minmax(44px, auto));
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(145px, 46vw);
     gap: 7px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 2px 8px;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
   }
-  .rug-services-only .chip-grid span {
-    padding: 8px 10px;
+
+  .rug-services-only .rug-services label {
+    scroll-snap-align: start;
+  }
+
+  .rug-services-only .rug-services span {
+    min-height: 44px;
+    padding: 7px 8px;
+    font-size: 11px;
   }
 }
