@@ -45,17 +45,14 @@
       const action = event.target.closest('[data-v50-draft]')?.dataset.v50Draft;
       if (action === 'view') {
         document.body.classList.add('v50-full-form');
-        $('#v50Summary')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setTimeout(() => $('.form-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+        setTimeout(() => $('.form-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
       }
       if (action === 'delete') {
         if (!window.confirm('Удалить незавершённую заявку?')) return;
         keys.forEach(key => {
           try { localStorage.removeItem(key); } catch {}
         });
-        try {
-          if (typeof resetForm === 'function') resetForm(true);
-        } catch {}
+        try { if (typeof resetForm === 'function') resetForm(true); } catch {}
         notice.remove();
       }
     });
@@ -68,9 +65,7 @@
     if (!card) return;
     card.classList.add('v50-smart-paste-compact');
     const heading = $('.section-heading', card);
-    if (heading) {
-      $$('p,small', heading).forEach(node => { node.hidden = true; });
-    }
+    if (heading) $$('p,small', heading).forEach(node => { node.hidden = true; });
     $$(':scope > p, :scope > .helper-text, :scope > .hint, :scope > small', card).forEach(node => {
       if (!node.closest('#smartPasteResult')) node.hidden = true;
     });
@@ -80,7 +75,7 @@
     const grid = $('.v50-automation-grid');
     if (!grid) return;
     grid.classList.add('v50-automation-grid-compact');
-    $('[data-v50-action="paste"]', grid)?.remove();
+    $$('[data-v50-action="paste"]', grid).forEach(button => button.remove());
     const labels = {
       client: ['👤', 'Клиент'],
       address: ['📍', 'Адрес'],
@@ -120,8 +115,7 @@
       matched.set(definition.label, label);
       label.classList.add('v50-service-chip');
       label.dataset.v50Service = definition.label;
-      const textNodes = [...label.childNodes].filter(node => node.nodeType === Node.TEXT_NODE);
-      textNodes.forEach(node => node.remove());
+      [...label.childNodes].filter(node => node.nodeType === 3).forEach(node => node.remove());
       let text = $('.v50-service-text', label);
       if (!text) {
         text = document.createElement('span');
@@ -131,15 +125,18 @@
       text.textContent = definition.label;
     });
 
-    const chosen = [...matched.values()];
+    const chosen = serviceDefinitions.map(item => matched.get(item.label)).filter(Boolean);
     if (!chosen.length) return;
-    const grid = document.createElement('div');
-    grid.className = 'v50-service-grid';
-    chosen.forEach(label => grid.append(label));
 
     const first = chosen[0];
-    const parent = first.parentElement;
-    if (parent) parent.insertBefore(grid, parent.firstChild);
+    const originalParent = first.parentElement;
+    if (!originalParent) return;
+
+    const grid = document.createElement('div');
+    grid.className = 'v50-service-grid';
+    originalParent.insertBefore(grid, first);
+    chosen.forEach(label => grid.append(label));
+
     card.dataset.v50ServicesRefined = '1';
   }
 
