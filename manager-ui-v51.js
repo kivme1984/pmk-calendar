@@ -7,14 +7,13 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const SERVICES = [
-    ['Удаление пятен', 'Пятна · 500 ₽'],
-    ['Удаление слайма / пластилина', 'Слайм / маркеры · 600 ₽'],
+    ['Удаление пятен', 'Пятна / слайм / пластилин / маркеры · 500 ₽'],
     ['Удаление запаха мочи', 'Запах мочи · 700/1000 ₽'],
+    ['Дезинфекция', 'Дезинфекция / после потопа · 700 ₽'],
     ['Кондиционер', 'Кондиционер · 300 ₽'],
     ['Вычёсывание шерсти и волос', 'Шерсть / волосы · 150 ₽/м²'],
-    ['Озонация', 'Озон · 300 ₽'],
     ['Подъём ворса', 'Подъём ворса · 150 ₽/м²'],
-    ['Дезинфекция', 'Дезинфекция · 700 ₽'],
+    ['Озонация', 'Озон · 300 ₽'],
     ['Экспресс-стирка', 'Экспресс · 1000 ₽'],
   ];
 
@@ -22,14 +21,13 @@
     const selected = new Set();
     $$('input[type="checkbox"]:checked', root).forEach(input => {
       const value = String(input.value || '');
-      if (/слайм|пластилин|маркер/i.test(value)) selected.add('Удаление слайма / пластилина');
-      else if (/пят/i.test(value)) selected.add('Удаление пятен');
+      if (/пят|слайм|пластилин|маркер/i.test(value)) selected.add('Удаление пятен');
       if (/запах.*моч|моч[аи]/i.test(value)) selected.add('Удаление запаха мочи');
+      if (/дезинф|потоп|мокр/i.test(value)) selected.add('Дезинфекция');
       if (/кондиционер/i.test(value)) selected.add('Кондиционер');
       if (/шерст|волос|выч[её]с/i.test(value)) selected.add('Вычёсывание шерсти и волос');
-      if (/озон/i.test(value)) selected.add('Озонация');
       if (/подъ[её]м.*ворс|расч[её]с|расчес/i.test(value)) selected.add('Подъём ворса');
-      if (/дезинф/i.test(value)) selected.add('Дезинфекция');
+      if (/озон/i.test(value)) selected.add('Озонация');
       if (/экспресс/i.test(value)) selected.add('Экспресс-стирка');
     });
     return selected;
