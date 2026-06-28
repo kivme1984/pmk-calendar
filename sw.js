@@ -1,4 +1,4 @@
-const CACHE = 'pmk-calendar-v37';
+const CACHE = 'pmk-calendar-v38';
 const ASSETS = [
   './',
   './index.html',
@@ -7,7 +7,7 @@ const ASSETS = [
   './manager-planner.css?v=32',
   './address-autocomplete.css?v=33',
   './mobile-rug-layout.css?v=36',
-  './app.js?v=37',
+  './app.js?v=38',
   './manager-planner-core.js',
   './manager-planner-hooks.js',
   './address-autocomplete.js?v=33',
@@ -18,6 +18,7 @@ const ASSETS = [
   './returning-client-search.js?v=35',
   './google-freeform-import.js?v=36',
   './runtime-stability-v37.js',
+  './smart-paste-v38.js',
   './manifest.webmanifest',
   './version.json',
   './icons/icon-192.png',
@@ -38,7 +39,6 @@ self.addEventListener('activate', event => {
     await Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)));
     await self.clients.claim();
 
-    // Перезагрузка разрешена только после явного перехода через reset.html.
     const clients = await self.clients.matchAll({ type: 'window' });
     await Promise.all(clients
       .filter(client => /[?&]reset=/.test(client.url))
@@ -66,7 +66,7 @@ self.addEventListener('fetch', event => {
     event.respondWith((async () => {
       try {
         const parts = await Promise.all([
-          networkText('./app.js?v=37'),
+          networkText('./app.js?v=38'),
           networkText('./manager-planner-core.js'),
           networkText('./manager-planner-hooks.js'),
           networkText('./address-autocomplete.js?v=33'),
@@ -77,12 +77,13 @@ self.addEventListener('fetch', event => {
           networkText('./returning-client-search.js?v=35'),
           networkText('./google-freeform-import.js?v=36'),
           networkText('./runtime-stability-v37.js'),
+          networkText('./smart-paste-v38.js'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
             'Content-Type': 'application/javascript; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '37',
+            'X-PMK-Version': '38',
           },
         });
         return cacheResponse(event.request, response);
@@ -106,7 +107,7 @@ self.addEventListener('fetch', event => {
           headers: {
             'Content-Type': 'text/css; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '37',
+            'X-PMK-Version': '38',
           },
         });
         return cacheResponse(event.request, response);
