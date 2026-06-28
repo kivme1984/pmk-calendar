@@ -78,7 +78,9 @@
 
   function currentPricing() {
     try {
-      return normalized(state?.settings?.pricing || {});
+      const source = { ...(state?.settings?.pricing || {}) };
+      if (source.minimum === undefined && Number.isFinite(Number(state?.settings?.minimumOrder))) source.minimum = Number(state.settings.minimumOrder);
+      return normalized(source);
     } catch {
       return normalized({});
     }
@@ -95,7 +97,7 @@
   }
 
   function cardMarkup() {
-    return `<details class="form-card pricing-settings-card" open>
+    return `<details id="pricingSettingsCard" class="form-card pricing-settings-card" open>
       <summary>Прайс калькулятора</summary>
       <p class="pricing-settings-intro">Все значения хранятся на этом устройстве и применяются сразу после сохранения настроек.</p>
       <div class="pricing-settings-groups">
@@ -160,12 +162,11 @@
     if (!grid) return false;
 
     const wrapper = document.createElement('div');
-    wrapper.id = 'pricingSettingsCard';
     wrapper.innerHTML = cardMarkup();
     const rulesCard = $('#minimumOrderSetting')?.closest('.form-card');
-    if (rulesCard?.nextSibling) grid.insertBefore(wrapper.firstElementChild, rulesCard.nextSibling);
-    else grid.appendChild(wrapper.firstElementChild);
-    wrapper.remove();
+    const card = wrapper.firstElementChild;
+    if (rulesCard?.nextSibling) grid.insertBefore(card, rulesCard.nextSibling);
+    else grid.appendChild(card);
 
     $('#minimumOrderSetting')?.closest('.field')?.classList.add('pmk-price-legacy-minimum');
     fill();
