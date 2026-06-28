@@ -3,53 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Обновление ПМК Календаря до v51</title>
+<title>Обновление ПМК Календаря до v52</title>
 <style>
 body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
 main{width:min(520px,calc(100vw - 32px));padding:24px;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:#181818;box-sizing:border-box}
-h1{margin:0 0 12px;font-size:24px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:14px;color:#ffd15c}.error{color:#ff9b90}
+h1{margin:0 0 12px;font-size:24px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:14px;color:#ffd15c}.error{color:#ff9b90}a{display:inline-flex;margin-top:16px;color:#111;background:#f7b500;border-radius:10px;padding:12px 16px;font-weight:800;text-decoration:none}
 </style>
 </head>
 <body>
 <main>
-  <h1>Устанавливаем версию v51</h1>
-  <p>Обновляем интерфейс менеджера, быстрые действия, калькулятор и редактируемый прайс. Настройки Google, локальные заявки и черновики сохранятся.</p>
+  <h1>Устанавливаем исправление v52</h1>
+  <p>Убираем зависание после обновления. Настройки Google, локальные заявки и черновики сохранятся.</p>
   <p id="status" class="status">Удаляем старый кеш…</p>
+  <a id="manualOpen" href="./?v=52" hidden>Открыть приложение</a>
 </main>
 <script>
 (async()=>{
   const status=document.querySelector('#status');
-  const redirect=()=>location.replace('./?v=51&reset='+Date.now());
+  const manual=document.querySelector('#manualOpen');
+  const target='./?v=52&reset='+Date.now();
+  const redirect=()=>location.replace(target);
+  const watchdog=setTimeout(()=>{status.textContent='Открываем исправленную версию…';manual.hidden=false;redirect();},8000);
   try{
     if('serviceWorker' in navigator){
       const registrations=await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map(item=>item.unregister()));
+      await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
     }
     if('caches' in window){
       const keys=await caches.keys();
-      await Promise.all(keys.map(key=>caches.delete(key)));
+      await Promise.all(keys.map(key=>caches.delete(key).catch(()=>false)));
     }
 
-    if(!('serviceWorker' in navigator)){
-      status.textContent='Обновление готово. Запускаем приложение…';
-      redirect();
-      return;
+    if('serviceWorker' in navigator){
+      status.textContent='Устанавливаем исправленную сборку v52…';
+      const registration=await navigator.serviceWorker.register('./sw.js?v=52-'+Date.now(),{updateViaCache:'none'});
+      await Promise.race([
+        registration.update().catch(()=>null),
+        new Promise(resolve=>setTimeout(resolve,3000)),
+      ]);
     }
 
-    status.textContent='Устанавливаем новую сборку v51…';
-    const registration=await navigator.serviceWorker.register('./sw.js?v=51',{updateViaCache:'none'});
-    await registration.update();
-
-    const ready=Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise(resolve=>setTimeout(resolve,4500)),
-    ]);
-    await ready;
-    status.textContent='Версия v51 установлена. Запускаем приложение…';
-    redirect();
+    clearTimeout(watchdog);
+    status.textContent='Исправление установлено. Открываем приложение…';
+    manual.hidden=false;
+    setTimeout(redirect,250);
   }catch(error){
+    clearTimeout(watchdog);
     status.className='status error';
-    status.textContent='Не удалось завершить обновление: '+(error?.message||error)+'. Повторите ещё раз.';
+    status.textContent='Автоматическая установка не завершилась. Нажмите «Открыть приложение».';
+    manual.hidden=false;
+    manual.href=target;
   }
 })();
 </script>
