@@ -1,7 +1,7 @@
-const VERSION='57';
+const VERSION='58';
 const CACHE=`pmk-calendar-v${VERSION}`;
 const JS=[
-  './app.js?v=57','./manager-planner-core.js','./manager-planner-hooks.js',
+  './app.js?v=58','./manager-planner-core.js','./manager-planner-hooks.js',
   './address-autocomplete.js?v=41','./address-mobile-v46.js','./stability-route.js?v=34',
   './stability-cache.js?v=34','./stability-copy.js?v=34','./stability-draft.js?v=34',
   './google-freeform-import.js?v=36','./runtime-stability-v37.js',
@@ -15,14 +15,15 @@ const JS=[
   './manager-ui-v51-tools-stable.js?v=68','./manager-ui-v51-draft.js?v=68',
   './android-autofill-off-v53.js?v=55','./preview-description-v53.js?v=54',
   './edit-save-hotfix-v54.js?v=55','./address-placeholders-off-v56.js?v=56',
-  './client-info-sticky-v57.js?v=57'
+  './client-info-sticky-v57.js?v=57','./workshop-measurement-v58.js?v=58'
 ];
 const CSS=[
-  './styles.css?v=57','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
+  './styles.css?v=58','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
   './mobile-rug-layout.css?v=36','./manager-form-v40.css','./unified-rug-services-v43.css?v=46',
   './manager-ui-v50-preview.css?v=68','./manager-ui-v50-refinements.css?v=68',
   './manager-ui-v51.css?v=68','./v51-tools-stable.css?v=68','./pricing-settings-v67.css?v=69',
-  './preview-readability-v56.css?v=56','./client-info-sticky-v57.css?v=57'
+  './preview-readability-v56.css?v=56','./client-info-sticky-v57.css?v=57',
+  './workshop-measurement-v58.css?v=58'
 ];
 const ASSETS=[
   './','./index.html','./reset.html','./v51-preview.html','./address-test.html','./worker-update.html',
@@ -69,8 +70,8 @@ self.addEventListener('fetch',event=>{
           'Cache-Control':'no-store','X-PMK-Version':VERSION
         }}));
       }catch(error){
-        console.error('PMK v57 bundle error',error);
-        return fallback(event.request,'./app.js?v=57');
+        console.error('PMK v58 bundle error',error);
+        return fallback(event.request,'./app.js?v=58');
       }
     })());
     return;
@@ -85,8 +86,8 @@ self.addEventListener('fetch',event=>{
           'Cache-Control':'no-store','X-PMK-Version':VERSION
         }}));
       }catch(error){
-        console.error('PMK v57 styles error',error);
-        return fallback(event.request,'./styles.css?v=57');
+        console.error('PMK v58 styles error',error);
+        return fallback(event.request,'./styles.css?v=58');
       }
     })());
     return;
