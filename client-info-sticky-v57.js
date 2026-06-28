@@ -5,54 +5,66 @@
   window.PMK_CLIENT_INFO_STICKY_V57 = true;
 
   const $ = (selector, root = document) => root.querySelector(selector);
-  let saveTimer = 0;
+  let syncing = false;
 
-  function updateState() {
-    const card = $('#smartPasteCard');
-    const textarea = $('#smartPasteInput');
-    const status = $('#pmkClientDraftStatus');
-    if (!card || !textarea) return;
-    card.classList.toggle('pmk-client-draft-has-text', Boolean(textarea.value.trim()));
-    if (status) status.textContent = textarea.value.trim() ? 'Сохранено' : 'Пусто';
+  function createMirror() {
+    if ($('#pmkClientInfoMirror')) return $('#pmkClientInfoMirror');
+    const panel = document.createElement('section');
+    panel.id = 'pmkClientInfoMirror';
+    panel.className = 'pmk-client-info-mirror';
+    panel.innerHTML = `
+      <label for="pmkClientInfoMirrorInput">Информация клиента</label>
+      <textarea id="pmkClientInfoMirrorInput" rows="3"></textarea>`;
+    document.body.appendChild(panel);
+    return panel;
   }
 
-  function markSaving() {
-    const status = $('#pmkClientDraftStatus');
-    if (status) status.textContent = 'Сохраняем…';
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(updateState, 450);
+  function syncFromMain() {
+    if (syncing) return;
+    const source = $('#smartPasteInput');
+    const mirror = $('#pmkClientInfoMirrorInput');
+    if (!source || !mirror || mirror.value === source.value) return;
+    syncing = true;
+    mirror.value = source.value;
+    syncing = false;
+  }
+
+  function syncFromMirror() {
+    if (syncing) return;
+    const source = $('#smartPasteInput');
+    const mirror = $('#pmkClientInfoMirrorInput');
+    if (!source || !mirror || source.value === mirror.value) return;
+    syncing = true;
+    source.value = mirror.value;
+    source.dispatchEvent(new Event('input', { bubbles: true }));
+    syncing = false;
   }
 
   function install() {
     const card = $('#smartPasteCard');
-    const textarea = $('#smartPasteInput');
-    if (!card || !textarea) return false;
+    const source = $('#smartPasteInput');
+    if (!card || !source) return false;
     if (card.dataset.pmkClientInfoSticky === '1') return true;
 
     card.dataset.pmkClientInfoSticky = '1';
-    card.classList.add('pmk-client-info-sticky');
-    textarea.rows = 3;
+    card.classList.add('pmk-client-info-start');
 
-    const heading = $('.smart-paste-heading', card);
-    const title = $('h2', heading || card);
-    const icon = $('.smart-paste-heading > span', card);
-    if (title) title.textContent = 'Информация клиента — черновик';
-    if (icon) icon.textContent = '✎';
+    const title = $('.smart-paste-heading h2', card);
+    if (title) title.textContent = 'Информация клиента';
 
-    if (heading && !$('#pmkClientDraftStatus', card)) {
-      const status = document.createElement('span');
-      status.id = 'pmkClientDraftStatus';
-      status.className = 'pmk-client-draft-status';
-      status.textContent = 'Пусто';
-      heading.append(status);
-    }
+    const mirrorPanel = createMirror();
+    const mirror = $('#pmkClientInfoMirrorInput', mirrorPanel);
+    mirror.value = source.value;
 
-    textarea.addEventListener('input', markSaving);
-    $('#smartPasteClearBtn')?.addEventListener('click', () => setTimeout(updateState, 0));
-    $('#smartPasteClipboardBtn')?.addEventListener('click', () => setTimeout(updateState, 250));
-    $('#smartPasteParseBtn')?.addEventListener('click', () => setTimeout(updateState, 0));
+    source.addEventListener('input', syncFromMain);
+    mirror.addEventListener('input', syncFromMirror);
+    $('#smartPasteClearBtn')?.addEventListener('click', () => setTimeout(syncFromMain, 0));
+    $('#smartPasteClipboardBtn')?.addEventListener('click', () => setTimeout(syncFromMain, 250));
+    $('#smartPasteParseBtn')?.addEventListener('click', () => setTimeout(syncFromMain, 0));
 
-    updateState();
+    const bodyObserver = new MutationObserver(syncFromMain);
+    bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
     document.body.classList.add('pmk-client-info-sticky-ready');
     return true;
   }
