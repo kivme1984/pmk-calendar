@@ -11,8 +11,7 @@ const JS=[
   './empty-rug-dimensions-v42.js','./unified-rug-services-v43.js?v=68','./pricing-v48.js?v=68',
   './pricing-settings-v67.js?v=68','./manager-ui-v50-preview.js?v=68',
   './manager-ui-v50-refinements.js?v=68','./manager-ui-v51.js?v=68',
-  './manager-ui-v51-fix.js?v=68','./manager-ui-v51-tools-stable.js?v=68',
-  './manager-ui-v51-draft.js?v=68'
+  './manager-ui-v51-tools-stable.js?v=68','./manager-ui-v51-draft.js?v=68'
 ];
 const CSS=[
   './styles.css?v=51','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
