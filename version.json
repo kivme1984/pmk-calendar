@@ -1,17 +1,15 @@
 {
-  "version": "57",
-  "release": "full-calendar-client-search-and-persistent-client-draft",
+  "version": "58",
+  "release": "workshop-rug-measurement",
   "date": "2026-06-28",
   "features": [
-    "main-release-v56-features",
-    "load-all-google-calendar-pages",
+    "main-release-v57-features",
+    "workshop-measurement-checkbox",
+    "show-rug-count-input-when-workshop-measurement-enabled",
+    "save-workshop-measurement-in-google-event",
+    "show-rug-count-in-event-title-and-description",
+    "preserve-hidden-rug-details-when-toggling-mode",
     "search-clients-across-entire-calendar",
-    "recognize-legacy-events-by-name-phone-and-address",
-    "show-up-to-30-client-results",
-    "persistent-client-information-text-field-in-all-form-tabs",
-    "full-smart-paste-tools-only-on-start-page",
-    "preserve-client-draft-between-tabs",
-    "preserve-edited-order-save-fix",
-    "preserve-android-autofill-save-prompt-fix"
+    "persistent-client-information-text-field-in-all-form-tabs"
   ]
 }
