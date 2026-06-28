@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Безопасный запуск ПМК</title>
+<style>
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}button{width:100%;min-height:48px;margin-top:18px;border:0;border-radius:12px;color:#171717;background:#f7b500;font-weight:800;font-size:15px}
+</style>
+</head>
+<body>
+<main>
+<h1>Безопасный запуск</h1>
+<p>Запускаем базовую версию напрямую, без повреждённого service worker. Заявки, настройки и черновики остаются на устройстве.</p>
+<p id="status" class="status">Отключаем повреждённый кэш…</p>
+<button id="retry" type="button" hidden>Повторить запуск</button>
+</main>
+<script>
+(() => {
+  const status=document.querySelector('#status');
+  const retry=document.querySelector('#retry');
+
+  async function launch(){
+    retry.hidden=true;
+    status.className='status';
+    status.textContent='Отключаем повреждённый кэш…';
+    try{
+      if('serviceWorker' in navigator){
+        const registrations=await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
+      }
+      if('caches' in window){
+        const keys=await caches.keys();
+        await Promise.all(keys.filter(key=>key.startsWith('pmk-calendar-')).map(key=>caches.delete(key).catch(()=>false)));
+      }
+      status.textContent='Загружаем приложение напрямую…';
+      const response=await fetch(`./index.html?safe-source=${Date.now()}`,{cache:'no-store'});
+      if(!response.ok)throw new Error(`index.html: ${response.status}`);
+      let html=await response.text();
+      const guard=`<script>window.PMK_SAFE_MODE=true;try{navigator.serviceWorker.register=()=>Promise.reject(new Error('safe mode'));}catch(e){}<\/script>`;
+      html=html.replace(/<link rel="manifest"[^>]*>/i,'');
+      html=html.replace(/<script src="app\.js[^>]*><\/script>/i,`${guard}<script src="app.js?safe=${Date.now()}" defer><\/script>`);
+      document.open();
+      document.write(html);
+      document.close();
+    }catch(error){
+      status.className='status error';
+      status.textContent=`Безопасный запуск не выполнен: ${error.message}`;
+      retry.hidden=false;
+    }
+  }
+
+  retry.addEventListener('click',launch);
+  launch();
+})();
+</script>
+</body>
+</html>
