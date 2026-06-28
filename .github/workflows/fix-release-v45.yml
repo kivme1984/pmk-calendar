@@ -1,0 +1,184 @@
+name: Fix and release PMK Calendar v45
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-release-v45.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Patch parser, pricing and release wiring
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          parser = Path('smart-parser-v45.js')
+          text = parser.read_text()
+          replacements = {
+            "два: 2, две: 2, второго:": "два: 2, две: 2, двух: 2, второго:",
+            "три: 3, третьего:": "три: 3, трех: 3, трёх: 3, третьего:",
+            "четыре: 4, четвертого:": "четыре: 4, четырех: 4, четырёх: 4, четвертого:",
+            "пять: 5, пятого:": "пять: 5, пяти: 5, пятого:",
+            "шесть: 6, шестого:": "шесть: 6, шести: 6, шестого:",
+            "семь: 7, седьмого:": "семь: 7, семи: 7, седьмого:",
+            "восемь: 8, восьмого:": "восемь: 8, восьми: 8, восьмого:",
+            "девять: 9, девятого:": "девять: 9, девяти: 9, девятого:",
+            "десять: 10, одиннадцать: 11, двенадцать: 12, тринадцать: 13, четырнадцать: 14,": "десять: 10, десяти: 10, одиннадцать: 11, одиннадцати: 11, двенадцать: 12, двенадцати: 12, тринадцать: 13, тринадцати: 13, четырнадцать: 14, четырнадцати: 14,",
+            "пятнадцать: 15, шестнадцать: 16, семнадцать: 17, восемнадцать: 18, девятнадцать: 19,": "пятнадцать: 15, пятнадцати: 15, шестнадцать: 16, шестнадцати: 16, семнадцать: 17, семнадцати: 17, восемнадцать: 18, восемнадцати: 18, девятнадцать: 19, девятнадцати: 19,",
+            "двадцать: 20, тридцать: 30, сорок: 40, пятьдесят: 50,": "двадцать: 20, двадцати: 20, тридцать: 30, тридцати: 30, сорок: 40, сорока: 40, пятьдесят: 50, пятидесяти: 50,",
+            "шестьдесят: 60, семьдесят: 70, восемьдесят: 80, девяносто: 90,": "шестьдесят: 60, шестидесяти: 60, семьдесят: 70, семидесяти: 70, восемьдесят: 80, восьмидесяти: 80, девяносто: 90, девяноста: 90,",
+          }
+          for old, new in replacements.items():
+              if old in text and new not in text:
+                  text = text.replace(old, new)
+          parser.write_text(text)
+
+          pricing = Path('auto-pricing-v40.js')
+          text = pricing.read_text()
+          if 'disinfectionPerRug: 700' not in text:
+              text = text.replace(
+                  "    pileLiftPerM2: 150,\n    minOrder: 1800,",
+                  "    pileLiftPerM2: 150,\n    disinfectionPerRug: 700,\n    slimePlasticinePerRug: 500,\n    ozonationPerRug: 300,\n    expressPerOrder: 1000,\n    minOrder: 1800,"
+              )
+          start = text.find('  const MANUAL_PRICE_SERVICES = new Set([')
+          if start >= 0:
+              end = text.find('  ]);', start)
+              if end >= 0:
+                  text = text[:start] + '  const MANUAL_PRICE_SERVICES = new Set();' + text[end + 5:]
+          if 'let expressAdded = false;' not in text:
+              text = text.replace('    let subtotal = 0;\n\n    rugs.forEach', '    let subtotal = 0;\n    let expressAdded = false;\n\n    rugs.forEach')
+          marker = """      if (services.includes('Подъём ворса')) {
+        const value = Math.round(area * SITE_PRICING.pileLiftPerM2);
+        subtotal += value;
+        lines.push(`Расчёсывание / подъём ворса: ${area.toFixed(2).replace('.00', '')} м² × ${SITE_PRICING.pileLiftPerM2} ₽ = ${formatMoney(value)}`);
+      }
+"""
+          if "lines.push(`Дезинфекция:" not in text:
+              addition = marker + """      if (services.includes('Дезинфекция')) {
+        subtotal += SITE_PRICING.disinfectionPerRug;
+        lines.push(`Дезинфекция: ${formatMoney(SITE_PRICING.disinfectionPerRug)}`);
+      }
+      if (services.includes('Удаление слайма / пластилина')) {
+        subtotal += SITE_PRICING.slimePlasticinePerRug;
+        lines.push(`Удаление слайма / пластилина: ${formatMoney(SITE_PRICING.slimePlasticinePerRug)}`);
+      }
+      if (services.includes('Озонация')) {
+        subtotal += SITE_PRICING.ozonationPerRug;
+        lines.push(`Озонация: ${formatMoney(SITE_PRICING.ozonationPerRug)}`);
+      }
+      if (services.includes('Экспресс-стирка') && !expressAdded) {
+        subtotal += SITE_PRICING.expressPerOrder;
+        expressAdded = true;
+        lines.push(`Экспресс-заказ: ${formatMoney(SITE_PRICING.expressPerOrder)}`);
+      }
+"""
+              text = text.replace(marker, addition)
+          pricing.write_text(text)
+
+          services = Path('unified-rug-services-v43.js')
+          text = services.read_text()
+          for old, new in {
+              'Дезинфекция · цена вручную': 'Дезинфекция · 700 ₽/ковёр',
+              'Удаление слайма / пластилина · цена вручную': 'Удаление слайма / пластилина · 500 ₽/ковёр',
+              'Озонация · цена вручную': 'Озонация · 300 ₽/ковёр',
+              'Экспресс-стирка · цена вручную': 'Экспресс-стирка · 1000 ₽/заказ',
+          }.items():
+              text = text.replace(old, new)
+          services.write_text(text)
+
+          sw = Path('sw.js')
+          text = sw.read_text().replace('pmk-calendar-v44', 'pmk-calendar-v45').replace("'X-PMK-Version': '44'", "'X-PMK-Version': '45'")
+          if "'./smart-parser-v45.js'," not in text:
+              text = text.replace("  './smart-paste-lifecycle-v38.js',", "  './smart-paste-lifecycle-v38.js',\n  './smart-parser-v45.js',")
+          if "networkText('./smart-parser-v45.js')," not in text:
+              text = text.replace("          networkText('./smart-paste-lifecycle-v38.js'),", "          networkText('./smart-paste-lifecycle-v38.js'),\n          networkText('./smart-parser-v45.js'),")
+          text = text.replace('auto-pricing-v40.js?v=44', 'auto-pricing-v40.js?v=45')
+          text = text.replace('unified-rug-services-v43.js?v=44', 'unified-rug-services-v43.js?v=45')
+          sw.write_text(text)
+
+          reset = Path('reset.html')
+          text = reset.read_text().replace('версию v44', 'версию v45').replace('?v=44&reset=', '?v=45&reset=')
+          text = text.replace('Синхронизируем весь автоматический расчёт и скидки с калькулятором на сайте «Промой Ковер».', 'Расширяем голосовое распознавание заявок и добавляем полный расчёт всех дополнительных услуг.')
+          reset.write_text(text)
+
+          version = Path('version.json')
+          data = json.loads(version.read_text())
+          data['version'] = '45'
+          data['release'] = 'extended-smart-parser-and-complete-pricing'
+          additions = [
+              'voice-friendly-russian-number-parser', 'spoken-address-and-access-recognition',
+              'spoken-rug-dimensions-and-services', 'disinfection-700-per-rug',
+              'slime-plasticine-500-per-rug', 'ozonation-300-per-rug', 'express-1000-per-order'
+          ]
+          for item in additions:
+              if item not in data['features']:
+                  data['features'].append(item)
+          version.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
+          PY
+
+      - name: Validate syntax
+        run: |
+          node --check smart-parser-v45.js
+          node --check auto-pricing-v40.js
+          node --check unified-rug-services-v43.js
+          node --check sw.js
+
+      - name: Test dictated order
+        run: |
+          cat > /tmp/test-parser.js <<'NODE'
+          global.window = global;
+          global.document = { readyState: 'complete', addEventListener() {} };
+          global.qs = () => null;
+          global.state = { selectedDayKey: '2026-06-28' };
+          global.businessTodayKey = () => '2026-06-28';
+          global.dateKeyForDisplay = key => new Date(`${key}T12:00:00Z`);
+          global.addDaysToKey = (key, days) => { const d = new Date(`${key}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10); };
+          global.addMinutesToTime = (value, minutes) => { const [h,m] = value.split(':').map(Number); const total = h*60+m+minutes; return `${String(Math.floor(total/60)%24).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; };
+          global.REQUEST_DURATION_MINUTES = 30;
+          global.setTimeout = () => 0;
+          require(process.cwd() + '/smart-parser-v45.js');
+          const parsed = global.PMK_SMART_PARSER_V45.parseText('Клиент Ольга. Адрес улица Коминтерна дом сто пятнадцать, квартира сорок пять, пятый подъезд, третий этаж. Ковер шегги два на три, пятна, шерсть, дезинфекция, озонация и расчесывание ворса. Постоянный клиент, завтра с трех до пяти вечера.');
+          const check = (value, message) => { if (!value) throw new Error(message + '\n' + JSON.stringify(parsed, null, 2)); };
+          check(parsed.customerName === 'Ольга', 'name');
+          check(parsed.street.toLowerCase().includes('коминтерна'), 'street');
+          check(parsed.houseNumber === '115', 'house');
+          check(parsed.apartmentNumber === '45', 'apartment');
+          check(parsed.entrance === '5', 'entrance');
+          check(parsed.floor === '3', 'floor');
+          check(parsed.rugs.length === 1 && parsed.rugs[0].length === 2 && parsed.rugs[0].width === 3, 'dimensions');
+          check(parsed.rugs[0].material === 'Синтетика' && parsed.rugs[0].pile === 'Более 1 см', 'shaggy');
+          for (const service of ['Удаление пятен','Вычёсывание шерсти и волос','Дезинфекция','Озонация','Подъём ворса']) check(parsed.rugs[0].services.includes(service), service);
+          check(parsed.regularCustomer, 'regular');
+          check(parsed.startTime === '15:00' && parsed.endTime === '17:00', 'time');
+          NODE
+          node /tmp/test-parser.js
+
+      - name: Validate release values
+        run: |
+          grep -q 'disinfectionPerRug: 700' auto-pricing-v40.js
+          grep -q 'slimePlasticinePerRug: 500' auto-pricing-v40.js
+          grep -q 'ozonationPerRug: 300' auto-pricing-v40.js
+          grep -q 'expressPerOrder: 1000' auto-pricing-v40.js
+          grep -q 'smart-parser-v45.js' sw.js
+          grep -q 'pmk-calendar-v45' sw.js
+          grep -q '"version": "45"' version.json
+
+      - name: Commit release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add smart-parser-v45.js auto-pricing-v40.js unified-rug-services-v43.js sw.js reset.html version.json
+          git rm -f .github/workflows/fix-release-v45.yml
+          test ! -f .github/workflows/validate-v45.yml || git rm -f .github/workflows/validate-v45.yml
+          git commit -m 'Release voice parser and complete pricing v45'
+          git push
