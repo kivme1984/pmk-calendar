@@ -8,8 +8,11 @@ body.v50-manager-preview .v50-summary{display:grid;gap:14px;margin:0 0 18px}
 body.v50-manager-preview .v50-source-section{display:none!important}
 body.v50-manager-preview.v50-full-form .v50-source-section{display:block!important}
 body.v50-manager-preview.v50-full-form #v50Summary{display:none}
-body.v50-manager-preview.v50-full-form .form-layout{display:grid}
-body.v50-manager-preview:not(.v50-full-form) .form-layout{display:none!important}
+body.v50-manager-preview .form-layout{display:grid!important}
+body.v50-manager-preview:not(.v50-full-form) .form-layout>.form-column{display:contents}
+body.v50-manager-preview:not(.v50-full-form) .form-actions{display:none!important}
+body.v50-manager-preview.v50-full-form .form-layout>.form-column{display:block}
+body.v50-manager-preview.v50-full-form .form-actions{display:flex!important}
 
 .v50-status{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #b9dfc2;border-radius:16px;background:#effaf1;color:#1f6d2f}
 .v50-status>span{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#5cbf70;color:white;font-weight:900;font-size:20px;flex:0 0 auto}
