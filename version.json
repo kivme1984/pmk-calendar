@@ -1,16 +1,17 @@
 {
-  "version": "56",
-  "release": "preview-readability-and-clean-address-fields",
+  "version": "57",
+  "release": "full-calendar-client-search-and-persistent-client-draft",
   "date": "2026-06-28",
   "features": [
-    "main-release-v55-features",
-    "high-contrast-event-preview",
-    "white-preview-text-on-dark-background",
-    "larger-preview-font",
-    "remove-address-field-examples",
-    "remove-address-search-placeholder",
+    "main-release-v56-features",
+    "load-all-google-calendar-pages",
+    "search-clients-across-entire-calendar",
+    "recognize-legacy-events-by-name-phone-and-address",
+    "show-up-to-30-client-results",
+    "persistent-client-information-text-field-in-all-form-tabs",
+    "full-smart-paste-tools-only-on-start-page",
+    "preserve-client-draft-between-tabs",
     "preserve-edited-order-save-fix",
-    "preserve-android-autofill-save-prompt-fix",
-    "preserve-google-settings-local-events-and-drafts"
+    "preserve-android-autofill-save-prompt-fix"
   ]
 }
