@@ -1,16 +1,14 @@
 {
-  "version": "52",
-  "release": "manager-ui-freeze-hotfix",
+  "version": "53",
+  "release": "android-autofill-save-prompt-disabled",
   "date": "2026-06-28",
   "features": [
-    "main-release-v51-features",
-    "fixed-infinite-mutation-observer-loop",
-    "no-freeze-after-update",
-    "safer-reset-installer",
-    "forced-new-service-worker-cache",
+    "main-release-v52-features",
+    "disable-android-address-save-prompts",
+    "disable-browser-personal-data-autofill",
+    "preserve-internal-dadata-address-search",
+    "preserve-google-settings-local-events-and-drafts",
     "editable-calculator-price-list",
-    "correct-synthetic-width-threshold",
-    "single-stain-service",
-    "preserve-google-settings-local-events-and-drafts"
+    "no-freeze-after-update"
   ]
 }
