@@ -1,22 +1,28 @@
-const VERSION='49';
+const VERSION='51';
 const CACHE=`pmk-calendar-v${VERSION}`;
 const JS=[
-  './app.js?v=38','./manager-planner-core.js','./manager-planner-hooks.js',
+  './app.js?v=51','./manager-planner-core.js','./manager-planner-hooks.js',
   './address-autocomplete.js?v=41','./address-mobile-v46.js','./stability-route.js?v=34',
   './stability-cache.js?v=34','./stability-copy.js?v=34','./stability-draft.js?v=34',
   './returning-client-search.js?v=35','./google-freeform-import.js?v=36','./runtime-stability-v37.js',
   './smart-paste-v38.js','./smart-paste-lifecycle-v38.js','./smart-parser-v45.js',
   './smart-parser-v45-runtime-fix.js','./smart-parser-v47.js','./smart-parser-v47-name-fix.js',
   './smart-parser-v47-assignments.js','./hotfix-parser-v48.js','./parser-real-case-v49.js?v=49',
-  './empty-rug-dimensions-v42.js','./unified-rug-services-v43.js?v=45','./pricing-v48.js'
+  './empty-rug-dimensions-v42.js','./unified-rug-services-v43.js?v=68','./pricing-v48.js?v=68',
+  './pricing-settings-v67.js?v=68','./manager-ui-v50-preview.js?v=68',
+  './manager-ui-v50-refinements.js?v=68','./manager-ui-v51.js?v=68',
+  './manager-ui-v51-fix.js?v=68','./manager-ui-v51-tools-stable.js?v=68',
+  './manager-ui-v51-draft.js?v=68'
 ];
 const CSS=[
-  './styles.css?v=30','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
-  './mobile-rug-layout.css?v=36','./manager-form-v40.css','./unified-rug-services-v43.css?v=46'
+  './styles.css?v=51','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
+  './mobile-rug-layout.css?v=36','./manager-form-v40.css','./unified-rug-services-v43.css?v=46',
+  './manager-ui-v50-preview.css?v=68','./manager-ui-v50-refinements.css?v=68',
+  './manager-ui-v51.css?v=68','./v51-tools-stable.css?v=68','./pricing-settings-v67.css?v=68'
 ];
 const ASSETS=[
-  './','./index.html','./reset.html','./v49.html','./address-test.html','./worker-update.html',
-  './manifest.webmanifest','./manifest-v49.webmanifest','./version.json',
+  './','./index.html','./reset.html','./v51-preview.html','./address-test.html','./worker-update.html',
+  './manifest.webmanifest','./version.json',
   './icons/icon-192.png','./icons/icon-512.png',...JS,...CSS
 ];
 
@@ -59,8 +65,8 @@ self.addEventListener('fetch',event=>{
           'Cache-Control':'no-store','X-PMK-Version':VERSION
         }}));
       }catch(error){
-        console.error('PMK v49 bundle error',error);
-        return fallback(event.request,'./app.js?v=38');
+        console.error('PMK v51 bundle error',error);
+        return fallback(event.request,'./app.js?v=51');
       }
     })());
     return;
@@ -75,8 +81,8 @@ self.addEventListener('fetch',event=>{
           'Cache-Control':'no-store','X-PMK-Version':VERSION
         }}));
       }catch(error){
-        console.error('PMK v49 styles error',error);
-        return fallback(event.request,'./styles.css?v=30');
+        console.error('PMK v51 styles error',error);
+        return fallback(event.request,'./styles.css?v=51');
       }
     })());
     return;
