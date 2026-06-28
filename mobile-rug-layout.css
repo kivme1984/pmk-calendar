@@ -10,9 +10,25 @@
     min-width: 0;
   }
 
+  .rug-card > .field-grid.four > .field:nth-child(1) {
+    order: 2;
+  }
+
+  .rug-card > .field-grid.four > .field:nth-child(2) {
+    order: 1;
+  }
+
   .rug-card > .field-grid.four > .field:nth-child(3),
   .rug-card > .field-grid.four > .field:nth-child(4) {
     grid-column: 1 / -1 !important;
+  }
+
+  .rug-card > .field-grid.four > .field:nth-child(3) {
+    order: 3;
+  }
+
+  .rug-card > .field-grid.four > .field:nth-child(4) {
+    order: 4;
   }
 
   .rug-card .rug-length,
