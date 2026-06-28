@@ -6,92 +6,77 @@ fs.mkdirSync('artifacts', { recursive: true });
 const browser = await chromium.launch({ headless: true, executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
 let stage = 'open';
+async function shot(name){await page.screenshot({path:`artifacts/${name}.png`,fullPage:true});}
 
-async function shot(name) {
-  await page.screenshot({ path: `artifacts/${name}.png`, fullPage: true });
-}
-
-try {
-  await page.goto('http://127.0.0.1:4173/v51-preview.html?test=' + Date.now(), { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('#v50Summary', { timeout: 20000 });
-  await page.waitForSelector('.rug-card', { timeout: 20000 });
-  await page.waitForFunction(() => document.documentElement.dataset.v51Verified === '1', null, { timeout: 15000 });
+try{
+  await page.goto('http://127.0.0.1:4173/v51-preview.html?test='+Date.now(),{waitUntil:'domcontentloaded'});
+  await page.waitForSelector('#v50Summary',{timeout:20000});
+  await page.waitForSelector('.rug-card',{timeout:20000});
+  await page.waitForTimeout(3000);
+  const debug=await page.evaluate(()=>({
+    verified:document.documentElement.dataset.v51Verified||'',
+    tools:document.querySelectorAll('.v51-tool').length,
+    cards:document.querySelectorAll('.rug-card').length,
+    services:[...document.querySelectorAll('.rug-card')].map(card=>[...card.querySelectorAll('.v51-service span')].map(node=>node.textContent.trim())),
+    oldServices:document.querySelectorAll('.rug-card .rug-service-item,.rug-card .v50-final-service').length,
+    smartClass:Boolean(document.querySelector('#smartPasteInput')?.closest('.form-card,section,.card')?.classList.contains('v51-smart-paste-clean')),
+    descriptionLeaves:[...document.querySelectorAll('body *')].filter(node=>!node.children.length&&/^можно продиктовать обычной фразой/i.test((node.textContent||'').trim())).map(node=>node.outerHTML)
+  }));
+  fs.writeFileSync('artifacts/v51-debug.json',JSON.stringify(debug,null,2));
+  await shot('v51-00-debug');
+  await page.waitForFunction(()=>document.documentElement.dataset.v51Verified==='1',null,{timeout:12000});
   await shot('v51-01-summary');
 
-  stage = 'tools';
-  const tools = page.locator('#v51Tools');
-  assert.equal(await tools.count(), 1);
-  assert.equal(await tools.locator('.v51-tool').count(), 4);
-  assert.deepEqual(await tools.locator('.v51-tool strong').allTextContents(), ['Постоянный клиент', 'Поиск адреса', 'Окна маршрута', 'Автостоимость']);
+  stage='tools';
+  const tools=page.locator('#v51Tools');
+  assert.equal(await tools.count(),1);
+  assert.equal(await tools.locator('.v51-tool').count(),4);
+  assert.deepEqual(await tools.locator('.v51-tool strong').allTextContents(),['Постоянный клиент','Поиск адреса','Окна маршрута','Автостоимость']);
   await tools.locator('.v51-tools-toggle').click();
-  await page.waitForFunction(() => document.querySelector('#v51Tools')?.classList.contains('is-open'));
-  const toolBoxes = await tools.locator('.v51-tool').evaluateAll(nodes => nodes.map(node => {
-    const b = node.getBoundingClientRect(); return { x: Math.round(b.x), y: Math.round(b.y), right: Math.round(b.right), h: Math.round(b.height) };
-  }));
-  assert.equal(new Set(toolBoxes.map(box => box.x)).size, 2);
-  assert.equal(new Set(toolBoxes.map(box => box.y)).size, 2);
-  assert.ok(toolBoxes.every(box => box.x >= 0 && box.right <= 390 && box.h >= 60));
+  await page.waitForFunction(()=>document.querySelector('#v51Tools')?.classList.contains('is-open'));
+  const toolBoxes=await tools.locator('.v51-tool').evaluateAll(nodes=>nodes.map(node=>{const b=node.getBoundingClientRect();return{x:Math.round(b.x),y:Math.round(b.y),right:Math.round(b.right),h:Math.round(b.height)}}));
+  assert.equal(new Set(toolBoxes.map(box=>box.x)).size,2);
+  assert.equal(new Set(toolBoxes.map(box=>box.y)).size,2);
+  assert.ok(toolBoxes.every(box=>box.x>=0&&box.right<=390&&box.h>=60));
   await shot('v51-02-tools');
 
-  stage = 'tool-actions';
-  for (const action of ['client','address','slots','price']) {
+  stage='tool-actions';
+  for(const action of ['client','address','slots','price']){
     await tools.locator(`[data-v51-action="${action}"]`).click();
     await page.waitForSelector('.v50-editor-open');
-    assert.equal(await page.locator('.v50-editor-open').count(), 1);
+    assert.equal(await page.locator('.v50-editor-open').count(),1);
     await page.locator('.v50-editor-done').click();
-    await page.waitForFunction(() => !document.body.classList.contains('v50-modal-active'));
-    if (!await tools.evaluate(node => node.classList.contains('is-open'))) await tools.locator('.v51-tools-toggle').click();
+    await page.waitForFunction(()=>!document.body.classList.contains('v50-modal-active'));
+    if(!await tools.evaluate(node=>node.classList.contains('is-open')))await tools.locator('.v51-tools-toggle').click();
   }
 
-  stage = 'services';
+  stage='services';
   await page.locator('[data-v50-open="rugs"]').first().click();
   await page.waitForSelector('.v50-editor-open .rug-card');
-  const services = page.locator('.v50-editor-open .rug-card').first().locator('.v51-service');
-  assert.equal(await services.count(), 6);
-  assert.deepEqual(await services.locator('span').allTextContents(), ['Пятна','Запах мочи','Кондиционер','Шерсть / волосы','Озон','Расчёсывание ворса']);
-  const serviceBoxes = await services.evaluateAll(nodes => nodes.map(node => {
-    const b = node.getBoundingClientRect(); return { x: Math.round(b.x), y: Math.round(b.y), right: Math.round(b.right), h: Math.round(b.height) };
-  }));
-  assert.equal(new Set(serviceBoxes.map(box => box.x)).size, 2);
-  assert.equal(new Set(serviceBoxes.map(box => box.y)).size, 3);
-  assert.ok(serviceBoxes.every(box => box.x >= 0 && box.right <= 390 && box.h >= 50));
-  for (let i = 0; i < 6; i += 1) {
-    const service = services.nth(i);
-    await service.click();
-    assert.equal(await service.locator('input').isChecked(), true);
-    await service.click();
-    assert.equal(await service.locator('input').isChecked(), false);
-  }
+  const services=page.locator('.v50-editor-open .rug-card').first().locator('.v51-service');
+  assert.equal(await services.count(),6);
+  assert.deepEqual(await services.locator('span').allTextContents(),['Пятна','Запах мочи','Кондиционер','Шерсть / волосы','Озон','Расчёсывание ворса']);
+  const serviceBoxes=await services.evaluateAll(nodes=>nodes.map(node=>{const b=node.getBoundingClientRect();return{x:Math.round(b.x),y:Math.round(b.y),right:Math.round(b.right),h:Math.round(b.height)}}));
+  assert.equal(new Set(serviceBoxes.map(box=>box.x)).size,2);
+  assert.equal(new Set(serviceBoxes.map(box=>box.y)).size,3);
+  assert.ok(serviceBoxes.every(box=>box.x>=0&&box.right<=390&&box.h>=50));
+  for(let i=0;i<6;i+=1){const service=services.nth(i);await service.click();assert.equal(await service.locator('input').isChecked(),true);await service.click();assert.equal(await service.locator('input').isChecked(),false);}
   await shot('v51-03-rugs');
   await page.locator('.v50-editor-done').click();
 
-  stage = 'all-editors';
-  for (const type of ['client','date','rugs','cost','preview']) {
-    await page.locator(`[data-v50-open="${type}"]`).first().click();
-    await page.waitForSelector('.v50-editor-open');
-    assert.equal(await page.locator('.v50-editor-open').count(), 1);
-    await page.locator('.v50-editor-done').click();
-    await page.waitForFunction(() => !document.body.classList.contains('v50-modal-active'));
-  }
+  stage='all-editors';
+  for(const type of ['client','date','rugs','cost','preview']){await page.locator(`[data-v50-open="${type}"]`).first().click();await page.waitForSelector('.v50-editor-open');assert.equal(await page.locator('.v50-editor-open').count(),1);await page.locator('.v50-editor-done').click();await page.waitForFunction(()=>!document.body.classList.contains('v50-modal-active'));}
 
-  stage = 'draft';
-  await page.evaluate(() => localStorage.setItem('pmk-form-autodraft-v1', JSON.stringify({ savedAt: Date.now(), data: { customerName: 'Тестовый клиент', phone: '+79000000000', rugs: [] } })));
-  await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('#v50DraftNotice', { timeout: 15000 });
-  assert.equal(await page.locator('#v50DraftNotice [data-v50-draft="view"]').count(), 1);
-  assert.equal(await page.locator('#v50DraftNotice [data-v50-draft="delete"]').count(), 1);
+  stage='draft';
+  await page.evaluate(()=>localStorage.setItem('pmk-form-autodraft-v1',JSON.stringify({savedAt:Date.now(),data:{customerName:'Тестовый клиент',phone:'+79000000000',rugs:[]}})));
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForSelector('#v50DraftNotice',{timeout:15000});
+  assert.equal(await page.locator('#v50DraftNotice [data-v50-draft="view"]').count(),1);
+  assert.equal(await page.locator('#v50DraftNotice [data-v50-draft="delete"]').count(),1);
   await shot('v51-04-draft');
 
-  stage = 'overflow';
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  assert.ok(overflow <= 1, `Горизонтальный выход за экран: ${overflow}px`);
-
+  stage='overflow';
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+  assert.ok(overflow<=1,`Горизонтальный выход за экран: ${overflow}px`);
   console.log('V51_UI_CHECK_OK');
-} catch (error) {
-  console.error('V51_UI_CHECK_FAILED_STAGE=' + stage);
-  console.error(error.stack || error);
-  try { await shot(`v51-failure-${stage}`); } catch {}
-  throw error;
-} finally {
-  await browser.close();
-}
+}catch(error){console.error('V51_UI_CHECK_FAILED_STAGE='+stage);console.error(error.stack||error);try{await shot(`v51-failure-${stage}`)}catch{}throw error;}finally{await browser.close();}
