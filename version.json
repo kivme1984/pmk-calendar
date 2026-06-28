@@ -1,15 +1,15 @@
 {
-  "version": "58",
-  "release": "workshop-rug-measurement",
+  "version": "59",
+  "release": "compact-settings-and-version-header",
   "date": "2026-06-28",
   "features": [
-    "main-release-v57-features",
-    "workshop-measurement-checkbox",
-    "show-rug-count-input-when-workshop-measurement-enabled",
-    "save-workshop-measurement-in-google-event",
-    "show-rug-count-in-event-title-and-description",
-    "preserve-hidden-rug-details-when-toggling-mode",
-    "search-clients-across-entire-calendar",
-    "persistent-client-information-text-field-in-all-form-tabs"
+    "main-release-v58-features",
+    "pricing-settings-collapsed-by-default",
+    "version-information-at-top-of-settings",
+    "update-button-moved-to-top-of-settings",
+    "remove-update-button-from-bottom-settings-actions",
+    "preserve-workshop-measurement",
+    "preserve-full-calendar-client-search",
+    "preserve-persistent-client-draft"
   ]
 }
