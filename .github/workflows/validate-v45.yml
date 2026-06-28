@@ -1,0 +1,59 @@
+name: Validate PMK Calendar v45
+
+on:
+  push:
+    paths:
+      - '.github/workflows/validate-v45.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate parser syntax and voice examples
+        run: |
+          node --check smart-parser-v45.js
+          cat > /tmp/test-parser.js <<'NODE'
+          global.window = global;
+          global.document = { readyState: 'complete', addEventListener() {} };
+          global.qs = () => null;
+          global.state = { selectedDayKey: '2026-06-28' };
+          global.businessTodayKey = () => '2026-06-28';
+          global.dateKeyForDisplay = key => new Date(`${key}T12:00:00Z`);
+          global.addDaysToKey = (key, days) => { const d = new Date(`${key}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10); };
+          global.addMinutesToTime = (value, minutes) => { const [h,m] = value.split(':').map(Number); const total = h*60+m+minutes; return `${String(Math.floor(total/60)%24).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; };
+          global.REQUEST_DURATION_MINUTES = 30;
+          global.setTimeout = () => 0;
+          require(process.cwd() + '/smart-parser-v45.js');
+          const parser = global.PMK_SMART_PARSER_V45;
+          const parsed = parser.parseText('Клиент Ольга. Адрес улица Коминтерна дом сто пятнадцать, квартира сорок пять, пятый подъезд, третий этаж. Ковер шегги два на три, пятна, шерсть и расчесывание ворса. Постоянный клиент, завтра с трех до пяти вечера.');
+          const assert = (ok, message) => { if (!ok) throw new Error(message + '\n' + JSON.stringify(parsed, null, 2)); };
+          assert(parsed.customerName === 'Ольга', 'Имя');
+          assert(parsed.street.toLowerCase().includes('коминтерна'), 'Улица');
+          assert(parsed.houseNumber === '115', 'Дом словами');
+          assert(parsed.apartmentNumber === '45', 'Квартира словами');
+          assert(parsed.entrance === '5', 'Подъезд порядковым словом');
+          assert(parsed.floor === '3', 'Этаж порядковым словом');
+          assert(parsed.rugs.length === 1 && parsed.rugs[0].length === 2 && parsed.rugs[0].width === 3, 'Размер словами');
+          assert(parsed.rugs[0].material === 'Синтетика' && parsed.rugs[0].pile === 'Более 1 см', 'Шегги');
+          assert(parsed.rugs[0].services.includes('Удаление пятен'), 'Пятна');
+          assert(parsed.rugs[0].services.includes('Вычёсывание шерсти и волос'), 'Шерсть');
+          assert(parsed.rugs[0].services.includes('Подъём ворса'), 'Расчёсывание');
+          assert(parsed.regularCustomer && parsed.discount === 0, 'Постоянный клиент');
+          assert(parsed.startTime === '15:00' && parsed.endTime === '17:00', 'Время словами');
+          NODE
+          node /tmp/test-parser.js
+
+      - name: Remove one-time workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/validate-v45.yml
+          git commit -m "Complete v45 parser validation"
+          git push
