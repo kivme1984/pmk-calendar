@@ -17,11 +17,11 @@ try{
   stage='tools';
   const tools=page.locator('#v51Tools');
   assert.equal(await tools.count(),1);
-  assert.equal(await tools.evaluate(node=>node.tagName),'DETAILS');
+  assert.equal(await tools.evaluate(node=>node.tagName),'SECTION');
   assert.equal(await tools.locator('.v51-tool').count(),4);
   assert.deepEqual(await tools.locator('.v51-tool strong').allTextContents(),['Постоянный клиент','Поиск адреса','Окна маршрута','Автостоимость']);
   await tools.locator('.v51-tools-toggle').click();
-  await page.waitForFunction(()=>document.querySelector('#v51Tools')?.open===true);
+  await page.waitForFunction(()=>document.querySelector('#v51Tools')?.classList.contains('is-open'));
   const toolBoxes=await tools.locator('.v51-tool').evaluateAll(nodes=>nodes.map(node=>{const b=node.getBoundingClientRect();return{x:Math.round(b.x),y:Math.round(b.y),right:Math.round(b.right),h:Math.round(b.height)}}));
   assert.equal(new Set(toolBoxes.map(box=>box.x)).size,2);
   assert.equal(new Set(toolBoxes.map(box=>box.y)).size,2);
@@ -30,7 +30,7 @@ try{
 
   stage='tool-actions';
   for(const action of ['client','address','slots','price']){
-    if(!await tools.evaluate(node=>node.open))await tools.locator('.v51-tools-toggle').click();
+    if(!await tools.evaluate(node=>node.classList.contains('is-open')))await tools.locator('.v51-tools-toggle').click();
     await tools.locator(`[data-v51-action="${action}"]`).click();
     await page.waitForSelector('.v50-editor-open');
     assert.equal(await page.locator('.v50-editor-open').count(),1);
