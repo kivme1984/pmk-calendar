@@ -1,14 +1,15 @@
 {
-  "version": "54",
-  "release": "selected-time-only-in-event-preview",
+  "version": "55",
+  "release": "edited-order-save-hotfix",
   "date": "2026-06-28",
   "features": [
-    "main-release-v53-features",
-    "show-only-selected-visit-time-in-event-description",
-    "remove-other-district-windows-from-event-preview",
+    "main-release-v54-features",
+    "fix-saving-edited-orders",
+    "restore-google-connection-before-updating-existing-event",
+    "prevent-silent-local-copy-of-google-event",
+    "dynamic-update-order-button",
     "preserve-android-autofill-save-prompt-fix",
-    "preserve-google-settings-local-events-and-drafts",
-    "editable-calculator-price-list",
-    "no-freeze-after-update"
+    "preserve-selected-time-only-preview",
+    "preserve-google-settings-local-events-and-drafts"
   ]
 }
