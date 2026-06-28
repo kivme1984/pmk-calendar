@@ -6,16 +6,37 @@
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-  const SERVICES = [
-    ['Удаление пятен', 'Пятна / слайм / пластилин / маркеры · 500 ₽'],
-    ['Удаление запаха мочи', 'Запах мочи · 700/1000 ₽'],
-    ['Дезинфекция', 'Дезинфекция / после потопа · 700 ₽'],
-    ['Кондиционер', 'Кондиционер · 300 ₽'],
-    ['Вычёсывание шерсти и волос', 'Шерсть / волосы · 150 ₽/м²'],
-    ['Подъём ворса', 'Подъём ворса · 150 ₽/м²'],
-    ['Озонация', 'Озон · 300 ₽'],
-    ['Экспресс-стирка', 'Экспресс · 1000 ₽'],
-  ];
+  const FALLBACK_PRICE = {
+    stain: 500, odorSmall: 700, odorLarge: 1000, odorAreaThreshold: 6,
+    disinfection: 700, conditioner: 300, hair: 150, pileLift: 150,
+    ozonation: 300, express: 1000,
+  };
+
+  function priceTable() {
+    return { ...FALLBACK_PRICE, ...(window.PMK_PRICING_V48?.priceTable?.() || {}) };
+  }
+
+  function money(value) {
+    return new Intl.NumberFormat('ru-RU').format(Number(value || 0)) + ' ₽';
+  }
+
+  function area(value) {
+    return Number(value || 0).toFixed(1).replace(/\.0$/, '');
+  }
+
+  function serviceDefinitions() {
+    const price = priceTable();
+    return [
+      ['Удаление пятен', `Пятна / слайм / пластилин / маркеры · ${money(price.stain)}/ковёр`],
+      ['Удаление запаха мочи', `Удаление запаха мочи · ${money(price.odorSmall)} до ${area(price.odorAreaThreshold)} м² / ${money(price.odorLarge)} свыше`],
+      ['Дезинфекция', `Дезинфекция / ковёр после потопа · ${money(price.disinfection)}/ковёр`],
+      ['Кондиционер', `Кондиционер · ${money(price.conditioner)}/ковёр`],
+      ['Вычёсывание шерсти и волос', `Вычёсывание шерсти и волос · ${money(price.hair)}/м²`],
+      ['Подъём ворса', `Расчёсывание / подъём ворса · ${money(price.pileLift)}/м²`],
+      ['Озонация', `Озонация · ${money(price.ozonation)}/ковёр`],
+      ['Экспресс-стирка', `Экспресс-стирка · ${money(price.express)}/заказ`],
+    ];
+  }
 
   function selectedServices(root) {
     const selected = new Set();
@@ -34,18 +55,32 @@
   }
 
   function serviceMarkup(selected = new Set()) {
-    return SERVICES.map(([value, label]) => `
+    return serviceDefinitions().map(([value, label]) => `
       <label class="v51-service">
         <input type="checkbox" value="${value}" ${selected.has(value) ? 'checked' : ''}>
         <span>${label}</span>
       </label>`).join('');
   }
 
+  function updateExistingLabels(details) {
+    const definitions = new Map(serviceDefinitions());
+    $$('.v51-service', details).forEach(label => {
+      const input = $('input[type="checkbox"]', label);
+      const text = $('span', label);
+      if (input && text && definitions.has(input.value)) text.textContent = definitions.get(input.value);
+    });
+  }
+
   function rebuildRugDetails(details) {
     if (!details) return;
-    const expected = SERVICES.map(item => item[1]).join('|');
-    const current = $$('.v51-service span', details).map(node => node.textContent.trim()).join('|');
-    if (current === expected) return;
+    const expectedValues = serviceDefinitions().map(item => item[0]);
+    const currentValues = $$('.v51-service input', details).map(input => input.value);
+    const structureOk = currentValues.length === expectedValues.length && currentValues.every((value, index) => value === expectedValues[index]);
+
+    if (structureOk) {
+      updateExistingLabels(details);
+      return;
+    }
 
     const selected = selectedServices(details);
     details.className = 'rug-details-grid v51-clean-details';
@@ -132,10 +167,11 @@
   function verify() {
     const tools = $('#v51Tools');
     const toolButtons = tools ? $$('.v51-tool', tools) : [];
+    const expectedValues = serviceDefinitions().map(item => item[0]);
     const cards = $$('.rug-card');
     const servicesOk = cards.length > 0 && cards.every(card => {
-      const labels = $$('.v51-service span', card).map(node => node.textContent.trim());
-      return labels.length === SERVICES.length && labels.join('|') === SERVICES.map(item => item[1]).join('|');
+      const values = $$('.v51-service input', card).map(input => input.value);
+      return values.length === expectedValues.length && values.every((value, index) => value === expectedValues[index]);
     });
     const ok = Boolean(tools && toolButtons.length === 4 && servicesOk && smartPasteCard()?.classList.contains('v51-smart-paste-clean'));
     document.documentElement.dataset.v51Verified = ok ? '1' : '0';
@@ -161,6 +197,7 @@
     if (rugs) new MutationObserver(() => { rebuildServices(); verify(); }).observe(rugs, { childList: true, subtree: true });
     const summary = $('#v50Summary');
     if (summary) new MutationObserver(() => { installTools(); verify(); }).observe(summary, { childList: true, subtree: true });
+    window.addEventListener('pmk-pricing-updated', () => { rebuildServices(); verify(); });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
