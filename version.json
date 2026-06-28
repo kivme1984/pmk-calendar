@@ -1,14 +1,13 @@
 {
-  "version": "61",
-  "release": "conditional-client-note-and-collapse",
+  "version": "62",
+  "release": "remove-planning-refresh-button",
   "date": "2026-06-28",
   "features": [
-    "main-release-v60-features",
-    "show-client-note-in-tabs-only-when-text-exists",
-    "collapse-client-note-with-close-button",
-    "keep-note-text-in-main-information-block",
-    "reopen-collapsed-note-from-compact-bar",
-    "remove-empty-note-spacing",
+    "main-release-v61-features",
+    "remove-update-button-from-planning",
+    "keep-app-update-button-in-settings",
+    "show-client-note-only-when-text-exists",
+    "collapse-client-note-without-deleting-text",
     "preserve-mobile-menu-layer-fix",
     "preserve-period-swipe-fix"
   ]
