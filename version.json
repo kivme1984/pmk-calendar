@@ -1,6 +1,6 @@
 {
-  "version": "46",
-  "release": "mobile-address-manual-discount-compact-services",
+  "version": "47",
+  "release": "per-rug-dictation-and-calendar-discount-policy",
   "date": "2026-06-28",
   "features": [
     "stable-service-worker",
@@ -31,7 +31,6 @@
     "legacy-issue-to-service-migration",
     "website-base-rates",
     "website-extra-service-rates",
-    "website-multi-rug-discounts",
     "website-minimum-order",
     "voice-friendly-russian-number-parser",
     "spoken-address-and-access-recognition",
@@ -43,6 +42,10 @@
     "mobile-pwa-address-get-transport",
     "cloudflare-null-origin-cors-fix",
     "manual-discount-override",
-    "two-row-rug-services"
+    "two-row-rug-services",
+    "free-form-client-name-recognition",
+    "first-second-rug-context-assignment",
+    "per-rug-material-pile-and-service-linking",
+    "no-calendar-quantity-discounts"
   ]
 }
