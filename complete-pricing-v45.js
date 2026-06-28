@@ -37,11 +37,8 @@
     return 0;
   }
 
-  function suggestedDiscount(rugs = []) {
-    if (qs('#regularCustomer')?.checked) return 10;
-    if (rugs.length >= 3) return 10;
-    if (rugs.length >= 2) return 5;
-    return 0;
+  function suggestedDiscount() {
+    return qs('#regularCustomer')?.checked ? 10 : 0;
   }
 
   function unlockDiscount() {
@@ -50,22 +47,23 @@
     input.readOnly = false;
     input.removeAttribute('readonly');
     input.classList.remove('discount-locked');
-    input.title = 'Можно указать скидку вручную';
+    input.title = 'Можно указать любую скидку вручную';
   }
 
-  function discountForCalculation(rugs = []) {
+  function discountForCalculation() {
     const input = qs('#discount');
-    if (!input) return suggestedDiscount(rugs);
+    if (!input) return suggestedDiscount();
 
     unlockDiscount();
     const isManual = input.dataset.manualDiscount === '1';
+    const automatic = suggestedDiscount();
     const value = isManual
       ? clampDiscount(input.dataset.manualValue ?? input.value)
-      : suggestedDiscount(rugs);
+      : automatic;
 
     input.value = String(value);
     if (isManual) input.dataset.manualValue = String(value);
-    input.dataset.autoDiscount = String(suggestedDiscount(rugs));
+    input.dataset.autoDiscount = String(automatic);
     return value;
   }
 
@@ -169,14 +167,14 @@
       return;
     }
 
-    const discount = discountForCalculation(rugs);
+    const discount = discountForCalculation();
     const afterDiscount = Math.round(subtotal * (100 - discount) / 100);
     const total = Math.max(afterDiscount, P.minimum);
     priceInput.value = String(total);
 
     if (discount) {
       const manual = qs('#discount')?.dataset.manualDiscount === '1';
-      lines.push(`Скидка ${discount}%${manual ? ' (вручную)' : ''}: −${money(subtotal - afterDiscount)}`);
+      lines.push(`Скидка ${discount}%${manual ? ' (вручную)' : ' (постоянный клиент)'}: −${money(subtotal - afterDiscount)}`);
     }
     if (total > afterDiscount) lines.push(`Минимальный заказ: ${money(P.minimum)}`);
     lines.push(`Итого: ${money(total)}`);
@@ -199,8 +197,7 @@
     previousFillForm(data);
     const input = qs('#discount');
     if (input) {
-      const rugs = Array.isArray(data.rugs) ? data.rugs : [];
-      const automatic = data.regularCustomer ? 10 : rugs.length >= 3 ? 10 : rugs.length >= 2 ? 5 : 0;
+      const automatic = data.regularCustomer ? 10 : 0;
       const saved = clampDiscount(data.discount || 0);
       input.dataset.manualDiscount = saved !== automatic ? '1' : '0';
       input.dataset.manualValue = String(saved);
