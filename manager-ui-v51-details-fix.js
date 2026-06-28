@@ -32,22 +32,36 @@
       </div>`;
   }
 
+  function bind(details) {
+    if (!details || details.dataset.v51Bound === '1') return;
+    details.dataset.v51Bound = '1';
+    const summary = details.querySelector('.v51-tools-toggle');
+    summary?.addEventListener('click', event => {
+      event.preventDefault();
+      details.open = !details.open;
+    });
+    details.addEventListener('click', event => {
+      const button = event.target.closest('[data-v51-action]');
+      if (!button) return;
+      event.preventDefault();
+      openEditor(button.dataset.v51Action);
+    });
+  }
+
   function install() {
     const old = $('#v51Tools');
     const summary = $('#v50Summary');
     if (!summary) return;
-    if (!old || old.tagName !== 'DETAILS') {
-      const details = document.createElement('details');
+    let details = old;
+    if (!details || details.tagName !== 'DETAILS') {
+      details = document.createElement('details');
       details.id = 'v51Tools';
       details.className = 'v51-tools';
       details.innerHTML = markup();
-      details.addEventListener('click', event => {
-        const button = event.target.closest('[data-v51-action]');
-        if (button) openEditor(button.dataset.v51Action);
-      });
       if (old) old.replaceWith(details);
       else (summary.querySelector('.v50-status') || summary.firstElementChild)?.after(details);
     }
+    bind(details);
 
     const input = $('#smartPasteInput');
     if (input) input.placeholder = 'Вставьте или продиктуйте текст заявки';
@@ -58,7 +72,7 @@
     const timer = setInterval(() => {
       install();
       count += 1;
-      if ($('#v51Tools')?.tagName === 'DETAILS' || count > 160) clearInterval(timer);
+      if ($('#v51Tools')?.dataset.v51Bound === '1' || count > 160) clearInterval(timer);
     }, 50);
     const summary = $('#v50Summary');
     if (summary) new MutationObserver(install).observe(summary, { childList: true, subtree: true });
