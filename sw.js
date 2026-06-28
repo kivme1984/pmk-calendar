@@ -1,7 +1,10 @@
-const VERSION='63';
+const VERSION='64';
 const CACHE=`pmk-calendar-v${VERSION}`;
+const BUNDLE_JS='./__pmk-app-v64.js';
+const BUNDLE_CSS='./__pmk-styles-v64.css';
+
 const JS=[
-  './app.js?v=63','./manager-planner-core.js','./manager-planner-hooks.js',
+  './app.js?source=64','./manager-planner-core.js','./manager-planner-hooks.js',
   './address-autocomplete.js?v=41','./address-mobile-v46.js','./stability-route.js?v=34',
   './stability-cache.js?v=34','./stability-copy.js?v=34','./stability-draft.js?v=34',
   './google-freeform-import.js?v=36','./runtime-stability-v37.js',
@@ -15,39 +18,77 @@ const JS=[
   './manager-ui-v51-tools-stable.js?v=68','./manager-ui-v51-draft.js?v=68',
   './android-autofill-off-v53.js?v=55','./preview-description-v53.js?v=54',
   './edit-save-hotfix-v54.js?v=55','./address-placeholders-off-v56.js?v=56',
-  './client-info-sticky-v57.js?v=61','./workshop-measurement-v58.js?v=58',
-  './settings-version-header-v59.js?v=63','./navigation-layer-swipe-fix-v60.js?v=60',
+  './client-note-safe-v64.js?v=64','./workshop-measurement-v58.js?v=58',
+  './settings-version-header-v59.js?v=64','./navigation-layer-swipe-fix-v60.js?v=60',
   './planning-refresh-remove-v62.js?v=62'
 ];
+
 const CSS=[
-  './styles.css?v=63','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
+  './styles.css?source=64','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
   './mobile-rug-layout.css?v=36','./manager-form-v40.css','./unified-rug-services-v43.css?v=46',
   './manager-ui-v50-preview.css?v=68','./manager-ui-v50-refinements.css?v=68',
   './manager-ui-v51.css?v=68','./v51-tools-stable.css?v=68','./pricing-settings-v67.css?v=69',
-  './preview-readability-v56.css?v=56','./client-info-sticky-v57.css?v=61',
+  './preview-readability-v56.css?v=56','./client-note-safe-v64.css?v=64',
   './workshop-measurement-v58.css?v=58','./settings-version-header-v59.css?v=59',
   './navigation-layer-swipe-fix-v60.css?v=60'
 ];
-const ASSETS=[
-  './','./index.html','./reset.html','./recovery.html','./v51-preview.html','./address-test.html','./worker-update.html',
-  './manifest.webmanifest','./version.json',
-  './icons/icon-192.png','./icons/icon-512.png',...JS,...CSS
+
+const OPTIONAL_ASSETS=[
+  './reset.html','./recovery.html','./safe.html','./v51-preview.html','./address-test.html','./worker-update.html',
+  './manifest.webmanifest','./version.json','./icons/icon-192.png','./icons/icon-512.png'
 ];
 
-async function fetchFresh(url){
-  const response=await fetch(url,{cache:'no-store'});
-  if(!response.ok)throw new Error(`Не удалось загрузить ${url}: ${response.status}`);
-  return response;
+function fetchWithTimeout(url,timeout=7000){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),timeout);
+  return fetch(url,{cache:'no-store',signal:controller.signal}).finally(()=>clearTimeout(timer));
+}
+
+async function textAsset(url,required=false){
+  try{
+    const response=await fetchWithTimeout(url);
+    if(!response.ok)throw new Error(`${response.status}`);
+    return await response.text();
+  }catch(error){
+    if(required)throw new Error(`Не удалось загрузить обязательный файл ${url}: ${error.message}`);
+    console.warn(`PMK v${VERSION}: пропущен дополнительный файл ${url}`,error);
+    return '';
+  }
+}
+
+async function cacheResponse(cache,key,response){
+  await cache.put(new Request(key,{cache:'reload'}),response);
 }
 
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   const cache=await caches.open(CACHE);
-  const results=await Promise.allSettled(ASSETS.map(async asset=>{
-    const response=await fetchFresh(asset);
-    await cache.put(asset,response.clone());
+
+  const indexResponse=await fetchWithTimeout(`./index.html?install=${VERSION}`);
+  if(!indexResponse.ok)throw new Error(`index.html: ${indexResponse.status}`);
+  const indexCopy=indexResponse.clone();
+  await cacheResponse(cache,'./index.html',indexResponse);
+  await cacheResponse(cache,'./',indexCopy);
+
+  const jsParts=await Promise.all(JS.map((url,index)=>textAsset(url,index===0)));
+  const cssParts=await Promise.all(CSS.map((url,index)=>textAsset(url,index===0)));
+
+  await cacheResponse(cache,BUNDLE_JS,new Response(jsParts.join('\n\n'),{headers:{
+    'Content-Type':'application/javascript; charset=utf-8',
+    'Cache-Control':'no-store',
+    'X-PMK-Version':VERSION
+  }}));
+
+  await cacheResponse(cache,BUNDLE_CSS,new Response(cssParts.join('\n\n'),{headers:{
+    'Content-Type':'text/css; charset=utf-8',
+    'Cache-Control':'no-store',
+    'X-PMK-Version':VERSION
+  }}));
+
+  await Promise.allSettled(OPTIONAL_ASSETS.map(async url=>{
+    const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}install=${VERSION}`,5000);
+    if(response.ok)await cacheResponse(cache,url,response);
   }));
-  const failed=results.filter(item=>item.status==='rejected');
-  if(failed.length)console.warn(`PMK v${VERSION}: часть необязательных файлов пока не закеширована`,failed.length);
+
   await self.skipWaiting();
 })()));
 
@@ -57,36 +98,17 @@ self.addEventListener('activate',event=>event.waitUntil((async()=>{
   await self.clients.claim();
 })()));
 
-async function text(url){
-  return (await fetchFresh(url)).text();
+async function cached(key){
+  return (await caches.open(CACHE)).match(key);
 }
 
-async function optionalText(url,index){
-  try{
-    return await text(url);
-  }catch(error){
-    if(index===0)throw error;
-    console.warn(`PMK v${VERSION}: пропущен необязательный модуль ${url}`,error);
-    return `\n;console.warn(${JSON.stringify(`PMK: модуль ${url} временно не загружен`)});`;
-  }
-}
-
-async function store(request,response){
-  try{
+async function networkAndStore(request,key=request){
+  const response=await fetchWithTimeout(request.url||request,6000);
+  if(response.ok){
     const cache=await caches.open(CACHE);
-    await cache.put(request,response.clone());
-  }catch(error){
-    console.warn('PMK: не удалось обновить кэш ответа',error);
+    await cache.put(key,response.clone());
   }
   return response;
-}
-
-async function fallback(request,url){
-  const direct=await caches.match(request);
-  if(direct)return direct;
-  const cached=await caches.match(url);
-  if(cached)return cached;
-  return fetch(url,{cache:'no-store'});
 }
 
 self.addEventListener('fetch',event=>{
@@ -94,50 +116,31 @@ self.addEventListener('fetch',event=>{
   const url=new URL(event.request.url);
 
   if(url.pathname.endsWith('/app.js')){
-    event.respondWith((async()=>{
-      try{
-        const body=(await Promise.all(JS.map(optionalText))).join('\n\n');
-        return store(event.request,new Response(body,{headers:{
-          'Content-Type':'application/javascript; charset=utf-8',
-          'Cache-Control':'no-store','X-PMK-Version':VERSION
-        }}));
-      }catch(error){
-        console.error('PMK v63 bundle error',error);
-        return fallback(event.request,'./app.js?v=63');
-      }
-    })());
+    event.respondWith(cached(BUNDLE_JS).then(response=>response||fetch(event.request)));
     return;
   }
 
   if(url.pathname.endsWith('/styles.css')){
-    event.respondWith((async()=>{
-      try{
-        const parts=await Promise.all(CSS.map(async (asset,index)=>{
-          try{return await text(asset);}catch(error){
-            if(index===0)throw error;
-            console.warn(`PMK v${VERSION}: пропущен необязательный стиль ${asset}`,error);
-            return '';
-          }
-        }));
-        return store(event.request,new Response(parts.join('\n\n'),{headers:{
-          'Content-Type':'text/css; charset=utf-8',
-          'Cache-Control':'no-store','X-PMK-Version':VERSION
-        }}));
-      }catch(error){
-        console.error('PMK v63 styles error',error);
-        return fallback(event.request,'./styles.css?v=63');
-      }
-    })());
+    event.respondWith(cached(BUNDLE_CSS).then(response=>response||fetch(event.request)));
     return;
   }
 
-  const networkFirst=event.request.mode==='navigate'||/\.(?:html|js|css|json|webmanifest)$/.test(url.pathname);
-  if(networkFirst){
-    event.respondWith(fetch(event.request,{cache:'no-store'})
-      .then(response=>store(event.request,response))
-      .catch(()=>fallback(event.request,url.pathname.endsWith('/')?'./':'./index.html')));
+  const specialPage=/\/(?:reset|recovery|safe)\.html$/.test(url.pathname);
+  if(event.request.mode==='navigate'&&specialPage){
+    event.respondWith(networkAndStore(event.request,url.pathname.split('/').pop()).catch(()=>cached(url.pathname.split('/').pop())));
     return;
   }
 
-  event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>store(event.request,response))));
+  if(event.request.mode==='navigate'){
+    event.respondWith(cached('./index.html').then(response=>response||fetch(event.request)));
+    return;
+  }
+
+  event.respondWith(caches.match(event.request).then(response=>response||fetch(event.request).then(async networkResponse=>{
+    if(networkResponse.ok){
+      const cache=await caches.open(CACHE);
+      cache.put(event.request,networkResponse.clone()).catch(()=>{});
+    }
+    return networkResponse;
+  })));
 });
