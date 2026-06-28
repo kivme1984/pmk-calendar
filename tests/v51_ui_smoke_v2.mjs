@@ -34,7 +34,7 @@ try{
     await tools.locator(`[data-v51-action="${action}"]`).click();
     await page.waitForSelector('.v50-editor-open');
     assert.equal(await page.locator('.v50-editor-open').count(),1);
-    await page.locator('.v50-editor-done').click();
+    await page.locator('.v50-editor-open .v50-editor-done').click();
     await page.waitForFunction(()=>!document.body.classList.contains('v50-modal-active'));
   }
 
@@ -51,10 +51,10 @@ try{
   assert.ok(boxes.every(box=>box.x>=0&&box.right<=390&&box.h>=50));
   for(let i=0;i<6;i++){const s=services.nth(i);await s.click();assert.equal(await s.locator('input').isChecked(),true);await s.click();assert.equal(await s.locator('input').isChecked(),false);}
   await shot('v51-03-rugs');
-  await page.locator('.v50-editor-done').click();
+  await page.locator('.v50-editor-open .v50-editor-done').click();
 
   stage='editors';
-  for(const type of ['client','date','rugs','cost','preview']){await page.locator(`[data-v50-open="${type}"]`).first().click();await page.waitForSelector('.v50-editor-open');assert.equal(await page.locator('.v50-editor-open').count(),1);await page.locator('.v50-editor-done').click();await page.waitForFunction(()=>!document.body.classList.contains('v50-modal-active'));}
+  for(const type of ['client','date','rugs','cost','preview']){await page.locator(`[data-v50-open="${type}"]`).first().click();await page.waitForSelector('.v50-editor-open');assert.equal(await page.locator('.v50-editor-open').count(),1);await page.locator('.v50-editor-open .v50-editor-done').click();await page.waitForFunction(()=>!document.body.classList.contains('v50-modal-active'));}
 
   stage='draft';
   await page.evaluate(()=>localStorage.setItem('pmk-form-autodraft-v1',JSON.stringify({savedAt:Date.now(),data:{customerName:'Тестовый клиент',phone:'+79000000000',rugs:[]}})));
