@@ -1,14 +1,15 @@
 {
-  "version": "62",
-  "release": "remove-planning-refresh-button",
+  "version": "63",
+  "release": "safe-service-worker-recovery",
   "date": "2026-06-28",
   "features": [
-    "main-release-v61-features",
+    "main-release-v62-features",
+    "safe-update-without-deleting-working-cache-first",
+    "recovery-page-for-stuck-installed-app",
+    "partial-cache-failures-no-longer-block-activation",
+    "optional-modules-no-longer-break-main-app-bundle",
+    "preserve-local-data-google-settings-events-and-drafts",
     "remove-update-button-from-planning",
-    "keep-app-update-button-in-settings",
-    "show-client-note-only-when-text-exists",
-    "collapse-client-note-without-deleting-text",
-    "preserve-mobile-menu-layer-fix",
-    "preserve-period-swipe-fix"
+    "conditional-collapsible-client-note"
   ]
 }
