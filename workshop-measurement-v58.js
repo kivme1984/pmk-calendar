@@ -24,26 +24,31 @@
 
     const card = $('.v50-rugs-summary', summary);
     const heading = $('.v50-card-head strong', card || summary);
-    if (heading) heading.textContent = `Ковры — ${count}`;
+    const headingText = `Ковры — ${count}`;
+    if (heading && heading.textContent !== headingText) heading.textContent = headingText;
 
-    if (card) {
+    if (card && card.dataset.workshopSummaryCount !== String(count)) {
       const body = [...card.children].find(child => !child.classList.contains('v50-card-head'));
-      if (body) body.innerHTML = `
-        <button type="button" class="v50-rug-row" data-v50-open="rugs">
-          <span class="v50-rug-number">✓</span>
-          <span><strong>Замер в цеху</strong><b>${count} ${typeof pluralRugs === 'function' ? pluralRugs(count) : 'ковров'}</b><small>Размеры будут внесены после забора</small></span>
-          <i>›</i>
-        </button>`;
+      if (body) {
+        body.innerHTML = `
+          <button type="button" class="v50-rug-row" data-v50-open="rugs">
+            <span class="v50-rug-number">✓</span>
+            <span><strong>Замер в цеху</strong><b>${count} ${typeof pluralRugs === 'function' ? pluralRugs(count) : 'ковров'}</b><small>Размеры будут внесены после забора</small></span>
+            <i>›</i>
+          </button>`;
+      }
+      card.dataset.workshopSummaryCount = String(count);
     }
 
     const missing = ['#customerName','#phone','#district','#street','#houseNumber','#visitDate','#startTime','#endTime']
       .reduce((total, selector) => total + ($(selector)?.value?.trim() ? 0 : 1), 0);
     const status = $('.v50-status', summary);
-    if (status) {
+    if (status && status.dataset.workshopMissing !== String(missing)) {
       status.classList.toggle('v50-status-warning', missing > 0);
       status.innerHTML = missing
         ? `<span>!</span><div><strong>Нужно проверить: ${missing}</strong><small>Незаполненные обязательные поля выделены в редакторах</small></div>`
         : '<span>✓</span><div><strong>Заявка готова к созданию</strong><small>Количество ковров указано, размеры определим в цеху</small></div>';
+      status.dataset.workshopMissing = String(missing);
     }
   }
 
@@ -64,7 +69,7 @@
       if (input && !input.value) input.value = String(Math.max(1, $$('.rug-card', list || document).length));
     }
 
-    schedulePreviewUpdate?.();
+    if (typeof schedulePreviewUpdate === 'function') schedulePreviewUpdate();
     setTimeout(syncSummary, 100);
   }
 
@@ -91,7 +96,7 @@
     $('#workshopMeasurement').addEventListener('change', applyMode);
     $('#workshopRugCount').addEventListener('input', event => {
       event.target.value = String(clampCount(event.target.value));
-      schedulePreviewUpdate?.();
+      if (typeof schedulePreviewUpdate === 'function') schedulePreviewUpdate();
       setTimeout(syncSummary, 100);
     });
 
