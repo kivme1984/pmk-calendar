@@ -1,0 +1,78 @@
+name: Final validation PMK Calendar v47
+
+on:
+  push:
+    paths:
+      - '.github/workflows/validate-v47c.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate syntax and exact dictated examples
+        run: |
+          node --check smart-parser-v45.js
+          node --check smart-parser-v47.js
+          node --check smart-parser-v47-name-fix.js
+          node --check smart-parser-v47-assignments.js
+          node --check complete-pricing-v45.js
+          node --check sw.js
+          cat > /tmp/test-v47.js <<'NODE'
+          global.window = global;
+          global.document = { readyState: 'loading', addEventListener() {} };
+          global.state = { selectedDayKey: '2026-06-28' };
+          global.businessTodayKey = () => '2026-06-28';
+          global.dateKeyForDisplay = key => new Date(`${key}T12:00:00Z`);
+          global.addDaysToKey = (key, days) => { const d = new Date(`${key}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10); };
+          global.addMinutesToTime = (value, minutes) => { const [h,m] = value.split(':').map(Number); const total = h*60+m+minutes; return `${String(Math.floor(total/60)%24).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; };
+          global.REQUEST_DURATION_MINUTES = 30;
+          global.setTimeout = () => 0;
+          require(process.cwd() + '/smart-parser-v45.js');
+          require(process.cwd() + '/smart-parser-v47.js');
+          require(process.cwd() + '/smart-parser-v47-name-fix.js');
+          require(process.cwd() + '/smart-parser-v47-assignments.js');
+          const parse = global.PMK_SMART_PARSER_V45.parseText;
+          const check = (ok, label, data) => { if (!ok) throw new Error(`${label}\n${JSON.stringify(data, null, 2)}`); };
+
+          const first = parse('Клиентка Марина, два ковра: один синтетика средний ворс, второй шегги. На первом пятна, на втором поднятие ворса.');
+          check(first.customerName === 'Марина', 'Имя Марина', first);
+          check(first.rugs.length === 2, 'Количество ковров', first);
+          check(first.rugs[0].material === 'Синтетика' && first.rugs[0].pile === 'До 1 см', 'Первый ковёр', first);
+          check(first.rugs[0].services.includes('Удаление пятен'), 'Пятна первого', first);
+          check(first.rugs[1].material === 'Синтетика' && first.rugs[1].pile === 'Более 1 см', 'Второй шегги', first);
+          check(first.rugs[1].services.includes('Подъём ворса'), 'Подъём второго', first);
+          check(!first.rugs[0].services.includes('Подъём ворса') && !first.rugs[1].services.includes('Удаление пятен'), 'Услуги не смешиваются', first);
+          check(!first.startTime && !first.endTime, 'На первом не является временем', first);
+
+          const second = parse('Зовут Ольга. Два ковра. Первый ковёр размер два на три, синтетика, средний ворс. Второй ковёр размер полтора на два, шегги. Для первого удаление пятен. Для второго расчёсывание ворса.');
+          check(second.customerName === 'Ольга', 'Имя Ольга', second);
+          check(second.rugs.length === 2, 'Два подробных ковра', second);
+          check(second.rugs[0].length === 2 && second.rugs[0].width === 3, 'Размер первого', second);
+          check(second.rugs[0].pile === 'До 1 см' && second.rugs[0].services.includes('Удаление пятен'), 'Свойства первого', second);
+          check(second.rugs[1].length === 1.5 && second.rugs[1].width === 2, 'Размер второго', second);
+          check(second.rugs[1].pile === 'Более 1 см' && second.rugs[1].services.includes('Подъём ворса'), 'Свойства второго', second);
+          check(!second.street && !second.houseNumber, 'Размер не является адресом', second);
+          check(!second.startTime && !second.endTime, 'Размер не является временем', second);
+          console.log('V47_FINAL_OK');
+          NODE
+          node /tmp/test-v47.js
+          grep -q "return qs('#regularCustomer')?.checked ? 10 : 0" complete-pricing-v45.js
+          ! grep -q "rugs.length >= 2" complete-pricing-v45.js
+          grep -q "smart-parser-v47-assignments.js" sw.js
+
+      - name: Remove temporary diagnostics and workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          test ! -f validation-v47.txt || git rm validation-v47.txt
+          test ! -f validation-v47b.txt || git rm validation-v47b.txt
+          git rm .github/workflows/validate-v47c.yml
+          git commit -m "Complete final v47 validation"
+          git push
