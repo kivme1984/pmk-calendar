@@ -1,16 +1,15 @@
 {
-  "version": "60",
-  "release": "mobile-menu-layer-and-period-swipe-fix",
+  "version": "61",
+  "release": "conditional-client-note-and-collapse",
   "date": "2026-06-28",
   "features": [
-    "main-release-v59-features",
-    "mobile-menu-above-all-form-editors",
-    "menu-backdrop-and-body-scroll-lock",
-    "disable-period-change-on-horizontal-scroll",
-    "multi-day-week-month-navigation-by-buttons-only",
-    "safer-day-swipe-threshold",
-    "preserve-compact-settings",
-    "preserve-workshop-measurement",
-    "preserve-full-calendar-client-search"
+    "main-release-v60-features",
+    "show-client-note-in-tabs-only-when-text-exists",
+    "collapse-client-note-with-close-button",
+    "keep-note-text-in-main-information-block",
+    "reopen-collapsed-note-from-compact-bar",
+    "remove-empty-note-spacing",
+    "preserve-mobile-menu-layer-fix",
+    "preserve-period-swipe-fix"
   ]
 }
