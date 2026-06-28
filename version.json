@@ -1,18 +1,19 @@
 {
-  "version": "36",
-  "release": "mobile-rug-and-google-import",
+  "version": "37",
+  "release": "runtime-stability",
   "date": "2026-06-28",
   "features": [
+    "stable-service-worker",
+    "no-automatic-account-picker",
+    "preserve-events-on-auth-failure",
+    "protect-against-wrong-google-account",
+    "single-flight-calendar-refresh",
+    "instant-day-swipe",
     "cached-google-events",
-    "faster-rendering",
     "request-copy",
     "automatic-draft-recovery",
-    "non-blocking-route-warning",
     "returning-client-search",
-    "fill-client-from-history",
-    "repeat-order-from-history",
     "mobile-width-before-length",
-    "google-freeform-event-import",
-    "convert-google-event-to-pmk"
+    "google-freeform-event-import"
   ]
 }
