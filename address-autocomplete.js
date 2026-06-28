@@ -40,6 +40,36 @@ function addressStatus(message, type = '') {
   status.className = `address-search-status${type ? ` ${type}` : ''}`;
 }
 
+function addressErrorMessage(error = {}) {
+  const status = Number(error.status || 0);
+  const payload = error.payload || {};
+  const details = String(payload.details || '').toLowerCase();
+  const backendMessage = String(payload.error || error.message || '');
+
+  if (backendMessage.includes('DADATA_API_KEY is not configured')) {
+    return 'В Cloudflare не найден секрет DADATA_API_KEY. Проверьте точное имя переменной и выполните Deploy.';
+  }
+  if (status === 401) {
+    return 'DaData отклонила API-ключ: ошибка 401. Проверьте, что в Value вставлен верхний «API-ключ», без слова Token и без пробелов.';
+  }
+  if (status === 403) {
+    return 'DaData запретила доступ: ошибка 403. Проверьте подтверждение почты и активность API-ключа в личном кабинете.';
+  }
+  if (status === 429) {
+    return 'Превышен лимит запросов DaData. Попробуйте позже.';
+  }
+  if (status >= 500) {
+    return `Cloudflare Worker вернул ошибку ${status}${backendMessage ? `: ${backendMessage}` : ''}.`;
+  }
+  if (details.includes('unauthorized') || details.includes('token')) {
+    return 'DaData не приняла API-ключ. Проверьте значение секрета DADATA_API_KEY.';
+  }
+  if (error.name === 'TypeError' || /failed to fetch|networkerror|load failed/i.test(backendMessage)) {
+    return 'Нет соединения с Cloudflare Worker или запрос заблокирован браузером. Откройте страницу проверки сервиса.';
+  }
+  return `Адресный сервис недоступен${status ? ` — ошибка ${status}` : ''}${backendMessage ? `: ${backendMessage}` : ''}.`;
+}
+
 async function requestAddressSuggestions(query, count = 8) {
   if (!PMK_ADDRESS_API_URL) return [];
   addressAbortController?.abort();
@@ -50,11 +80,21 @@ async function requestAddressSuggestions(query, count = 8) {
     body: JSON.stringify({ query, count }),
     signal: addressAbortController.signal,
   });
+
+  const raw = await response.text();
+  let payload = {};
+  try { payload = raw ? JSON.parse(raw) : {}; }
+  catch { payload = { error: raw || `Ошибка адресного сервиса: ${response.status}` }; }
+
   if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.error || `Ошибка адресного сервиса: ${response.status}`);
+    const error = new Error(payload.error || `Ошибка адресного сервиса: ${response.status}`);
+    error.status = response.status;
+    error.payload = payload;
+    window.PMK_ADDRESS_LAST_ERROR = { status: response.status, payload };
+    throw error;
   }
-  const payload = await response.json();
+
+  window.PMK_ADDRESS_LAST_ERROR = null;
   return Array.isArray(payload.suggestions) ? payload.suggestions : [];
 }
 
@@ -179,7 +219,7 @@ function createAddressSearchUI() {
         if (error.name === 'AbortError') return;
         console.error(error);
         closeAddressSuggestions();
-        addressStatus('Сервис адресов временно недоступен. Заполните поля вручную.', 'error');
+        addressStatus(addressErrorMessage(error), 'error');
       }
     }, 350);
   });
