@@ -128,6 +128,11 @@
         subtotal += value;
         lines.push(`Удаление запаха: ${formatMoney(value)}`);
       }
+      if (services.includes('Вычёсывание шерсти и волос')) {
+        const value = Math.round(area * 150);
+        subtotal += value;
+        lines.push(`Вычёсывание шерсти и волос: ${area.toFixed(2).replace('.00', '')} м² × 150 ₽ = ${formatMoney(value)}`);
+      }
       if (services.includes('Кондиционер')) {
         subtotal += 300;
         lines.push(`Кондиционер: ${formatMoney(300)}`);
