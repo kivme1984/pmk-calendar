@@ -25,10 +25,10 @@ jobs:
           sleep 2
       - name: Check v51 mobile UI
         run: node tests/v51_ui_smoke.mjs
-      - name: Upload screenshots
+      - name: Upload diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v51-mobile-ui
-          path: artifacts/*.png
+          path: artifacts/*
           if-no-files-found: ignore
