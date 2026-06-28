@@ -1,7 +1,6 @@
 'use strict';
 
-// После создания Cloudflare Worker сюда будет записан его публичный адрес.
-const PMK_ADDRESS_API_URL = '';
+const PMK_ADDRESS_API_URL = 'https://lucky-math-8e63pmk-address.standart-media.workers.dev/suggest';
 const PMK_DISTRICTS = [
   'Автозаводский', 'Ленинский', 'Канавинский', 'Московский',
   'Сормовский', 'Нижегородский', 'Советский', 'Приокский',
