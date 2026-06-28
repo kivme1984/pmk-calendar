@@ -6,24 +6,56 @@
   display:none;
 }
 
-body.v50-modal-active .pmk-client-info-mirror{
+body.v50-modal-active.pmk-client-info-has-text .pmk-client-info-mirror{
   position:fixed;
   top:62px;
   left:0;
   right:0;
   z-index:215;
   display:block;
-  padding:10px 14px 12px;
+  padding:9px 14px 12px;
   border-bottom:1px solid #d8b100;
   background:rgba(255,249,219,.98);
   box-shadow:0 10px 24px rgba(0,0,0,.14);
   backdrop-filter:blur(14px);
 }
 
+.pmk-client-info-mirror-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  margin-bottom:6px;
+}
+
 .pmk-client-info-mirror label{
   display:block;
-  margin:0 0 6px;
   color:#171717;
+  font-size:13px;
+  font-weight:850;
+}
+
+.pmk-client-info-collapse{
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border:0;
+  border-radius:50%;
+  color:#6d5700;
+  background:#fff2b8;
+  font-size:23px;
+  line-height:1;
+}
+
+.pmk-client-info-expand{
+  display:none;
+  width:100%;
+  border:0;
+  padding:0;
+  color:#6d5700;
+  background:transparent;
+  text-align:left;
   font-size:13px;
   font-weight:850;
 }
@@ -49,13 +81,35 @@ body.v50-modal-active .pmk-client-info-mirror{
   box-shadow:0 0 0 3px rgba(255,196,0,.22);
 }
 
-body.v50-modal-active .v50-source-section.v50-editor-open{
+body.v50-modal-active.pmk-client-info-has-text .v50-source-section.v50-editor-open{
   padding-top:210px!important;
 }
 
+body.pmk-client-info-collapsed .pmk-client-info-mirror{
+  padding-top:10px!important;
+  padding-bottom:10px!important;
+}
+
+body.pmk-client-info-collapsed .pmk-client-info-mirror-head{
+  margin-bottom:0;
+}
+
+body.pmk-client-info-collapsed .pmk-client-info-mirror label,
+body.pmk-client-info-collapsed .pmk-client-info-mirror textarea{
+  display:none;
+}
+
+body.pmk-client-info-collapsed .pmk-client-info-expand{
+  display:block;
+}
+
+body.v50-modal-active.pmk-client-info-has-text.pmk-client-info-collapsed .v50-source-section.v50-editor-open{
+  padding-top:128px!important;
+}
+
 @media(max-width:760px){
-  body.v50-modal-active .pmk-client-info-mirror{
-    padding:9px 11px 10px;
+  body.v50-modal-active.pmk-client-info-has-text .pmk-client-info-mirror{
+    padding:8px 11px 10px;
   }
 
   .pmk-client-info-mirror textarea{
@@ -64,7 +118,11 @@ body.v50-modal-active .v50-source-section.v50-editor-open{
     font-size:15px;
   }
 
-  body.v50-modal-active .v50-source-section.v50-editor-open{
+  body.v50-modal-active.pmk-client-info-has-text .v50-source-section.v50-editor-open{
     padding-top:198px!important;
+  }
+
+  body.v50-modal-active.pmk-client-info-has-text.pmk-client-info-collapsed .v50-source-section.v50-editor-open{
+    padding-top:120px!important;
   }
 }
