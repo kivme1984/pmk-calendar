@@ -1,6 +1,6 @@
 {
-  "version": "35",
-  "release": "returning-client-search",
+  "version": "36",
+  "release": "mobile-rug-and-google-import",
   "date": "2026-06-28",
   "features": [
     "cached-google-events",
@@ -10,6 +10,9 @@
     "non-blocking-route-warning",
     "returning-client-search",
     "fill-client-from-history",
-    "repeat-order-from-history"
+    "repeat-order-from-history",
+    "mobile-width-before-length",
+    "google-freeform-event-import",
+    "convert-google-event-to-pmk"
   ]
 }
