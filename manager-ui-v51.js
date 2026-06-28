@@ -71,11 +71,18 @@
 
   function updateExistingLabels(details) {
     const definitions = new Map(serviceDefinitions());
+    let changed = false;
     $$('.v51-service', details).forEach(label => {
       const input = $('input[type="checkbox"]', label);
       const text = $('span', label);
-      if (input && text && definitions.has(input.value)) text.textContent = definitions.get(input.value);
+      if (!input || !text || !definitions.has(input.value)) return;
+      const nextText = definitions.get(input.value);
+      if (text.textContent !== nextText) {
+        text.textContent = nextText;
+        changed = true;
+      }
     });
+    return changed;
   }
 
   function rebuildRugDetails(details) {
@@ -149,9 +156,15 @@
 
     const rugs = $('#rugsContainer');
     if (rugs) {
+      let pending = false;
       new MutationObserver(() => {
-        rebuildServices();
-        verify();
+        if (pending) return;
+        pending = true;
+        requestAnimationFrame(() => {
+          pending = false;
+          rebuildServices();
+          verify();
+        });
       }).observe(rugs, { childList: true, subtree: true });
     }
 
