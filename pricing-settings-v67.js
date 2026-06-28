@@ -97,7 +97,7 @@
   }
 
   function cardMarkup() {
-    return `<details id="pricingSettingsCard" class="form-card pricing-settings-card" open>
+    return `<details id="pricingSettingsCard" class="form-card pricing-settings-card">
       <summary>Прайс калькулятора</summary>
       <p class="pricing-settings-intro">Все значения хранятся на этом устройстве и применяются сразу после сохранения настроек.</p>
       <div class="pricing-settings-groups">
