@@ -1,14 +1,14 @@
 @media(max-width:760px){
-  .app-header{
+  body.pmk-sidebar-open .app-header{
     z-index:10020!important;
   }
 
-  #menuToggle{
+  body.pmk-sidebar-open #menuToggle{
     position:relative;
     z-index:10030!important;
   }
 
-  #sidebar{
+  #sidebar.open{
     z-index:10010!important;
   }
 
