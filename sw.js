@@ -19,6 +19,7 @@ const ASSETS = [
   './google-freeform-import.js?v=36',
   './runtime-stability-v37.js',
   './smart-paste-v38.js',
+  './smart-paste-lifecycle-v38.js',
   './manifest.webmanifest',
   './version.json',
   './icons/icon-192.png',
@@ -78,6 +79,7 @@ self.addEventListener('fetch', event => {
           networkText('./google-freeform-import.js?v=36'),
           networkText('./runtime-stability-v37.js'),
           networkText('./smart-paste-v38.js'),
+          networkText('./smart-paste-lifecycle-v38.js'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
