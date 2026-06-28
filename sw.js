@@ -16,7 +16,7 @@ const JS=[
   './android-autofill-off-v53.js?v=55','./preview-description-v53.js?v=54',
   './edit-save-hotfix-v54.js?v=55','./address-placeholders-off-v56.js?v=56',
   './client-info-sticky-v57.js?v=61','./workshop-measurement-v58.js?v=58',
-  './settings-version-header-v59.js?v=59','./navigation-layer-swipe-fix-v60.js?v=60',
+  './settings-version-header-v59.js?v=62','./navigation-layer-swipe-fix-v60.js?v=60',
   './planning-refresh-remove-v62.js?v=62'
 ];
 const CSS=[
