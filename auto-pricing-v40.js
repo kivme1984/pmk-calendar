@@ -8,10 +8,6 @@
   const HIGH_PILE_RE = /длинн\w*\s*ворс|высок\w*\s*ворс|более\s*1\s*см|свыше\s*1\s*см|длинноворс/i;
   const LOW_PILE_RE = /средн\w*\s*ворс|коротк\w*\s*ворс|низк\w*\s*ворс|до\s*1\s*см|коротковорс/i;
 
-  function cleanText(value = '') {
-    return String(value || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
-  }
-
   function inferMaterial(text = '') {
     if (/вискоз/i.test(text)) return 'Вискоза';
     if (/ш[её]лк|silk/i.test(text)) return 'Шёлк';
@@ -49,7 +45,8 @@
     const rugs = Array.isArray(data.rugs) ? data.rugs : [];
     const contexts = sizeLines(rawText);
     const enhancedRugs = rugs.map((rug, index) => {
-      const context = contexts[index] || (rugs.length === 1 ? rawText : '');
+      const lineContext = contexts[index] || '';
+      const context = [lineContext, rugs.length === 1 ? rawText : ''].filter(Boolean).join('\n');
       const shaggy = SHAGGY_RE.test(context);
       return {
         ...rug,
@@ -263,5 +260,8 @@
     };
     form?.addEventListener('input', recalculate);
     form?.addEventListener('change', recalculate);
+    form?.addEventListener('click', event => {
+      if (event.target.closest('.remove-rug') || event.target.closest('#addRugBtn')) setTimeout(calculatePrice, 0);
+    });
   });
 })();
