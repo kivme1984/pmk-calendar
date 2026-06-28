@@ -6,7 +6,6 @@
     'Вычёсывание шерсти и волос',
     'Удаление запаха мочи',
     'Дезинфекция',
-    'Удаление слайма / пластилина',
     'Подъём ворса',
     'Озонация',
     'Кондиционер',
@@ -15,18 +14,27 @@
 
   const ISSUE_TO_SERVICE = {
     'Пятна': 'Удаление пятен',
+    'Обычные пятна': 'Удаление пятен',
+    'Слайм': 'Удаление пятен',
+    'Пластилин': 'Удаление пятен',
+    'Слайм / пластилин': 'Удаление пятен',
+    'Удаление слайма / пластилина': 'Удаление пятен',
+    'Маркеры': 'Удаление пятен',
     'Шерсть': 'Вычёсывание шерсти и волос',
     'Волосы': 'Вычёсывание шерсти и волос',
     'Запах мочи': 'Удаление запаха мочи',
     'Дезинфекция': 'Дезинфекция',
-    'Слайм / пластилин': 'Удаление слайма / пластилина',
-    'Маркеры': 'Удаление слайма / пластилина',
   };
 
   const SERVICE_ALIASES = {
     'Пятна': 'Удаление пятен',
     'Обычные пятна': 'Удаление пятен',
     'Удаление пятен': 'Удаление пятен',
+    'Слайм': 'Удаление пятен',
+    'Пластилин': 'Удаление пятен',
+    'Слайм / пластилин': 'Удаление пятен',
+    'Удаление слайма / пластилина': 'Удаление пятен',
+    'Маркеры': 'Удаление пятен',
     'Шерсть': 'Вычёсывание шерсти и волос',
     'Волосы': 'Вычёсывание шерсти и волос',
     'Шерсть и волосы': 'Вычёсывание шерсти и волос',
@@ -36,10 +44,8 @@
     'Удаление запаха': 'Удаление запаха мочи',
     'Удаление запаха мочи': 'Удаление запаха мочи',
     'Дезинфекция': 'Дезинфекция',
-    'Слайм': 'Удаление слайма / пластилина',
-    'Маркеры': 'Удаление слайма / пластилина',
-    'Слайм / пластилин': 'Удаление слайма / пластилина',
-    'Удаление слайма / пластилина': 'Удаление слайма / пластилина',
+    'Ковёр после потопа': 'Дезинфекция',
+    'Мокрый ковёр': 'Дезинфекция',
     'Расчёсывание ворса': 'Подъём ворса',
     'Расчесывание ворса': 'Подъём ворса',
     'Расчёсывание': 'Подъём ворса',
@@ -76,9 +82,7 @@
     const legacyIssues = (Array.isArray(data.issues) ? data.issues : []).map(value => ISSUE_TO_SERVICE[value] || canonicalService(value));
     const legacyServices = (Array.isArray(data.services) ? data.services : []).map(canonicalService);
 
-    if (rugs.length && (legacyIssues.length || legacyServices.length)) {
-      rugs[0].services = unique([...rugs[0].services, ...legacyIssues, ...legacyServices]);
-    }
+    if (rugs.length && (legacyIssues.length || legacyServices.length)) rugs[0].services = unique([...rugs[0].services, ...legacyIssues, ...legacyServices]);
 
     return {
       ...data,
@@ -103,18 +107,16 @@
       <div class="rug-service-section">
         <p class="field-label">Услуги для этого ковра</p>
         <div class="chip-grid rug-services">
-          <label><input type="checkbox" value="Удаление пятен" /><span>Обычные пятна · 500 ₽/ковёр</span></label>
-          <label><input type="checkbox" value="Удаление слайма / пластилина" /><span>Слайм / пластилин / маркеры · 600 ₽/ковёр</span></label>
+          <label><input type="checkbox" value="Удаление пятен" /><span>Пятна / слайм / пластилин / маркеры · 500 ₽/ковёр</span></label>
           <label><input type="checkbox" value="Вычёсывание шерсти и волос" /><span>Вычёсывание шерсти и волос · 150 ₽/м²</span></label>
           <label><input type="checkbox" value="Удаление запаха мочи" /><span>Удаление запаха мочи · 700 ₽ до 6 м² / 1000 ₽ свыше 6 м²</span></label>
-          <label><input type="checkbox" value="Дезинфекция" /><span>Дезинфекция · 700 ₽/ковёр</span></label>
+          <label><input type="checkbox" value="Дезинфекция" /><span>Дезинфекция / ковёр после потопа · 700 ₽/ковёр</span></label>
           <label><input type="checkbox" value="Подъём ворса" /><span>Расчёсывание / подъём ворса · 150 ₽/м²</span></label>
           <label><input type="checkbox" value="Озонация" /><span>Озонация · 300 ₽/ковёр</span></label>
           <label><input type="checkbox" value="Кондиционер" /><span>Кондиционер · 300 ₽/ковёр</span></label>
           <label><input type="checkbox" value="Экспресс-стирка" /><span>Экспресс-стирка · 1000 ₽/заказ</span></label>
         </div>
-      </div>
-    `;
+      </div>`;
   }
 
   replaceRugTemplate();
@@ -123,10 +125,7 @@
   collectRugs = function collectRugsWithUnifiedServices() {
     const rugs = originalCollectRugs();
     const cards = qsa('.rug-card');
-    return rugs.map((rug, index) => migrateRug({
-      ...rug,
-      services: servicesFromCard(cards[index]),
-    }));
+    return rugs.map((rug, index) => migrateRug({ ...rug, services: servicesFromCard(cards[index]) }));
   };
 
   const originalEventMeta = eventMeta;
