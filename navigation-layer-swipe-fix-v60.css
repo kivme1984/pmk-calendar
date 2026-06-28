@@ -1,0 +1,34 @@
+@media(max-width:760px){
+  .app-header{
+    z-index:10020!important;
+  }
+
+  #menuToggle{
+    position:relative;
+    z-index:10030!important;
+  }
+
+  #sidebar{
+    z-index:10010!important;
+  }
+
+  body.pmk-sidebar-open{
+    overflow:hidden;
+  }
+
+  body.pmk-sidebar-open::before{
+    content:"";
+    position:fixed;
+    inset:64px 0 0;
+    z-index:10000;
+    background:rgba(0,0,0,.42);
+    backdrop-filter:blur(2px);
+  }
+
+  .week-board,
+  .three-days-board,
+  .month-board{
+    touch-action:pan-x pan-y!important;
+    overscroll-behavior-x:contain;
+  }
+}
