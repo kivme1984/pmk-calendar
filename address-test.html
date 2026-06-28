@@ -20,23 +20,30 @@
 </head>
 <body>
   <main>
-    <h1>Проверка адресного сервиса</h1>
-    <p>Страница проверяет связь календаря с Cloudflare Worker и DaData. API-ключ здесь не отображается и не передаётся в браузер.</p>
+    <h1>Проверка адресного сервиса v46</h1>
+    <p>Проверяется тот же GET-запрос без предварительного CORS-запроса, который использует мобильное приложение.</p>
     <input id="query" value="Нижний Новгород, Космическая улица, 10" />
-    <button id="test">Проверить подключение</button>
-    <pre id="result">Нажмите «Проверить подключение».</pre>
+    <button id="test">Проверить мобильное подключение</button>
+    <pre id="result">Нажмите кнопку. Origin страницы: <span id="origin"></span></pre>
   </main>
   <script>
     const endpoint = 'https://lucky-math-8e63pmk-address.standart-media.workers.dev/suggest';
     const result = document.querySelector('#result');
+    document.querySelector('#origin').textContent = location.origin || 'null';
     document.querySelector('#test').addEventListener('click', async () => {
       result.className = '';
-      result.textContent = 'Отправляем проверочный запрос…';
+      result.textContent = 'Отправляем мобильный GET-запрос…';
       try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: document.querySelector('#query').value, count: 3 }),
+        const url = new URL(endpoint);
+        url.searchParams.set('q', document.querySelector('#query').value);
+        url.searchParams.set('count', '3');
+        url.searchParams.set('_', String(Date.now()));
+        const response = await fetch(url, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-store',
+          referrerPolicy: 'no-referrer',
         });
         const text = await response.text();
         let payload;
@@ -44,15 +51,15 @@
         if (response.ok && Array.isArray(payload.suggestions)) {
           result.className = 'ok';
           result.textContent = payload.suggestions.length
-            ? `Сервис работает. Найдено вариантов: ${payload.suggestions.length}\n\n${payload.suggestions.map(item => item.value).join('\n')}`
-            : 'Сервис работает, но по этому запросу ничего не найдено.';
+            ? `Мобильный транспорт работает. Найдено вариантов: ${payload.suggestions.length}\n\n${payload.suggestions.map(item => item.value).join('\n')}`
+            : 'Мобильный транспорт работает, но по этому запросу ничего не найдено.';
           return;
         }
         result.className = 'bad';
         result.textContent = `Ошибка ${response.status}\n${JSON.stringify(payload, null, 2)}`;
       } catch (error) {
         result.className = 'bad';
-        result.textContent = `Ошибка соединения\n${error.message}`;
+        result.textContent = `Запрос заблокирован до получения ответа Worker.\n${error.name}: ${error.message}`;
       }
     });
   </script>
