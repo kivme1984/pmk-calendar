@@ -1,4 +1,4 @@
-const CACHE = 'pmk-calendar-v39';
+const CACHE = 'pmk-calendar-v40';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   './manager-planner.css?v=32',
   './address-autocomplete.css?v=39',
   './mobile-rug-layout.css?v=36',
+  './manager-form-v40.css',
   './app.js?v=38',
   './manager-planner-core.js',
   './manager-planner-hooks.js',
@@ -20,6 +21,7 @@ const ASSETS = [
   './runtime-stability-v37.js',
   './smart-paste-v38.js',
   './smart-paste-lifecycle-v38.js',
+  './auto-pricing-v40.js',
   './manifest.webmanifest',
   './version.json',
   './icons/icon-192.png',
@@ -80,12 +82,13 @@ self.addEventListener('fetch', event => {
           networkText('./runtime-stability-v37.js'),
           networkText('./smart-paste-v38.js'),
           networkText('./smart-paste-lifecycle-v38.js'),
+          networkText('./auto-pricing-v40.js'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
             'Content-Type': 'application/javascript; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '39',
+            'X-PMK-Version': '40',
           },
         });
         return cacheResponse(event.request, response);
@@ -104,12 +107,13 @@ self.addEventListener('fetch', event => {
           networkText('./manager-planner.css?v=32'),
           networkText('./address-autocomplete.css?v=39'),
           networkText('./mobile-rug-layout.css?v=36'),
+          networkText('./manager-form-v40.css'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
             'Content-Type': 'text/css; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '39',
+            'X-PMK-Version': '40',
           },
         });
         return cacheResponse(event.request, response);
