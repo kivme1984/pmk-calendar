@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171717">
+<title>ПМК Календарь — тест v50</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#111;color:#f5f5f5;font-family:Arial,sans-serif}
+main{width:min(560px,calc(100vw - 32px));padding:24px;box-sizing:border-box;border:1px solid #333;border-radius:16px;background:#181818}
+h1{margin:0 0 12px;font-size:24px}p{margin:0;color:#ccc;line-height:1.5}.error{margin-top:14px;color:#ff9d93}
+</style>
+</head>
+<body>
+<main><h1>Запускаем тестовую версию v50</h1><p>Установленное приложение и версия v49 не изменяются. Загружается новый интерфейс менеджера со всеми автоматизациями.</p><p id="bootError" class="error"></p></main>
+<script>
+(async()=>{
+  const error=document.querySelector('#bootError');
+  try{
+    if('serviceWorker' in navigator){
+      try{navigator.serviceWorker.register=()=>Promise.resolve({});}catch{}
+    }
+
+    const response=await fetch('./index.html?v50='+Date.now(),{cache:'no-store'});
+    if(!response.ok)throw new Error('Не удалось загрузить основной интерфейс');
+    let html=await response.text();
+
+    const css=[
+      './styles.css?v=30','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
+      './mobile-rug-layout.css?v=36','./manager-form-v40.css','./unified-rug-services-v43.css?v=46',
+      './manager-ui-v50-preview.css?v=50'
+    ].map(href=>`<link rel="stylesheet" href="${href}">`).join('\n');
+
+    const scripts=[
+      './app.js?v=38','./manager-planner-core.js','./manager-planner-hooks.js',
+      './address-autocomplete.js?v=41','./address-mobile-v46.js','./stability-route.js?v=34',
+      './stability-cache.js?v=34','./stability-copy.js?v=34','./stability-draft.js?v=34',
+      './returning-client-search.js?v=35','./google-freeform-import.js?v=36','./runtime-stability-v37.js',
+      './smart-paste-v38.js','./smart-paste-lifecycle-v38.js','./smart-parser-v45.js',
+      './smart-parser-v45-runtime-fix.js','./smart-parser-v47.js','./smart-parser-v47-name-fix.js',
+      './smart-parser-v47-assignments.js','./hotfix-parser-v48.js','./parser-real-case-v49.js?v=49',
+      './empty-rug-dimensions-v42.js','./unified-rug-services-v43.js?v=45','./pricing-v48.js',
+      './manager-ui-v50-preview.js?v=50'
+    ].map(src=>`<script src="${src}" defer><\/script>`).join('\n');
+
+    html=html.replace(/<link rel="manifest"[^>]*>/i,'');
+    html=html.replace(/<link rel="stylesheet"[^>]*styles\.css[^>]*>/i,css);
+    html=html.replace(/<script\s+src="app\.js[^>]*><\/script>/i,
+      `<script>window.PMK_V50_PREVIEW=true;if('serviceWorker' in navigator){try{navigator.serviceWorker.register=()=>Promise.resolve({});}catch{}}<\/script>\n${scripts}`);
+    html=html.replace(/<title>[^<]*<\/title>/i,'<title>ПМК Календарь — тест v50<\/title>');
+
+    document.open();
+    document.write(html);
+    document.close();
+  }catch(e){
+    error.textContent='Ошибка запуска: '+(e?.message||e);
+  }
+})();
+</script>
+</body>
+</html>
