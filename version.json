@@ -1,6 +1,6 @@
 {
-  "version": "39",
-  "release": "address-autocomplete",
+  "version": "40",
+  "release": "auto-pricing-and-rug-types",
   "date": "2026-06-28",
   "features": [
     "stable-service-worker",
@@ -18,6 +18,10 @@
     "google-freeform-event-import",
     "cloudflare-address-proxy",
     "dadata-address-suggestions",
-    "automatic-district-selection"
+    "automatic-district-selection",
+    "compact-address-fields",
+    "shaggy-and-fiber-type-recognition",
+    "optional-automatic-price-calculation",
+    "automatic-regular-customer-discount"
   ]
 }
