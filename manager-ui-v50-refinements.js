@@ -6,26 +6,22 @@
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const DRAFT_KEY = 'pmk-form-autodraft-v1';
 
-  function draftKeys() {
-    const keys = [];
+  function hasDraft() {
     try {
-      for (let index = 0; index < localStorage.length; index += 1) {
-        const key = localStorage.key(index) || '';
-        if (!/(draft|чернов|unsaved|smart-paste)/i.test(key)) continue;
-        const stored = localStorage.getItem(key);
-        if (stored && stored !== '{}' && stored !== '[]' && stored !== 'null' && stored.length > 2) keys.push(key);
-      }
-    } catch {}
-    return keys;
+      const saved = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+      return Boolean(saved?.data && Date.now() - Number(saved.savedAt || 0) < 604800000);
+    } catch {
+      return false;
+    }
   }
 
   function renderDraftNotice() {
     const summary = $('#v50Summary');
     if (!summary) return;
     $('#v50DraftNotice')?.remove();
-    const keys = draftKeys();
-    if (!keys.length) return;
+    if (!hasDraft()) return;
 
     const notice = document.createElement('section');
     notice.id = 'v50DraftNotice';
@@ -33,7 +29,7 @@
     notice.innerHTML = `
       <div class="v50-draft-copy">
         <span>●</span>
-        <div><strong>Есть незавершённая заявка</strong><small>Можно продолжить заполнение или удалить черновик.</small></div>
+        <div><strong>Есть незавершённая заявка</strong><small>Можно посмотреть и продолжить либо удалить.</small></div>
       </div>
       <div class="v50-draft-actions">
         <button type="button" data-v50-draft="view">Посмотреть</button>
@@ -44,15 +40,18 @@
     notice.addEventListener('click', event => {
       const action = event.target.closest('[data-v50-draft]')?.dataset.v50Draft;
       if (action === 'view') {
-        document.body.classList.add('v50-full-form');
-        setTimeout(() => $('.form-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        try {
+          if (typeof pmkDraftRestore === 'function') pmkDraftRestore();
+          else document.body.classList.add('v50-full-form');
+        } catch {
+          document.body.classList.add('v50-full-form');
+        }
+        setTimeout(() => $('.form-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       }
       if (action === 'delete') {
         if (!window.confirm('Удалить незавершённую заявку?')) return;
-        keys.forEach(key => {
-          try { localStorage.removeItem(key); } catch {}
-        });
-        try { if (typeof resetForm === 'function') resetForm(true); } catch {}
+        try { localStorage.removeItem(DRAFT_KEY); } catch {}
+        $('#pmkDraftRestore')?.remove();
         notice.remove();
       }
     });
@@ -71,93 +70,11 @@
     });
   }
 
-  function compactAutomationBar() {
-    const grid = $('.v50-automation-grid');
-    if (!grid) return;
-    grid.classList.add('v50-automation-grid-compact');
-    $$('[data-v50-action="paste"]', grid).forEach(button => button.remove());
-    const labels = {
-      client: ['👤', 'Клиент'],
-      address: ['📍', 'Адрес'],
-      slots: ['🕒', 'Окна'],
-      price: ['₽', 'Стоимость'],
-    };
-    Object.entries(labels).forEach(([action, [icon, text]]) => {
-      const button = $(`[data-v50-action="${action}"]`, grid);
-      if (!button) return;
-      button.innerHTML = `<span>${icon}</span><b>${text}</b>`;
-    });
-  }
-
-  const serviceDefinitions = [
-    { label: 'Пятна', pattern: /пят/i },
-    { label: 'Запах мочи', pattern: /запах.*моч|моч[аи]/i },
-    { label: 'Кондиционер', pattern: /кондиционер/i },
-    { label: 'Шерсть / волосы', pattern: /шерст|волос|выч[её]с/i },
-    { label: 'Озон', pattern: /озон/i },
-    { label: 'Расчёсывание ворса', pattern: /подъ[её]м.*ворс|расч[её]с|расчес/i },
-  ];
-
-  function refineRugCard(card) {
-    if (!card || card.dataset.v50ServicesRefined === '1') return;
-    const labels = $$('label', card).filter(label => $('input[type="checkbox"]', label));
-    if (!labels.length) return;
-
-    const matched = new Map();
-    labels.forEach(label => {
-      const input = $('input[type="checkbox"]', label);
-      const source = `${input?.value || ''} ${label.textContent || ''}`;
-      const definition = serviceDefinitions.find(item => item.pattern.test(source));
-      if (!definition || matched.has(definition.label)) {
-        label.classList.add('v50-service-hidden');
-        return;
-      }
-      matched.set(definition.label, label);
-      label.classList.add('v50-service-chip');
-      label.dataset.v50Service = definition.label;
-      [...label.childNodes].filter(node => node.nodeType === 3).forEach(node => node.remove());
-      let text = $('.v50-service-text', label);
-      if (!text) {
-        text = document.createElement('span');
-        text.className = 'v50-service-text';
-        label.append(text);
-      }
-      text.textContent = definition.label;
-    });
-
-    const chosen = serviceDefinitions.map(item => matched.get(item.label)).filter(Boolean);
-    if (!chosen.length) return;
-
-    const first = chosen[0];
-    const originalParent = first.parentElement;
-    if (!originalParent) return;
-
-    const grid = document.createElement('div');
-    grid.className = 'v50-service-grid';
-    originalParent.insertBefore(grid, first);
-    chosen.forEach(label => grid.append(label));
-
-    card.dataset.v50ServicesRefined = '1';
-  }
-
-  function refineRugs() {
-    $$('.rug-card', $('#rugsContainer') || document).forEach(refineRugCard);
-  }
-
   function install() {
     if (!$('#v50Summary')) return false;
     renderDraftNotice();
     compactSmartPaste();
-    compactAutomationBar();
-    refineRugs();
-
-    const rugs = $('#rugsContainer');
-    if (rugs && rugs.dataset.v50RefinementObserver !== '1') {
-      rugs.dataset.v50RefinementObserver = '1';
-      new MutationObserver(() => setTimeout(refineRugs, 40)).observe(rugs, { childList: true, subtree: true });
-    }
-
-    window.addEventListener('storage', renderDraftNotice);
+    window.addEventListener('storage', renderDraftNotice, { once: true });
     return true;
   }
 
