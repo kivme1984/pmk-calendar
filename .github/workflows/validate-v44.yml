@@ -1,0 +1,45 @@
+name: Validate PMK Calendar v44
+
+on:
+  push:
+    paths:
+      - '.github/workflows/validate-v44.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate JavaScript and exact website rates
+        run: |
+          node --check app.js
+          node --check auto-pricing-v40.js
+          node --check unified-rug-services-v43.js
+          node --check empty-rug-dimensions-v42.js
+          node --check sw.js
+          grep -q "pmk-calendar-v44" sw.js
+          grep -q "conditionerPerRug: 350" auto-pricing-v40.js
+          grep -q "stainPerRug: 600" auto-pricing-v40.js
+          grep -q "odorPerRug: 700" auto-pricing-v40.js
+          grep -q "odorLargePerRug: 1000" auto-pricing-v40.js
+          grep -q "hairPerM2: 150" auto-pricing-v40.js
+          grep -q "pileLiftPerM2: 150" auto-pricing-v40.js
+          grep -q "wideWidthFrom: 3" auto-pricing-v40.js
+          grep -q "minOrder: 1800" auto-pricing-v40.js
+          grep -q "min: 2, percent: 5" auto-pricing-v40.js
+          grep -q "min: 3, percent: 10" auto-pricing-v40.js
+          grep -q '"version": "44"' version.json
+
+      - name: Remove one-time workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/validate-v44.yml
+          git commit -m "Complete v44 validation"
+          git push
