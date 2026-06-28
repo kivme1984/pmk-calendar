@@ -7,6 +7,7 @@
   const NO_PILE_RE = /без\s*ворс|безворс|циновк|килим/i;
   const HIGH_PILE_RE = /длинн\w*\s*ворс|высок\w*\s*ворс|более\s*1\s*см|свыше\s*1\s*см|длинноворс/i;
   const LOW_PILE_RE = /средн\w*\s*ворс|коротк\w*\s*ворс|низк\w*\s*ворс|до\s*1\s*см|коротковорс/i;
+  const COMBING_RE = /расч[её]с(?:ыван|ать|ка|ывание)?(?:\s+ворс[а-я]*)?|поднят(?:ие|ь)\s*ворс[а-я]*|подъ[её]м\s*ворс[а-я]*|причес(?:ать|ывание)\s*ворс[а-я]*/i;
 
   function inferMaterial(text = '') {
     if (/вискоз/i.test(text)) return 'Вискоза';
@@ -40,6 +41,12 @@
       .filter(line => /\d+(?:[.,]\d+)?\s*[xх×*]\s*\d+(?:[.,]\d+)?/i.test(line));
   }
 
+  function mergeServices(services = [], context = '') {
+    const result = Array.isArray(services) ? [...services] : [];
+    if (COMBING_RE.test(context) && !result.includes('Подъём ворса')) result.push('Подъём ворса');
+    return result;
+  }
+
   function enhanceOrderData(data = {}) {
     const rawText = [data.managerComment, data.description, data.rawText, data.orderSource].filter(Boolean).join('\n');
     const rugs = Array.isArray(data.rugs) ? data.rugs : [];
@@ -52,6 +59,7 @@
         ...rug,
         material: rug.material || (shaggy ? 'Синтетика' : inferMaterial(context)),
         pile: rug.pile || (shaggy ? 'Более 1 см' : inferPile(context)),
+        services: mergeServices(rug.services, context),
       };
     });
 
@@ -128,13 +136,15 @@
         subtotal += 300;
         lines.push(`Озонация: ${formatMoney(300)}`);
       }
+      if (services.includes('Подъём ворса')) {
+        const value = Math.round(area * 150);
+        subtotal += value;
+        lines.push(`Расчёсывание ворса: ${area.toFixed(2).replace('.00', '')} м² × 150 ₽ = ${formatMoney(value)}`);
+      }
       if (services.includes('Экспресс-стирка') && !expressAdded) {
         subtotal += 1000;
         expressAdded = true;
         lines.push(`Экспресс-заказ: ${formatMoney(1000)}`);
-      }
-      if (services.includes('Подъём ворса')) {
-        problems.push(`Ковёр ${index + 1}: цена подъёма ворса не задана — используйте ручной расчёт`);
       }
     });
 
@@ -203,6 +213,8 @@
 
     const addressGrid = qs('#houseNumber')?.closest('.field-grid');
     addressGrid?.classList.add('address-fields-grid');
+    const combingLabel = qs('.rug-services input[value="Подъём ворса"]')?.nextElementSibling;
+    if (combingLabel) combingLabel.textContent = 'Расчёсывание / подъём ворса';
     priceInput.step = '1';
   }
 
