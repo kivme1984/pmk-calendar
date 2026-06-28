@@ -147,6 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const pmkHotfixLoader = document.createElement('script');
-pmkHotfixLoader.src = './hotfix-loader.js?v=35';
+pmkHotfixLoader.src = './hotfix-loader.js?v=36';
 pmkHotfixLoader.async = false;
 document.head.appendChild(pmkHotfixLoader);
