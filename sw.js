@@ -1,16 +1,16 @@
-const CACHE = 'pmk-calendar-v38';
+const CACHE = 'pmk-calendar-v39';
 const ASSETS = [
   './',
   './index.html',
   './reset.html',
   './styles.css?v=30',
   './manager-planner.css?v=32',
-  './address-autocomplete.css?v=33',
+  './address-autocomplete.css?v=39',
   './mobile-rug-layout.css?v=36',
   './app.js?v=38',
   './manager-planner-core.js',
   './manager-planner-hooks.js',
-  './address-autocomplete.js?v=33',
+  './address-autocomplete.js?v=39',
   './stability-route.js?v=34',
   './stability-cache.js?v=34',
   './stability-copy.js?v=34',
@@ -70,7 +70,7 @@ self.addEventListener('fetch', event => {
           networkText('./app.js?v=38'),
           networkText('./manager-planner-core.js'),
           networkText('./manager-planner-hooks.js'),
-          networkText('./address-autocomplete.js?v=33'),
+          networkText('./address-autocomplete.js?v=39'),
           networkText('./stability-route.js?v=34'),
           networkText('./stability-cache.js?v=34'),
           networkText('./stability-copy.js?v=34'),
@@ -85,7 +85,7 @@ self.addEventListener('fetch', event => {
           headers: {
             'Content-Type': 'application/javascript; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '38',
+            'X-PMK-Version': '39',
           },
         });
         return cacheResponse(event.request, response);
@@ -102,14 +102,14 @@ self.addEventListener('fetch', event => {
         const parts = await Promise.all([
           networkText('./styles.css?v=30'),
           networkText('./manager-planner.css?v=32'),
-          networkText('./address-autocomplete.css?v=33'),
+          networkText('./address-autocomplete.css?v=39'),
           networkText('./mobile-rug-layout.css?v=36'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
             'Content-Type': 'text/css; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '38',
+            'X-PMK-Version': '39',
           },
         });
         return cacheResponse(event.request, response);
