@@ -1,0 +1,47 @@
+name: Validate PMK Calendar v40
+
+on:
+  push:
+    paths:
+      - '.github/workflows/validate-v40.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate JavaScript syntax
+        run: |
+          node --check app.js
+          node --check auto-pricing-v40.js
+          node --check address-autocomplete.js
+          node --check manager-planner-core.js
+          node --check manager-planner-hooks.js
+          node --check smart-paste-v38.js
+          node --check google-freeform-import.js
+          node --check sw.js
+
+      - name: Validate v40 wiring
+        run: |
+          grep -q "pmk-calendar-v40" sw.js
+          grep -q "auto-pricing-v40.js" sw.js
+          grep -q "manager-form-v40.css" sw.js
+          grep -q "DADATA_API_KEY" cloudflare-worker-dadata-compact.js
+          grep -q '"version": "40"' version.json
+          grep -q "Рассчитать стоимость автоматически" auto-pricing-v40.js
+          grep -q "Синтетика" auto-pricing-v40.js
+          grep -q "Более 1 см" auto-pricing-v40.js
+
+      - name: Remove one-time workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/validate-v40.yml
+          git commit -m "Complete v40 validation"
+          git push
