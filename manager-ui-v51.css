@@ -1,25 +1,21 @@
 body.v50-manager-preview{padding-bottom:92px}
 
-/* Верхняя кнопка дополнительных возможностей */
 .v51-tools{display:grid;gap:10px;margin:0 0 14px}
-.v51-tools-toggle{width:100%;min-height:58px;padding:0 16px;border:0;border-radius:16px;background:linear-gradient(135deg,#171717,#303030);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;font:inherit;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.v51-tools>summary{list-style:none}.v51-tools>summary::-webkit-details-marker{display:none}
+.v51-tools-toggle{width:100%;min-height:58px;padding:0 16px;border:0;border-radius:16px;background:linear-gradient(135deg,#171717,#303030);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;font:inherit;box-shadow:0 8px 20px rgba(0,0,0,.18);cursor:pointer;box-sizing:border-box}
 .v51-tools-toggle strong{display:flex;align-items:center;gap:10px;font-size:17px;text-align:left}.v51-tools-toggle strong::before{content:'⚡';display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:#ffc400;color:#111;font-size:18px}
-.v51-tools-toggle span{font-size:24px;color:#ffc400;transition:transform .2s ease}.v51-tools.is-open .v51-tools-toggle span{transform:rotate(180deg)}
+.v51-tools-toggle span{font-size:24px;color:#ffc400;transition:transform .2s ease}.v51-tools[open] .v51-tools-toggle span{transform:rotate(180deg)}
 .v51-tools-panel{display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:10px;border:1px solid #e1e1e1;border-radius:16px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.06)}
-.v51-tools.is-open .v51-tools-panel{display:grid}
+.v51-tools[open] .v51-tools-panel{display:grid}
 .v51-tool{min-height:70px;padding:10px 11px;border:1px solid #e1e1e1;border-radius:13px;background:#fafafa;color:#202020;display:grid;grid-template-columns:36px 1fr;gap:9px;align-items:center;text-align:left;font:inherit}
 .v51-tool-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:#ffc400;color:#111;font-weight:900;font-size:18px}
 .v51-tool-text{display:grid;gap:2px}.v51-tool-text strong{font-size:15px;line-height:1.1}.v51-tool-text small{font-size:12px;line-height:1.2;color:#666}
 .v51-tool:active{background:#fff4b8;border-color:#e9b900;transform:translateY(1px)}
 
-/* Старую сетку быстрых кнопок полностью убираем */
 .v50-automation-grid{display:none!important}
-
-/* Компактная быстрая вставка */
 .v51-smart-paste-clean p,.v51-smart-paste-clean small,.v51-smart-paste-clean .helper-text,.v51-smart-paste-clean .hint{display:none!important}
 .v51-smart-paste-clean .section-heading{margin-bottom:8px!important}
 
-/* Новый блок услуг */
 .v51-services{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 .v51-service{position:relative;display:block;min-height:54px}
 .v51-service input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
@@ -28,12 +24,8 @@ body.v50-manager-preview{padding-bottom:92px}
 .v51-service input:checked+span::before{content:'✓';margin-right:6px;color:#8a6700;font-weight:900}
 .v51-service:active span{transform:scale(.985)}
 .v51-service-section{margin-top:14px}.v51-service-title{margin:0 0 6px;font-size:17px;font-weight:900;color:#333}
-
-/* Удаляем старые блоки услуг и лишнее пустое место */
 .rug-card .rug-details-grid.v51-clean-details{display:block!important;margin-top:10px!important}
 .rug-card .rug-details-grid.v51-clean-details>*:not(.v51-service-section){display:none!important}
-
-/* Вкладки */
 .v50-editor-open{overscroll-behavior:contain}
 .v50-editor-open .rug-card{padding-bottom:18px!important}
 .v50-editor-open .v50-editor-save{box-shadow:0 10px 28px rgba(0,0,0,.18)}
