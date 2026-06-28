@@ -94,15 +94,15 @@
       <div class="rug-service-section">
         <p class="field-label">Услуги для этого ковра</p>
         <div class="chip-grid rug-services">
-          <label><input type="checkbox" value="Удаление пятен" /><span>Удаление пятен</span></label>
-          <label><input type="checkbox" value="Вычёсывание шерсти и волос" /><span>Вычёсывание шерсти и волос</span></label>
-          <label><input type="checkbox" value="Удаление запаха мочи" /><span>Удаление запаха мочи</span></label>
-          <label><input type="checkbox" value="Дезинфекция" /><span>Дезинфекция</span></label>
-          <label><input type="checkbox" value="Удаление слайма / пластилина" /><span>Удаление слайма / пластилина</span></label>
-          <label><input type="checkbox" value="Подъём ворса" /><span>Расчёсывание / подъём ворса</span></label>
-          <label><input type="checkbox" value="Озонация" /><span>Озонация</span></label>
-          <label><input type="checkbox" value="Кондиционер" /><span>Кондиционер</span></label>
-          <label><input type="checkbox" value="Экспресс-стирка" /><span>Экспресс-стирка</span></label>
+          <label><input type="checkbox" value="Удаление пятен" /><span>Удаление пятен · 600 ₽/ковёр</span></label>
+          <label><input type="checkbox" value="Вычёсывание шерсти и волос" /><span>Вычёсывание шерсти и волос · 150 ₽/м²</span></label>
+          <label><input type="checkbox" value="Удаление запаха мочи" /><span>Удаление запаха мочи · 700 ₽ до 6 м² / 1000 ₽ свыше 6 м²</span></label>
+          <label><input type="checkbox" value="Дезинфекция" /><span>Дезинфекция · цена вручную</span></label>
+          <label><input type="checkbox" value="Удаление слайма / пластилина" /><span>Удаление слайма / пластилина · цена вручную</span></label>
+          <label><input type="checkbox" value="Подъём ворса" /><span>Расчёсывание / подъём ворса · 150 ₽/м²</span></label>
+          <label><input type="checkbox" value="Озонация" /><span>Озонация · цена вручную</span></label>
+          <label><input type="checkbox" value="Кондиционер" /><span>Кондиционер · 350 ₽/ковёр</span></label>
+          <label><input type="checkbox" value="Экспресс-стирка" /><span>Экспресс-стирка · цена вручную</span></label>
         </div>
       </div>
     `;
