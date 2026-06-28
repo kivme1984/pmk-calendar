@@ -1,15 +1,16 @@
 {
-  "version": "59",
-  "release": "compact-settings-and-version-header",
+  "version": "60",
+  "release": "mobile-menu-layer-and-period-swipe-fix",
   "date": "2026-06-28",
   "features": [
-    "main-release-v58-features",
-    "pricing-settings-collapsed-by-default",
-    "version-information-at-top-of-settings",
-    "update-button-moved-to-top-of-settings",
-    "remove-update-button-from-bottom-settings-actions",
+    "main-release-v59-features",
+    "mobile-menu-above-all-form-editors",
+    "menu-backdrop-and-body-scroll-lock",
+    "disable-period-change-on-horizontal-scroll",
+    "multi-day-week-month-navigation-by-buttons-only",
+    "safer-day-swipe-threshold",
+    "preserve-compact-settings",
     "preserve-workshop-measurement",
-    "preserve-full-calendar-client-search",
-    "preserve-persistent-client-draft"
+    "preserve-full-calendar-client-search"
   ]
 }
