@@ -1,0 +1,25 @@
+.v50-final-automation{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}
+.v50-final-automation-button{min-width:0!important;min-height:48px!important;padding:0 6px!important;border:1px solid #d9d9d9!important;border-radius:12px!important;background:#fff!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;font:inherit!important;color:#202020!important;box-shadow:none!important}
+.v50-final-automation-button span{font-size:17px!important;line-height:1!important;flex:0 0 auto!important}
+.v50-final-automation-button b{font-size:11px!important;line-height:1!important;white-space:nowrap!important;font-weight:800!important}
+.v50-final-automation-button:active{transform:translateY(1px);background:#fff7cc!important;border-color:#e7b800!important}
+
+.v50-final-rug-details{display:block!important}
+.v50-final-rug-details>.rug-service-section{width:100%!important}
+.v50-final-services{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;margin-top:10px!important}
+.v50-final-service{position:relative!important;min-height:52px!important;padding:0!important;border:0!important;background:transparent!important;display:block!important}
+.v50-final-service input{position:absolute!important;opacity:0!important;pointer-events:none!important;width:1px!important;height:1px!important}
+.v50-final-service span{min-height:52px!important;padding:0 12px!important;border:1px solid #d7d7d7!important;border-radius:13px!important;background:#fff!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;font-size:15px!important;line-height:1.15!important;font-weight:800!important;color:#2b2b2b!important;box-sizing:border-box!important;transition:.15s ease!important}
+.v50-final-service input:checked+span{background:#fff3b0!important;border-color:#e6b600!important;box-shadow:0 0 0 2px rgba(255,196,0,.18) inset!important}
+.v50-final-service input:checked+span::before{content:'✓';margin-right:6px;font-weight:900;color:#9a7000}
+.v50-final-service:active span{transform:scale(.985)}
+.v50-final-rug-details .field-label{margin:0 0 4px!important;font-size:17px!important;font-weight:800!important}
+.v50-final-smart-paste .section-heading{margin-bottom:8px!important}
+
+@media(max-width:390px){
+  .v50-final-automation{gap:4px!important}
+  .v50-final-automation-button{padding:0 3px!important;gap:3px!important}
+  .v50-final-automation-button b{font-size:10px!important}
+  .v50-final-services{gap:8px!important}
+  .v50-final-service span{padding:0 8px!important;font-size:14px!important}
+}
