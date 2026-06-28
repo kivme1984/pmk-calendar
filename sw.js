@@ -1,4 +1,4 @@
-const CACHE = 'pmk-calendar-v43';
+const CACHE = 'pmk-calendar-v44';
 const ASSETS = [
   './',
   './index.html',
@@ -9,7 +9,7 @@ const ASSETS = [
   './address-autocomplete.css?v=39',
   './mobile-rug-layout.css?v=36',
   './manager-form-v40.css',
-  './unified-rug-services-v43.css',
+  './unified-rug-services-v43.css?v=44',
   './app.js?v=38',
   './manager-planner-core.js',
   './manager-planner-hooks.js',
@@ -23,9 +23,9 @@ const ASSETS = [
   './runtime-stability-v37.js',
   './smart-paste-v38.js',
   './smart-paste-lifecycle-v38.js',
-  './auto-pricing-v40.js?v=43',
+  './auto-pricing-v40.js?v=44',
   './empty-rug-dimensions-v42.js',
-  './unified-rug-services-v43.js',
+  './unified-rug-services-v43.js?v=44',
   './manifest.webmanifest',
   './version.json',
   './icons/icon-192.png',
@@ -86,15 +86,15 @@ self.addEventListener('fetch', event => {
           networkText('./runtime-stability-v37.js'),
           networkText('./smart-paste-v38.js'),
           networkText('./smart-paste-lifecycle-v38.js'),
-          networkText('./auto-pricing-v40.js?v=43'),
+          networkText('./auto-pricing-v40.js?v=44'),
           networkText('./empty-rug-dimensions-v42.js'),
-          networkText('./unified-rug-services-v43.js'),
+          networkText('./unified-rug-services-v43.js?v=44'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
             'Content-Type': 'application/javascript; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '43',
+            'X-PMK-Version': '44',
           },
         });
         return cacheResponse(event.request, response);
@@ -114,13 +114,13 @@ self.addEventListener('fetch', event => {
           networkText('./address-autocomplete.css?v=39'),
           networkText('./mobile-rug-layout.css?v=36'),
           networkText('./manager-form-v40.css'),
-          networkText('./unified-rug-services-v43.css'),
+          networkText('./unified-rug-services-v43.css?v=44'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
             'Content-Type': 'text/css; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '43',
+            'X-PMK-Version': '44',
           },
         });
         return cacheResponse(event.request, response);
