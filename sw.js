@@ -1,19 +1,21 @@
-const CACHE = 'pmk-calendar-v45';
+const CACHE = 'pmk-calendar-v46';
 const ASSETS = [
   './',
   './index.html',
   './reset.html',
   './address-test.html',
+  './worker-update.html',
   './styles.css?v=30',
   './manager-planner.css?v=32',
   './address-autocomplete.css?v=39',
   './mobile-rug-layout.css?v=36',
   './manager-form-v40.css',
-  './unified-rug-services-v43.css?v=45',
+  './unified-rug-services-v43.css?v=46',
   './app.js?v=38',
   './manager-planner-core.js',
   './manager-planner-hooks.js',
   './address-autocomplete.js?v=41',
+  './address-mobile-v46.js',
   './stability-route.js?v=34',
   './stability-cache.js?v=34',
   './stability-copy.js?v=34',
@@ -28,7 +30,7 @@ const ASSETS = [
   './auto-pricing-v40.js?v=44',
   './empty-rug-dimensions-v42.js',
   './unified-rug-services-v43.js?v=45',
-  './complete-pricing-v45.js',
+  './complete-pricing-v45.js?v=46',
   './manifest.webmanifest',
   './version.json',
   './icons/icon-192.png',
@@ -80,6 +82,7 @@ self.addEventListener('fetch', event => {
           networkText('./manager-planner-core.js'),
           networkText('./manager-planner-hooks.js'),
           networkText('./address-autocomplete.js?v=41'),
+          networkText('./address-mobile-v46.js'),
           networkText('./stability-route.js?v=34'),
           networkText('./stability-cache.js?v=34'),
           networkText('./stability-copy.js?v=34'),
@@ -94,13 +97,13 @@ self.addEventListener('fetch', event => {
           networkText('./auto-pricing-v40.js?v=44'),
           networkText('./empty-rug-dimensions-v42.js'),
           networkText('./unified-rug-services-v43.js?v=45'),
-          networkText('./complete-pricing-v45.js'),
+          networkText('./complete-pricing-v45.js?v=46'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
             'Content-Type': 'application/javascript; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '45',
+            'X-PMK-Version': '46',
           },
         });
         return cacheResponse(event.request, response);
@@ -120,13 +123,13 @@ self.addEventListener('fetch', event => {
           networkText('./address-autocomplete.css?v=39'),
           networkText('./mobile-rug-layout.css?v=36'),
           networkText('./manager-form-v40.css'),
-          networkText('./unified-rug-services-v43.css?v=45'),
+          networkText('./unified-rug-services-v43.css?v=46'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
             'Content-Type': 'text/css; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '45',
+            'X-PMK-Version': '46',
           },
         });
         return cacheResponse(event.request, response);
