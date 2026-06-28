@@ -1,149 +1,70 @@
-#smartPasteCard.pmk-client-info-sticky{
-  position:sticky;
-  top:82px;
-  z-index:72;
-  margin:0 0 14px!important;
-  padding:12px 14px!important;
-  border:1px solid #e6b800!important;
-  border-radius:16px!important;
-  background:rgba(255,249,219,.98)!important;
-  box-shadow:0 10px 30px rgba(0,0,0,.12)!important;
+#smartPasteCard.pmk-client-info-start{
+  margin-bottom:14px!important;
+}
+
+.pmk-client-info-mirror{
+  display:none;
+}
+
+body.v50-modal-active .pmk-client-info-mirror{
+  position:fixed;
+  top:62px;
+  left:0;
+  right:0;
+  z-index:215;
+  display:block;
+  padding:10px 14px 12px;
+  border-bottom:1px solid #d8b100;
+  background:rgba(255,249,219,.98);
+  box-shadow:0 10px 24px rgba(0,0,0,.14);
   backdrop-filter:blur(14px);
 }
 
-#smartPasteCard.pmk-client-info-sticky .smart-paste-heading{
-  display:grid!important;
-  grid-template-columns:34px minmax(0,1fr) auto;
-  align-items:center!important;
-  gap:9px!important;
-  margin:0 0 8px!important;
+.pmk-client-info-mirror label{
+  display:block;
+  margin:0 0 6px;
+  color:#171717;
+  font-size:13px;
+  font-weight:850;
 }
 
-#smartPasteCard.pmk-client-info-sticky .smart-paste-heading>span:first-child{
-  min-width:34px!important;
-  width:34px!important;
-  height:34px!important;
-  border-radius:10px!important;
-  background:#ffc400!important;
-  color:#111!important;
-  font-size:18px!important;
+.pmk-client-info-mirror textarea{
+  display:block;
+  width:100%;
+  min-height:76px;
+  max-height:116px;
+  padding:10px 12px;
+  border:1px solid #c9a519;
+  border-radius:11px;
+  color:#171717;
+  background:#fff;
+  font:15px/1.42 inherit;
+  resize:vertical;
+  box-sizing:border-box;
+  outline:none;
 }
 
-#smartPasteCard.pmk-client-info-sticky .smart-paste-heading h2{
-  margin:0!important;
-  color:#171717!important;
-  font-size:16px!important;
-  line-height:1.2!important;
-}
-
-#smartPasteCard.pmk-client-info-sticky .smart-paste-heading p{
-  display:none!important;
-}
-
-#smartPasteCard.pmk-client-info-sticky .pmk-client-draft-status{
-  min-width:auto!important;
-  width:auto!important;
-  height:auto!important;
-  padding:5px 8px!important;
-  border-radius:999px!important;
-  background:#fff!important;
-  color:#6d5700!important;
-  font-size:11px!important;
-  font-weight:850!important;
-  white-space:nowrap;
-}
-
-#smartPasteCard.pmk-client-info-sticky.pmk-client-draft-has-text .pmk-client-draft-status{
-  color:#176b39!important;
-  background:#e9f7ee!important;
-}
-
-#smartPasteCard.pmk-client-info-sticky label.field{
-  margin:0!important;
-  gap:0!important;
-  color:transparent!important;
-  font-size:0!important;
-}
-
-#smartPasteCard.pmk-client-info-sticky #smartPasteInput{
-  min-height:72px!important;
-  max-height:108px!important;
-  padding:10px 12px!important;
-  border:1px solid #d4b23d!important;
-  border-radius:11px!important;
-  color:#171717!important;
-  background:#fff!important;
-  font-size:15px!important;
-  line-height:1.42!important;
-  resize:vertical!important;
-}
-
-#smartPasteCard.pmk-client-info-sticky #smartPasteInput:focus{
-  border-color:#b88900!important;
-  box-shadow:0 0 0 3px rgba(255,196,0,.24)!important;
-}
-
-#smartPasteCard.pmk-client-info-sticky .smart-paste-actions{
-  display:grid!important;
-  grid-template-columns:1.4fr 1fr .7fr!important;
-  gap:7px!important;
-  margin-top:8px!important;
-}
-
-#smartPasteCard.pmk-client-info-sticky .smart-paste-actions .button{
-  min-height:38px!important;
-  padding:7px 9px!important;
-  border-radius:10px!important;
-  font-size:12px!important;
-}
-
-#smartPasteCard.pmk-client-info-sticky .smart-paste-result{
-  max-height:72px;
-  overflow:auto;
-  margin-top:7px!important;
-  padding:8px!important;
-  font-size:12px!important;
-}
-
-body.v50-modal-active #smartPasteCard.pmk-client-info-sticky{
-  position:fixed!important;
-  top:62px!important;
-  left:0!important;
-  right:0!important;
-  z-index:215!important;
-  margin:0!important;
-  border-width:0 0 1px!important;
-  border-radius:0!important;
-  box-shadow:0 12px 28px rgba(0,0,0,.16)!important;
+.pmk-client-info-mirror textarea:focus{
+  border-color:#9f7900;
+  box-shadow:0 0 0 3px rgba(255,196,0,.22);
 }
 
 body.v50-modal-active .v50-source-section.v50-editor-open{
-  padding-top:270px!important;
+  padding-top:210px!important;
 }
 
 @media(max-width:760px){
-  #smartPasteCard.pmk-client-info-sticky{
-    top:70px;
-    padding:10px 11px!important;
+  body.v50-modal-active .pmk-client-info-mirror{
+    padding:9px 11px 10px;
   }
 
-  #smartPasteCard.pmk-client-info-sticky #smartPasteInput{
-    min-height:68px!important;
-    max-height:92px!important;
-    font-size:15px!important;
-  }
-
-  #smartPasteCard.pmk-client-info-sticky .smart-paste-actions{
-    grid-template-columns:1.3fr 1fr .65fr!important;
-  }
-
-  #smartPasteCard.pmk-client-info-sticky .smart-paste-actions .button{
-    min-height:36px!important;
-    padding:6px!important;
-    font-size:11px!important;
+  .pmk-client-info-mirror textarea{
+    min-height:70px;
+    max-height:96px;
+    font-size:15px;
   }
 
   body.v50-modal-active .v50-source-section.v50-editor-open{
-    padding-top:258px!important;
+    padding-top:198px!important;
   }
 }
