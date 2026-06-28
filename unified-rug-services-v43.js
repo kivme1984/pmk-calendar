@@ -20,10 +20,12 @@
     'Запах мочи': 'Удаление запаха мочи',
     'Дезинфекция': 'Дезинфекция',
     'Слайм / пластилин': 'Удаление слайма / пластилина',
+    'Маркеры': 'Удаление слайма / пластилина',
   };
 
   const SERVICE_ALIASES = {
     'Пятна': 'Удаление пятен',
+    'Обычные пятна': 'Удаление пятен',
     'Удаление пятен': 'Удаление пятен',
     'Шерсть': 'Вычёсывание шерсти и волос',
     'Волосы': 'Вычёсывание шерсти и волос',
@@ -34,6 +36,8 @@
     'Удаление запаха': 'Удаление запаха мочи',
     'Удаление запаха мочи': 'Удаление запаха мочи',
     'Дезинфекция': 'Дезинфекция',
+    'Слайм': 'Удаление слайма / пластилина',
+    'Маркеры': 'Удаление слайма / пластилина',
     'Слайм / пластилин': 'Удаление слайма / пластилина',
     'Удаление слайма / пластилина': 'Удаление слайма / пластилина',
     'Расчёсывание ворса': 'Подъём ворса',
@@ -84,6 +88,11 @@
     };
   }
 
+  function servicesFromCard(card) {
+    if (!card) return [];
+    return unique(qsa('input[type="checkbox"]:checked', card).map(input => canonicalService(input.value)));
+  }
+
   function replaceRugTemplate() {
     const template = qs('#rugTemplate');
     const details = template?.content?.querySelector('.rug-details-grid');
@@ -94,21 +103,31 @@
       <div class="rug-service-section">
         <p class="field-label">Услуги для этого ковра</p>
         <div class="chip-grid rug-services">
-          <label><input type="checkbox" value="Удаление пятен" /><span>Удаление пятен · 600 ₽/ковёр</span></label>
+          <label><input type="checkbox" value="Удаление пятен" /><span>Обычные пятна · 500 ₽/ковёр</span></label>
+          <label><input type="checkbox" value="Удаление слайма / пластилина" /><span>Слайм / пластилин / маркеры · 600 ₽/ковёр</span></label>
           <label><input type="checkbox" value="Вычёсывание шерсти и волос" /><span>Вычёсывание шерсти и волос · 150 ₽/м²</span></label>
           <label><input type="checkbox" value="Удаление запаха мочи" /><span>Удаление запаха мочи · 700 ₽ до 6 м² / 1000 ₽ свыше 6 м²</span></label>
-          <label><input type="checkbox" value="Дезинфекция" /><span>Дезинфекция · цена вручную</span></label>
-          <label><input type="checkbox" value="Удаление слайма / пластилина" /><span>Удаление слайма / пластилина · цена вручную</span></label>
+          <label><input type="checkbox" value="Дезинфекция" /><span>Дезинфекция · 700 ₽/ковёр</span></label>
           <label><input type="checkbox" value="Подъём ворса" /><span>Расчёсывание / подъём ворса · 150 ₽/м²</span></label>
-          <label><input type="checkbox" value="Озонация" /><span>Озонация · цена вручную</span></label>
-          <label><input type="checkbox" value="Кондиционер" /><span>Кондиционер · 350 ₽/ковёр</span></label>
-          <label><input type="checkbox" value="Экспресс-стирка" /><span>Экспресс-стирка · цена вручную</span></label>
+          <label><input type="checkbox" value="Озонация" /><span>Озонация · 300 ₽/ковёр</span></label>
+          <label><input type="checkbox" value="Кондиционер" /><span>Кондиционер · 300 ₽/ковёр</span></label>
+          <label><input type="checkbox" value="Экспресс-стирка" /><span>Экспресс-стирка · 1000 ₽/заказ</span></label>
         </div>
       </div>
     `;
   }
 
   replaceRugTemplate();
+
+  const originalCollectRugs = collectRugs;
+  collectRugs = function collectRugsWithUnifiedServices() {
+    const rugs = originalCollectRugs();
+    const cards = qsa('.rug-card');
+    return rugs.map((rug, index) => migrateRug({
+      ...rug,
+      services: servicesFromCard(cards[index]),
+    }));
+  };
 
   const originalEventMeta = eventMeta;
   eventMeta = event => migrateData(originalEventMeta(event));
