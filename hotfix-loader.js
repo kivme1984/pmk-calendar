@@ -6,6 +6,7 @@
     './stability-cache.js?v=34',
     './stability-copy.js?v=34',
     './stability-draft.js?v=34',
+    './returning-client-search.js?v=35',
   ];
   let index = 0;
   const loadNext = () => {
