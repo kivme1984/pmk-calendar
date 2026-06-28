@@ -1,6 +1,6 @@
 {
-  "version": "43",
-  "release": "unified-rug-services",
+  "version": "44",
+  "release": "website-calculator-pricing",
   "date": "2026-06-28",
   "features": [
     "stable-service-worker",
@@ -24,12 +24,15 @@
     "optional-automatic-price-calculation",
     "automatic-regular-customer-discount",
     "pile-combing-keyword-recognition",
-    "pile-combing-150-per-square-meter",
     "address-service-exact-error-messages",
     "address-service-test-page",
     "empty-rug-dimensions",
     "unified-rug-service-selector",
     "legacy-issue-to-service-migration",
-    "wool-and-hair-combing-150-per-square-meter"
+    "website-base-rates",
+    "website-extra-service-rates",
+    "website-multi-rug-discounts",
+    "website-minimum-order",
+    "manual-price-warning-for-unpriced-services"
   ]
 }
