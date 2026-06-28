@@ -1,15 +1,16 @@
 {
-  "version": "55",
-  "release": "edited-order-save-hotfix",
+  "version": "56",
+  "release": "preview-readability-and-clean-address-fields",
   "date": "2026-06-28",
   "features": [
-    "main-release-v54-features",
-    "fix-saving-edited-orders",
-    "restore-google-connection-before-updating-existing-event",
-    "prevent-silent-local-copy-of-google-event",
-    "dynamic-update-order-button",
+    "main-release-v55-features",
+    "high-contrast-event-preview",
+    "white-preview-text-on-dark-background",
+    "larger-preview-font",
+    "remove-address-field-examples",
+    "remove-address-search-placeholder",
+    "preserve-edited-order-save-fix",
     "preserve-android-autofill-save-prompt-fix",
-    "preserve-selected-time-only-preview",
     "preserve-google-settings-local-events-and-drafts"
   ]
 }
