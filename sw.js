@@ -1,8 +1,9 @@
-const CACHE = 'pmk-calendar-v40';
+const CACHE = 'pmk-calendar-v41';
 const ASSETS = [
   './',
   './index.html',
   './reset.html',
+  './address-test.html',
   './styles.css?v=30',
   './manager-planner.css?v=32',
   './address-autocomplete.css?v=39',
@@ -11,7 +12,7 @@ const ASSETS = [
   './app.js?v=38',
   './manager-planner-core.js',
   './manager-planner-hooks.js',
-  './address-autocomplete.js?v=39',
+  './address-autocomplete.js?v=41',
   './stability-route.js?v=34',
   './stability-cache.js?v=34',
   './stability-copy.js?v=34',
@@ -21,7 +22,7 @@ const ASSETS = [
   './runtime-stability-v37.js',
   './smart-paste-v38.js',
   './smart-paste-lifecycle-v38.js',
-  './auto-pricing-v40.js',
+  './auto-pricing-v40.js?v=41',
   './manifest.webmanifest',
   './version.json',
   './icons/icon-192.png',
@@ -72,7 +73,7 @@ self.addEventListener('fetch', event => {
           networkText('./app.js?v=38'),
           networkText('./manager-planner-core.js'),
           networkText('./manager-planner-hooks.js'),
-          networkText('./address-autocomplete.js?v=39'),
+          networkText('./address-autocomplete.js?v=41'),
           networkText('./stability-route.js?v=34'),
           networkText('./stability-cache.js?v=34'),
           networkText('./stability-copy.js?v=34'),
@@ -82,13 +83,13 @@ self.addEventListener('fetch', event => {
           networkText('./runtime-stability-v37.js'),
           networkText('./smart-paste-v38.js'),
           networkText('./smart-paste-lifecycle-v38.js'),
-          networkText('./auto-pricing-v40.js'),
+          networkText('./auto-pricing-v40.js?v=41'),
         ]);
         const response = new Response(parts.join('\n\n'), {
           headers: {
             'Content-Type': 'application/javascript; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '40',
+            'X-PMK-Version': '41',
           },
         });
         return cacheResponse(event.request, response);
@@ -113,7 +114,7 @@ self.addEventListener('fetch', event => {
           headers: {
             'Content-Type': 'text/css; charset=utf-8',
             'Cache-Control': 'no-store',
-            'X-PMK-Version': '40',
+            'X-PMK-Version': '41',
           },
         });
         return cacheResponse(event.request, response);
