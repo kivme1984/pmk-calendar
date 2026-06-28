@@ -6,6 +6,7 @@
 
   const $ = (selector, root = document) => root.querySelector(selector);
   let syncing = false;
+  let hadText = false;
 
   function createMirror() {
     if ($('#pmkClientInfoMirror')) return $('#pmkClientInfoMirror');
@@ -13,31 +14,67 @@
     panel.id = 'pmkClientInfoMirror';
     panel.className = 'pmk-client-info-mirror';
     panel.innerHTML = `
-      <label for="pmkClientInfoMirrorInput">Информация клиента</label>
+      <div class="pmk-client-info-mirror-head">
+        <button type="button" id="pmkClientInfoExpand" class="pmk-client-info-expand" aria-label="Развернуть заметку">Заметка сохранена</button>
+        <label for="pmkClientInfoMirrorInput">Информация клиента</label>
+        <button type="button" id="pmkClientInfoCollapse" class="pmk-client-info-collapse" aria-label="Свернуть заметку">×</button>
+      </div>
       <textarea id="pmkClientInfoMirrorInput" rows="3"></textarea>`;
     document.body.appendChild(panel);
     return panel;
+  }
+
+  function updateVisibility({ resetCollapse = false } = {}) {
+    const source = $('#smartPasteInput');
+    const hasText = Boolean(source?.value.trim());
+
+    document.body.classList.toggle('pmk-client-info-has-text', hasText);
+    if (resetCollapse || (hasText && !hadText)) {
+      document.body.classList.remove('pmk-client-info-collapsed');
+    }
+    if (!hasText) {
+      document.body.classList.remove('pmk-client-info-collapsed');
+    }
+    hadText = hasText;
   }
 
   function syncFromMain() {
     if (syncing) return;
     const source = $('#smartPasteInput');
     const mirror = $('#pmkClientInfoMirrorInput');
-    if (!source || !mirror || mirror.value === source.value) return;
-    syncing = true;
-    mirror.value = source.value;
-    syncing = false;
+    if (!source || !mirror) return;
+
+    const changed = mirror.value !== source.value;
+    if (changed) {
+      syncing = true;
+      mirror.value = source.value;
+      syncing = false;
+    }
+    updateVisibility({ resetCollapse: changed && Boolean(source.value.trim()) && !hadText });
   }
 
   function syncFromMirror() {
     if (syncing) return;
     const source = $('#smartPasteInput');
     const mirror = $('#pmkClientInfoMirrorInput');
-    if (!source || !mirror || source.value === mirror.value) return;
+    if (!source || !mirror || source.value === mirror.value) {
+      updateVisibility();
+      return;
+    }
     syncing = true;
     source.value = mirror.value;
     source.dispatchEvent(new Event('input', { bubbles: true }));
     syncing = false;
+    updateVisibility();
+  }
+
+  function collapseMirror() {
+    document.body.classList.add('pmk-client-info-collapsed');
+  }
+
+  function expandMirror() {
+    document.body.classList.remove('pmk-client-info-collapsed');
+    requestAnimationFrame(() => $('#pmkClientInfoMirrorInput')?.focus());
   }
 
   function install() {
@@ -58,6 +95,8 @@
 
     source.addEventListener('input', syncFromMain);
     mirror.addEventListener('input', syncFromMirror);
+    $('#pmkClientInfoCollapse')?.addEventListener('click', collapseMirror);
+    $('#pmkClientInfoExpand')?.addEventListener('click', expandMirror);
     $('#smartPasteClearBtn')?.addEventListener('click', () => setTimeout(syncFromMain, 0));
     $('#smartPasteClipboardBtn')?.addEventListener('click', () => setTimeout(syncFromMain, 250));
     $('#smartPasteParseBtn')?.addEventListener('click', () => setTimeout(syncFromMain, 0));
@@ -65,6 +104,7 @@
     const bodyObserver = new MutationObserver(syncFromMain);
     bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
+    updateVisibility();
     document.body.classList.add('pmk-client-info-sticky-ready');
     return true;
   }
