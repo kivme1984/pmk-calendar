@@ -1,7 +1,7 @@
-const VERSION='53';
+const VERSION='54';
 const CACHE=`pmk-calendar-v${VERSION}`;
 const JS=[
-  './app.js?v=53','./manager-planner-core.js','./manager-planner-hooks.js',
+  './app.js?v=54','./manager-planner-core.js','./manager-planner-hooks.js',
   './address-autocomplete.js?v=41','./address-mobile-v46.js','./stability-route.js?v=34',
   './stability-cache.js?v=34','./stability-copy.js?v=34','./stability-draft.js?v=34',
   './returning-client-search.js?v=35','./google-freeform-import.js?v=36','./runtime-stability-v37.js',
@@ -12,10 +12,10 @@ const JS=[
   './pricing-settings-v67.js?v=69','./manager-ui-v50-preview.js?v=68',
   './manager-ui-v50-refinements.js?v=68','./manager-ui-v51.js?v=70',
   './manager-ui-v51-tools-stable.js?v=68','./manager-ui-v51-draft.js?v=68',
-  './android-autofill-off-v53.js?v=53'
+  './android-autofill-off-v53.js?v=53','./preview-description-v53.js?v=54'
 ];
 const CSS=[
-  './styles.css?v=53','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
+  './styles.css?v=54','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
   './mobile-rug-layout.css?v=36','./manager-form-v40.css','./unified-rug-services-v43.css?v=46',
   './manager-ui-v50-preview.css?v=68','./manager-ui-v50-refinements.css?v=68',
   './manager-ui-v51.css?v=68','./v51-tools-stable.css?v=68','./pricing-settings-v67.css?v=69'
@@ -65,8 +65,8 @@ self.addEventListener('fetch',event=>{
           'Cache-Control':'no-store','X-PMK-Version':VERSION
         }}));
       }catch(error){
-        console.error('PMK v53 bundle error',error);
-        return fallback(event.request,'./app.js?v=53');
+        console.error('PMK v54 bundle error',error);
+        return fallback(event.request,'./app.js?v=54');
       }
     })());
     return;
@@ -81,8 +81,8 @@ self.addEventListener('fetch',event=>{
           'Cache-Control':'no-store','X-PMK-Version':VERSION
         }}));
       }catch(error){
-        console.error('PMK v53 styles error',error);
-        return fallback(event.request,'./styles.css?v=53');
+        console.error('PMK v54 styles error',error);
+        return fallback(event.request,'./styles.css?v=54');
       }
     })());
     return;
