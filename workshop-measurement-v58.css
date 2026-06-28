@@ -1,0 +1,90 @@
+.workshop-measurement-panel{
+  display:grid;
+  gap:10px;
+  margin:0 0 14px;
+  padding:13px;
+  border:1px solid #deded8;
+  border-radius:15px;
+  background:#fafaf7;
+}
+
+.workshop-measurement-toggle{
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  cursor:pointer;
+}
+
+.workshop-measurement-toggle input{
+  width:22px;
+  height:22px;
+  margin:1px 0 0;
+  accent-color:#e7a700;
+  flex:0 0 auto;
+}
+
+.workshop-measurement-toggle span,
+.workshop-measurement-toggle strong,
+.workshop-measurement-toggle small{
+  display:block;
+}
+
+.workshop-measurement-toggle strong{
+  color:#202020;
+  font-size:16px;
+}
+
+.workshop-measurement-toggle small{
+  margin-top:3px;
+  color:#6c6c67;
+  font-size:13px;
+  line-height:1.35;
+}
+
+.workshop-rug-count{
+  margin:0!important;
+  max-width:240px;
+}
+
+.workshop-rug-count input{
+  min-height:48px;
+  font-size:20px!important;
+  font-weight:850;
+  text-align:center;
+}
+
+.workshop-measurement-note{
+  padding:10px 11px;
+  border-radius:11px;
+  color:#6c5200;
+  background:#fff3bf;
+  font-size:12px;
+  line-height:1.4;
+}
+
+#rugsContainer.workshop-rugs-hidden{
+  display:none!important;
+}
+
+:root[data-theme="dark"] .workshop-measurement-panel{
+  border-color:rgba(255,255,255,.14);
+  background:#171b1f;
+}
+
+:root[data-theme="dark"] .workshop-measurement-toggle strong{
+  color:#fff;
+}
+
+:root[data-theme="dark"] .workshop-measurement-toggle small{
+  color:#b8bdc2;
+}
+
+@media(max-width:760px){
+  .workshop-measurement-panel{
+    padding:12px;
+  }
+
+  .workshop-rug-count{
+    max-width:none;
+  }
+}
