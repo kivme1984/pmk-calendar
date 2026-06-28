@@ -1,6 +1,6 @@
 {
-  "version": "44",
-  "release": "website-calculator-pricing",
+  "version": "45",
+  "release": "extended-smart-parser-and-complete-pricing",
   "date": "2026-06-28",
   "features": [
     "stable-service-worker",
@@ -33,6 +33,12 @@
     "website-extra-service-rates",
     "website-multi-rug-discounts",
     "website-minimum-order",
-    "manual-price-warning-for-unpriced-services"
+    "voice-friendly-russian-number-parser",
+    "spoken-address-and-access-recognition",
+    "spoken-rug-dimensions-and-services",
+    "disinfection-700-per-rug",
+    "slime-plasticine-500-per-rug",
+    "ozonation-300-per-rug",
+    "express-1000-per-order"
   ]
 }
