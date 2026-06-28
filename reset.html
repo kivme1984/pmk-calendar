@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Обновление ПМК Календаря до v61</title>
+<title>Обновление ПМК Календаря до v62</title>
 <style>
 body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
 main{width:min(520px,calc(100vw - 32px));padding:24px;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:#181818;box-sizing:border-box}
@@ -12,16 +12,16 @@ h1{margin:0 0 12px;font-size:24px}p{margin:0;color:#c9c9c9;line-height:1.5}.stat
 </head>
 <body>
 <main>
-  <h1>Устанавливаем версию v61</h1>
-  <p>Заметка клиента показывается во вкладках только при наличии текста и теперь сворачивается без удаления информации.</p>
+  <h1>Устанавливаем версию v62</h1>
+  <p>Убираем кнопку «Обновить» из планирования. Условная заметка клиента и её сворачивание сохраняются.</p>
   <p id="status" class="status">Удаляем старый кеш…</p>
-  <a id="manualOpen" href="./?v=61" hidden>Открыть приложение</a>
+  <a id="manualOpen" href="./?v=62" hidden>Открыть приложение</a>
 </main>
 <script>
 (async()=>{
   const status=document.querySelector('#status');
   const manual=document.querySelector('#manualOpen');
-  const target='./?v=61&reset='+Date.now();
+  const target='./?v=62&reset='+Date.now();
   const redirect=()=>location.replace(target);
   const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   const watchdog=setTimeout(()=>{status.textContent='Открываем новую версию…';manual.hidden=false;redirect();},10000);
@@ -35,14 +35,14 @@ h1{margin:0 0 12px;font-size:24px}p{margin:0;color:#c9c9c9;line-height:1.5}.stat
       await Promise.all(keys.map(key=>caches.delete(key).catch(()=>false)));
     }
     if('serviceWorker' in navigator){
-      status.textContent='Устанавливаем сборку v61…';
-      const registration=await navigator.serviceWorker.register('./sw.js?v=61-'+Date.now(),{updateViaCache:'none'});
+      status.textContent='Устанавливаем сборку v62…';
+      const registration=await navigator.serviceWorker.register('./sw.js?v=62-'+Date.now(),{updateViaCache:'none'});
       await registration.update().catch(()=>null);
       status.textContent='Активируем новую сборку…';
       await Promise.race([navigator.serviceWorker.ready,delay(4500)]);
     }
     clearTimeout(watchdog);
-    status.textContent='Версия v61 установлена. Открываем приложение…';
+    status.textContent='Версия v62 установлена. Открываем приложение…';
     manual.hidden=false;
     await delay(300);
     redirect();
