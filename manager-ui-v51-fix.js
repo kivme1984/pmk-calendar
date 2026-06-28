@@ -22,7 +22,7 @@
     const tools = $('#v51Tools');
     const cards = $$('.rug-card');
     const toolsOk = Boolean(tools && $$('.v51-tool', tools).length === 4);
-    const servicesOk = cards.length > 0 && cards.every(card => {
+    const servicesOk = cards.length === 0 || cards.every(card => {
       const current = $$('.v51-service span', card).map(node => node.textContent.trim());
       return current.length === 6 && current.join('|') === labels.join('|');
     });
@@ -35,9 +35,6 @@
 
   function run() {
     cleanDescription();
-    if (typeof window.PMK_MANAGER_UI_V51 !== 'undefined') {
-      document.dispatchEvent(new CustomEvent('pmk-v51-refresh'));
-    }
     verify();
   }
 
