@@ -95,10 +95,10 @@
         <p class="field-label">Услуги для этого ковра</p>
         <div class="chip-grid rug-services">
           <label><input type="checkbox" value="Удаление пятен" /><span>Удаление пятен</span></label>
-          <label><input type="checkbox" value="Вычёсывание шерсти и волос" /><span>Шерсть и волосы</span></label>
+          <label><input type="checkbox" value="Вычёсывание шерсти и волос" /><span>Вычёсывание шерсти и волос</span></label>
           <label><input type="checkbox" value="Удаление запаха мочи" /><span>Удаление запаха мочи</span></label>
           <label><input type="checkbox" value="Дезинфекция" /><span>Дезинфекция</span></label>
-          <label><input type="checkbox" value="Удаление слайма / пластилина" /><span>Слайм / пластилин</span></label>
+          <label><input type="checkbox" value="Удаление слайма / пластилина" /><span>Удаление слайма / пластилина</span></label>
           <label><input type="checkbox" value="Подъём ворса" /><span>Расчёсывание / подъём ворса</span></label>
           <label><input type="checkbox" value="Озонация" /><span>Озонация</span></label>
           <label><input type="checkbox" value="Кондиционер" /><span>Кондиционер</span></label>
