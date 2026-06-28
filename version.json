@@ -1,12 +1,15 @@
 {
-  "version": "34",
-  "release": "manager-stability",
-  "date": "2026-06-27",
+  "version": "35",
+  "release": "returning-client-search",
+  "date": "2026-06-28",
   "features": [
     "cached-google-events",
     "faster-rendering",
     "request-copy",
     "automatic-draft-recovery",
-    "non-blocking-route-warning"
+    "non-blocking-route-warning",
+    "returning-client-search",
+    "fill-client-from-history",
+    "repeat-order-from-history"
   ]
 }
