@@ -1,15 +1,16 @@
 {
-  "version": "64",
-  "release": "instant-local-bundle-and-safe-mode",
-  "date": "2026-06-28",
+  "version": "65",
+  "release": "header-manual-calendar-sync-status",
+  "date": "2026-06-29",
   "features": [
-    "main-release-v63-features",
-    "prebuilt-local-javascript-bundle",
-    "prebuilt-local-css-bundle",
-    "instant-cache-first-app-launch",
-    "network-timeouts-during-installation",
-    "safe-mode-without-service-worker",
-    "safe-client-note-without-global-mutation-observer",
-    "preserve-local-data-google-settings-events-and-drafts"
+    "main-release-v64-features",
+    "manual-google-calendar-sync-button-in-header",
+    "sync-in-progress-status",
+    "successful-or-failed-sync-status",
+    "last-sync-date-and-time",
+    "synced-event-count",
+    "persistent-sync-status-across-restarts",
+    "responsive-mobile-header-layout",
+    "preserve-instant-local-bundle-launch"
   ]
 }
