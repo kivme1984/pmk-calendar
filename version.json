@@ -1,16 +1,15 @@
 {
-  "version": "65",
-  "release": "header-manual-calendar-sync-status",
+  "version": "66",
+  "release": "reminder-save-button-and-confirmation",
   "date": "2026-06-29",
   "features": [
-    "main-release-v64-features",
-    "manual-google-calendar-sync-button-in-header",
-    "sync-in-progress-status",
-    "successful-or-failed-sync-status",
-    "last-sync-date-and-time",
-    "synced-event-count",
-    "persistent-sync-status-across-restarts",
-    "responsive-mobile-header-layout",
+    "main-release-v65-features",
+    "visible-reminder-save-button",
+    "sticky-mobile-reminder-action",
+    "confirmation-dialog-before-calendar-create",
+    "reminder-date-time-and-text-preview",
+    "google-or-local-save-mode-label",
+    "explicit-success-or-error-feedback",
     "preserve-instant-local-bundle-launch"
   ]
 }
