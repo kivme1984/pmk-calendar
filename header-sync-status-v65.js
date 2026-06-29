@@ -105,7 +105,8 @@
 
     $('#pmkSyncButton').addEventListener('click', async () => {
       if (syncing) return;
-      if (!window.state?.token) {
+      const hasToken = typeof state !== 'undefined' && Boolean(state?.token);
+      if (!hasToken) {
         const failed = saveStatus('error', { message: 'Google Calendar не подключён' });
         render('disconnected', failed);
         if (typeof showToast === 'function') showToast('Сначала подключите Google Calendar.', 'error');
@@ -116,7 +117,7 @@
       syncing = true;
       render('syncing');
       try {
-        const sync = window.PMK_FULL_CALENDAR_SYNC?.refresh || window.refreshEvents;
+        const sync = window.PMK_FULL_CALENDAR_SYNC?.refresh;
         if (typeof sync !== 'function') throw new Error('Модуль синхронизации недоступен');
         await sync();
       } catch (error) {
