@@ -1,10 +1,10 @@
-const VERSION='65';
+const VERSION='66';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v65.js';
-const BUNDLE_CSS='./__pmk-styles-v65.css';
+const BUNDLE_JS='./__pmk-app-v66.js';
+const BUNDLE_CSS='./__pmk-styles-v66.css';
 
 const JS=[
-  './app.js?source=65','./manager-planner-core.js','./manager-planner-hooks.js',
+  './app.js?source=66','./manager-planner-core.js','./manager-planner-hooks.js',
   './address-autocomplete.js?v=41','./address-mobile-v46.js','./stability-route.js?v=34',
   './stability-cache.js?v=34','./stability-copy.js?v=34','./stability-draft.js?v=34',
   './google-freeform-import.js?v=36','./runtime-stability-v37.js',
@@ -19,18 +19,20 @@ const JS=[
   './android-autofill-off-v53.js?v=55','./preview-description-v53.js?v=54',
   './edit-save-hotfix-v54.js?v=55','./address-placeholders-off-v56.js?v=56',
   './client-note-safe-v64.js?v=64','./workshop-measurement-v58.js?v=58',
-  './settings-version-header-v59.js?v=65','./navigation-layer-swipe-fix-v60.js?v=60',
-  './planning-refresh-remove-v62.js?v=62','./header-sync-status-v65.js?v=65'
+  './settings-version-header-v59.js?v=66','./navigation-layer-swipe-fix-v60.js?v=60',
+  './planning-refresh-remove-v62.js?v=62','./header-sync-status-v65.js?v=65',
+  './reminder-save-confirm-v66.js?v=66'
 ];
 
 const CSS=[
-  './styles.css?source=65','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
+  './styles.css?source=66','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
   './mobile-rug-layout.css?v=36','./manager-form-v40.css','./unified-rug-services-v43.css?v=46',
   './manager-ui-v50-preview.css?v=68','./manager-ui-v50-refinements.css?v=68',
   './manager-ui-v51.css?v=68','./v51-tools-stable.css?v=68','./pricing-settings-v67.css?v=69',
   './preview-readability-v56.css?v=56','./client-note-safe-v64.css?v=64',
   './workshop-measurement-v58.css?v=58','./settings-version-header-v59.css?v=59',
-  './navigation-layer-swipe-fix-v60.css?v=60','./header-sync-status-v65.css?v=65'
+  './navigation-layer-swipe-fix-v60.css?v=60','./header-sync-status-v65.css?v=65',
+  './reminder-save-confirm-v66.css?v=66'
 ];
 
 const OPTIONAL_ASSETS=[
