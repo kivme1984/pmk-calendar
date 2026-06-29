@@ -1,0 +1,170 @@
+#view-reminder .reminder-card{
+  position:relative;
+  padding-bottom:18px;
+}
+
+#view-reminder .reminder-card .form-actions{
+  position:sticky;
+  bottom:10px;
+  z-index:12;
+  display:grid!important;
+  gap:8px;
+  width:100%;
+  margin-top:18px;
+  padding:10px;
+  border:1px solid rgba(0,0,0,.08);
+  border-radius:15px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 12px 32px rgba(0,0,0,.16);
+  backdrop-filter:blur(12px);
+  box-sizing:border-box;
+}
+
+#view-reminder .pmk-reminder-save-button{
+  display:flex!important;
+  width:100%;
+  min-height:56px;
+  align-items:center;
+  justify-content:center;
+  padding:0 18px;
+  font-size:16px;
+  font-weight:900;
+}
+
+.pmk-reminder-save-hint{
+  margin:0;
+  color:#686868;
+  font-size:12px;
+  line-height:1.35;
+  text-align:center;
+}
+
+.pmk-reminder-confirm-dialog{
+  width:min(460px,calc(100vw - 28px));
+  max-width:none;
+  padding:0;
+  border:0;
+  border-radius:20px;
+  background:transparent;
+  box-shadow:none;
+}
+
+.pmk-reminder-confirm-dialog::backdrop{
+  background:rgba(0,0,0,.58);
+  backdrop-filter:blur(4px);
+}
+
+.pmk-reminder-confirm-card{
+  display:grid;
+  gap:14px;
+  padding:24px;
+  border:1px solid rgba(0,0,0,.1);
+  border-radius:20px;
+  background:#fff;
+  box-shadow:0 24px 70px rgba(0,0,0,.28);
+  box-sizing:border-box;
+}
+
+.pmk-reminder-confirm-icon{
+  width:52px;
+  height:52px;
+  display:grid;
+  place-items:center;
+  border-radius:16px;
+  color:#171717;
+  background:#f7b500;
+  font-size:26px;
+  font-weight:900;
+}
+
+.pmk-reminder-confirm-card h2{
+  margin:0;
+  color:#171717;
+  font-size:22px;
+}
+
+#pmkReminderConfirmText{
+  display:grid;
+  gap:7px;
+  margin:0;
+  color:#333;
+}
+
+#pmkReminderConfirmText strong{
+  font-size:16px;
+}
+
+#pmkReminderConfirmText span{
+  padding:11px 12px;
+  border-radius:11px;
+  background:#f3f3f1;
+  font-size:15px;
+  line-height:1.4;
+  white-space:pre-wrap;
+}
+
+#pmkReminderConfirmText small{
+  color:#737373;
+  font-size:12px;
+}
+
+.pmk-reminder-confirm-actions{
+  display:grid;
+  grid-template-columns:1fr 1.4fr;
+  gap:10px;
+  margin-top:4px;
+}
+
+.pmk-reminder-confirm-actions .button{
+  min-height:50px;
+}
+
+html[data-theme="dark"] #view-reminder .reminder-card .form-actions{
+  border-color:rgba(255,255,255,.1);
+  background:rgba(31,31,31,.96);
+}
+
+html[data-theme="dark"] .pmk-reminder-save-hint{
+  color:#aaa;
+}
+
+html[data-theme="dark"] .pmk-reminder-confirm-card{
+  border-color:rgba(255,255,255,.12);
+  background:#202020;
+}
+
+html[data-theme="dark"] .pmk-reminder-confirm-card h2,
+html[data-theme="dark"] #pmkReminderConfirmText{
+  color:#f5f5f5;
+}
+
+html[data-theme="dark"] #pmkReminderConfirmText span{
+  background:#303030;
+}
+
+@media(max-width:760px){
+  #view-reminder .reminder-card{
+    padding-bottom:92px;
+  }
+
+  #view-reminder .reminder-card .form-actions{
+    position:fixed;
+    left:10px;
+    right:10px;
+    bottom:max(10px,env(safe-area-inset-bottom));
+    width:auto;
+    margin:0;
+  }
+
+  #view-reminder .pmk-reminder-save-button{
+    min-height:54px;
+  }
+
+  .pmk-reminder-confirm-card{
+    padding:20px;
+  }
+
+  .pmk-reminder-confirm-actions{
+    grid-template-columns:1fr;
+  }
+}
