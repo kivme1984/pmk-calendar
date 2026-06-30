@@ -12,7 +12,7 @@
       if (!response.ok) throw new Error('version unavailable');
       return await response.json();
     } catch {
-      return { version:'71', release:'unlimited-overlapping-events', date:'2026-06-30' };
+      return { version:'72', release:'any-calendar-edit-and-floating-note', date:'2026-06-30' };
     }
   }
 
@@ -24,10 +24,10 @@
     const panel = document.createElement('section');
     panel.id = 'settingsVersionHeader';
     panel.className = 'settings-version-header';
-    panel.innerHTML = '<div class="settings-version-info"><span class="settings-version-label">Версия приложения</span><strong id="settingsVersionValue">v71</strong><small id="settingsVersionRelease">Основная версия</small></div><a id="settingsUpdateButton" class="button button-primary settings-update-button" href="./reset.html?v=71-settings">Обновить приложение</a>';
+    panel.innerHTML = '<div class="settings-version-info"><span class="settings-version-label">Версия приложения</span><strong id="settingsVersionValue">v72</strong><small id="settingsVersionRelease">Основная версия</small></div><a id="settingsUpdateButton" class="button button-primary settings-update-button" href="./reset.html?v=72-settings">Обновить приложение</a>';
     heading.insertAdjacentElement('afterend', panel);
     const info = await loadVersion();
-    const version = String(info?.version || '71');
+    const version = String(info?.version || '72');
     $('#settingsVersionValue').textContent = `v${version}`;
     $('#settingsVersionRelease').textContent = info?.date ? `Установленная сборка · ${info.date}` : 'Установленная сборка';
     $('#settingsUpdateButton').href = `./reset.html?v=${encodeURIComponent(version)}-settings-${Date.now()}`;
