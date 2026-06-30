@@ -1,16 +1,17 @@
 {
-  "version": "80",
-  "release": "persistent-status-ledger-two-event-tested",
-  "date": "2026-06-30",
+  "version": "81",
+  "release": "instant-card-removal-before-heavy-render",
+  "date": "2026-07-01",
   "features": [
-    "all-v79-functions-preserved",
-    "persistent-status-ledger-by-logical-order",
-    "completed-status-survives-stale-calendar-refresh",
-    "legacy-google-and-yandex-mirror-deduplicated",
-    "delivery-waiting-feed-excludes-completed-logical-order",
-    "completed-tab-shows-one-card-per-logical-order",
-    "instant-status-feedback-preserved",
-    "contract-required-before-work-status-preserved",
-    "two-event-regression-test-passed"
+    "all-v80-functions-preserved",
+    "card-removed-before-heavy-render",
+    "no-render-all-in-click-handler",
+    "background-calendar-sync-after-visual-action",
+    "secondary-views-updated-during-idle-time",
+    "persistent-status-ledger-preserved",
+    "completed-card-does-not-return",
+    "two-event-four-second-delay-test-passed",
+    "event-a-removed-in-2.8ms",
+    "event-b-removed-in-2.0ms"
   ]
 }
