@@ -16,6 +16,14 @@
   function write(value) {
     try { localStorage.setItem(KEY, JSON.stringify(value)); } catch {}
   }
+  function notify(id, status) {
+    window.dispatchEvent(new CustomEvent('pmk-status-overrides-updated', { detail:{ id, status } }));
+    requestAnimationFrame(() => {
+      window.PMK_COMPLETED_WORKFLOW_V79_API?.scrub?.();
+      window.PMK_COMPLETED_WORKFLOW_V79_API?.render?.();
+      window.PMK_IN_WORK_WORKFLOW_V73_API?.render?.();
+    });
+  }
 
   function remember(id, status) {
     if (!id || !status) return;
@@ -27,7 +35,7 @@
     queueMicrotask(() => {
       const map = read();
       if (map[id]?.status === status) {
-        window.dispatchEvent(new CustomEvent('pmk-status-overrides-updated'));
+        notify(id, status);
         return;
       }
       const now = Date.now();
@@ -37,7 +45,7 @@
       if (!candidate) return;
       map[id] = { ...candidate, legacyEventId:id };
       write(map);
-      window.dispatchEvent(new CustomEvent('pmk-status-overrides-updated', { detail:{ id, status } }));
+      notify(id, status);
     });
   }
 
