@@ -1,13 +1,15 @@
 {
-  "version": "76",
-  "release": "completed-hidden-from-day-feed",
+  "version": "77",
+  "release": "instant-status-feedback",
   "date": "2026-06-30",
   "features": [
-    "all-v75-functions-preserved",
-    "completed-orders-hidden-from-day-feed",
-    "completed-status-applied-immediately",
-    "completed-orders-remain-in-calendar-and-search",
-    "picked-up-and-in-progress-still-hidden-from-day-feed",
-    "contract-required-before-picked-up-or-in-progress"
+    "all-v76-functions-preserved",
+    "instant-button-accepted-feedback",
+    "instant-card-removal-before-network",
+    "background-google-and-yandex-status-sync",
+    "independent-per-order-status-processing",
+    "picked-up-in-progress-and-completed-hide-immediately",
+    "contract-required-before-picked-up-or-in-progress",
+    "local-status-override-prevents-card-return-during-sync"
   ]
 }
