@@ -1,16 +1,17 @@
 {
-  "version": "69",
-  "release": "yandex-calendar-dual-sync-preview",
+  "version": "70",
+  "release": "provider-status-and-manager-device-setup",
   "date": "2026-06-30",
   "features": [
-    "google-and-yandex-dual-write",
-    "yandex-caldav-through-cloudflare-worker",
-    "provider-operation-queue",
-    "google-unavailable-yandex-fallback",
-    "yandex-calendar-event-reading",
-    "deduplicate-by-pmk-id",
-    "google-to-yandex-backfill",
-    "protected-browser-to-worker-sync-token",
-    "existing-v68-performance-and-manager-tools-preserved"
+    "separate-google-connection-status",
+    "separate-yandex-connection-status",
+    "last-successful-sync-time",
+    "provider-error-and-queue-indicators",
+    "one-button-dual-calendar-sync",
+    "manager-device-setup-card",
+    "copy-manager-connection-instructions",
+    "technical-token-only-on-manager-devices",
+    "yandex-login-and-app-password-stay-in-cloudflare",
+    "existing-google-and-yandex-dual-sync-preserved"
   ]
 }
