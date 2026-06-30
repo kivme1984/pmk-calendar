@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Восстановление ПМК Календаря v66</title>
+<title>Восстановление ПМК Календаря v67</title>
 <style>
 body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-shadow:0 24px 70px rgba(0,0,0,.38)}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
 </style>
@@ -11,17 +11,17 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 <body>
 <main>
 <h1>Восстановление ПМК Календаря</h1>
-<p>Устанавливаем локальный пакет v66 с исправленной карточкой напоминания. Настройки Google, заявки и черновики не удаляются.</p>
+<p>Устанавливаем локальный пакет v67 с новым рабочим пространством менеджера. Настройки Google, заявки и черновики не удаляются.</p>
 <p id="status" class="status">Проверяем сборку…</p>
 <div class="actions">
 <button id="retry" type="button" hidden>Повторить восстановление</button>
-<a id="safe" href="./safe.html?v=66" hidden>Открыть безопасный режим</a>
-<a id="open" href="./?v=66-recovery" hidden>Открыть приложение</a>
+<a id="safe" href="./safe.html?v=67" hidden>Открыть безопасный режим</a>
+<a id="open" href="./?v=67-recovery" hidden>Открыть приложение</a>
 </div>
 </main>
 <script>
 (() => {
-  const VERSION='66';
+  const VERSION='67';
   const status=document.querySelector('#status');
   const retry=document.querySelector('#retry');
   const safe=document.querySelector('#safe');
@@ -33,7 +33,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     if(!worker)return Promise.resolve();
     if(worker.state==='activated')return Promise.resolve();
     return new Promise((resolve,reject)=>{
-      const timeout=setTimeout(()=>reject(new Error('Новая сборка не активировалась.')),15000);
+      const timeout=setTimeout(()=>reject(new Error('Новая сборка не активировалась.')),20000);
       worker.addEventListener('statechange',()=>{
         if(worker.state==='activated'){clearTimeout(timeout);resolve();}
         if(worker.state==='redundant'){clearTimeout(timeout);reject(new Error('Установка новой сборки была отклонена.'));}
