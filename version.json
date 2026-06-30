@@ -1,20 +1,19 @@
 {
-  "version": "73",
-  "release": "compact-note-and-in-work-tab",
+  "version": "74",
+  "release": "green-note-status-and-light-ui",
   "date": "2026-06-30",
   "features": [
-    "all-v72-functions-preserved",
-    "compact-floating-note-default-top-left",
-    "note-auto-height-from-one-line",
-    "drag-note-anywhere-by-touch-or-mouse",
-    "note-recognize-and-fill-request",
-    "note-clear-text-action",
-    "note-text-position-and-open-state-persisted",
-    "in-work-tab",
-    "picked-up-orders-hidden-from-day-feed",
-    "picked-up-orders-grouped-by-work-start-date",
-    "daily-in-work-counts",
-    "work-start-timestamp-preserved",
-    "google-and-yandex-status-update-supported"
+    "all-v73-functions-preserved",
+    "remove-stuck-client-note-saved-panel",
+    "green-floating-manager-note",
+    "strong-note-shadow-and-separate-visual-style",
+    "drag-closed-note-button",
+    "directional-swipe-note-to-screen-edge",
+    "instant-picked-up-removal-from-day-feed",
+    "instant-addition-to-in-work-tab",
+    "status-overrides-reconciled-after-calendar-sync",
+    "lighter-day-interface",
+    "reduced-card-borders-and-shadows",
+    "google-and-yandex-status-save-preserved"
   ]
 }
