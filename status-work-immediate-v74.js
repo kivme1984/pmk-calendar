@@ -1,11 +1,12 @@
 'use strict';
 
 (() => {
-  if (window.PMK_STATUS_WORK_IMMEDIATE_V75) return;
-  window.PMK_STATUS_WORK_IMMEDIATE_V75 = true;
+  if (window.PMK_STATUS_WORK_IMMEDIATE_V76) return;
+  window.PMK_STATUS_WORK_IMMEDIATE_V76 = true;
 
   const OVERRIDES_KEY = 'pmk-status-overrides-v74';
   const WORK_STATUSES = new Set(['picked-up', 'in-progress']);
+  const HIDDEN_DAY_STATUSES = new Set(['picked-up', 'in-progress', 'completed']);
   const $ = (selector, root = document) => root.querySelector(selector);
   const previousEventMeta = eventMeta;
   const previousRenderToday = renderToday;
@@ -63,7 +64,7 @@
     if (changed) persistOverrides();
   }
 
-  eventMeta = function eventMetaWithStatusOverrideV75(event) {
+  eventMeta = function eventMetaWithStatusOverrideV76(event) {
     const base = previousEventMeta(event);
     const override = overrides[keyFor(event, base)];
     if (!override) return base;
@@ -75,17 +76,17 @@
     };
   };
 
-  function notInWork(event) {
-    return !WORK_STATUSES.has(eventMeta(event).requestStatus);
+  function visibleInDay(event) {
+    return !HIDDEN_DAY_STATUSES.has(eventMeta(event).requestStatus);
   }
 
-  renderToday = function renderTodayWithoutWorkV75(events = []) {
-    return previousRenderToday((events || []).filter(notInWork));
+  renderToday = function renderTodayActiveOnlyV76(events = []) {
+    return previousRenderToday((events || []).filter(visibleInDay));
   };
 
-  function renderDayWithoutWork() {
+  function renderDayActiveOnly() {
     if (state.currentView !== 'day') return;
-    const events = getAllEvents().filter(event => eventDateKey(event) === state.selectedDayKey && notInWork(event));
+    const events = getAllEvents().filter(event => eventDateKey(event) === state.selectedDayKey && visibleInDay(event));
     $('#todayCount').textContent = String(events.length);
     $('#summaryTotal').textContent = String(events.length);
     $('#summaryPickup').textContent = String(events.filter(event => eventMeta(event).visitType === 'pickup').length);
@@ -94,9 +95,9 @@
     renderToday(events);
   }
 
-  renderAll = function renderAllWithImmediateWorkV75() {
+  renderAll = function renderAllWithActiveDayV76() {
     previousRenderAll();
-    renderDayWithoutWork();
+    renderDayActiveOnly();
     window.PMK_IN_WORK_WORKFLOW_V73_API?.render?.();
   };
 
@@ -206,7 +207,9 @@
     setOverride(event, nextData, nextStatus, workStartedAt, resolvedContract);
     invalidateEventCaches();
     renderAll();
-    document.querySelector(`[data-event-card="${CSS.escape(id)}"]`)?.remove();
+    if (HIDDEN_DAY_STATUSES.has(nextStatus)) {
+      document.querySelector(`[data-event-card="${CSS.escape(id)}"]`)?.remove();
+    }
 
     try {
       const results = await saveStatus(event, nextData);
@@ -251,7 +254,7 @@
 
   requestAnimationFrame(() => {
     reconcileOverrides();
-    renderDayWithoutWork();
+    renderDayActiveOnly();
     window.PMK_IN_WORK_WORKFLOW_V73_API?.render?.();
   });
 })();
