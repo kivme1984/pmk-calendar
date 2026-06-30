@@ -1,10 +1,10 @@
-const VERSION='68';
+const VERSION='69';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v68.js';
-const BUNDLE_CSS='./__pmk-styles-v68.css';
+const BUNDLE_JS='./__pmk-app-v69.js';
+const BUNDLE_CSS='./__pmk-styles-v69.css';
 
 const JS=[
-  './app.js?source=68','./manager-planner-core.js','./manager-planner-hooks.js',
+  './app.js?source=69','./manager-planner-core.js','./manager-planner-hooks.js',
   './address-autocomplete.js?v=41','./address-mobile-v46.js','./stability-route.js?v=34',
   './stability-cache.js?v=34','./stability-copy.js?v=34','./stability-draft.js?v=34',
   './google-freeform-import.js?v=36','./runtime-stability-v37.js',
@@ -19,11 +19,12 @@ const JS=[
   './client-note-safe-v64.js?v=64','./workshop-measurement-v58.js?v=58',
   './settings-version-header-v59.js?v=68','./navigation-layer-swipe-fix-v60.js?v=60',
   './planning-refresh-remove-v62.js?v=62','./header-sync-status-v65.js?v=65',
-  './reminder-save-confirm-v66.js?v=66','./manager-workspace-fast-v68.js?v=68'
+  './reminder-save-confirm-v66.js?v=66','./manager-workspace-fast-v68.js?v=68',
+  './yandex-calendar-sync-v69.js?v=69'
 ];
 
 const CSS=[
-  './styles.css?source=68','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
+  './styles.css?source=69','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
   './mobile-rug-layout.css?v=36','./manager-form-v40.css','./unified-rug-services-v43.css?v=46',
   './manager-ui-v50-preview.css?v=68','./manager-ui-v50-refinements.css?v=68',
   './manager-ui-v51.css?v=68','./v51-tools-stable.css?v=68','./pricing-settings-v67.css?v=69',
@@ -36,7 +37,8 @@ const CSS=[
 
 const REQUIRED_JS=new Set([
   './fast-calendar-sync-v68.js?v=68','./client-search-fast-v68.js?v=68',
-  './voice-parser-fast-v68.js?v=68','./manager-workspace-fast-v68.js?v=68'
+  './voice-parser-fast-v68.js?v=68','./manager-workspace-fast-v68.js?v=68',
+  './yandex-calendar-sync-v69.js?v=69'
 ]);
 const REQUIRED_CSS=new Set([
   './client-search-workflow-v66.css?v=67','./manager-workspace-v66.css?v=67','./performance-fixes-v68.css?v=68'
