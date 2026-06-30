@@ -12,7 +12,7 @@
       if (!response.ok) throw new Error('version unavailable');
       return await response.json();
     } catch {
-      return { version:'73', release:'compact-note-and-in-work-tab', date:'2026-06-30' };
+      return { version:'74', release:'green-note-status-and-light-ui', date:'2026-06-30' };
     }
   }
 
@@ -24,10 +24,10 @@
     const panel = document.createElement('section');
     panel.id = 'settingsVersionHeader';
     panel.className = 'settings-version-header';
-    panel.innerHTML = '<div class="settings-version-info"><span class="settings-version-label">Версия приложения</span><strong id="settingsVersionValue">v73</strong><small id="settingsVersionRelease">Основная версия</small></div><a id="settingsUpdateButton" class="button button-primary settings-update-button" href="./reset.html?v=73-settings">Обновить приложение</a>';
+    panel.innerHTML = '<div class="settings-version-info"><span class="settings-version-label">Версия приложения</span><strong id="settingsVersionValue">v74</strong><small id="settingsVersionRelease">Основная версия</small></div><a id="settingsUpdateButton" class="button button-primary settings-update-button" href="./reset.html?v=74-settings">Обновить приложение</a>';
     heading.insertAdjacentElement('afterend', panel);
     const info = await loadVersion();
-    const version = String(info?.version || '73');
+    const version = String(info?.version || '74');
     $('#settingsVersionValue').textContent = `v${version}`;
     $('#settingsVersionRelease').textContent = info?.date ? `Установленная сборка · ${info.date}` : 'Установленная сборка';
     $('#settingsUpdateButton').href = `./reset.html?v=${encodeURIComponent(version)}-settings-${Date.now()}`;
