@@ -1,14 +1,15 @@
 {
-  "version": "78",
-  "release": "verified-version-install",
+  "version": "79",
+  "release": "completed-tab-and-legacy-status-fix",
   "date": "2026-06-30",
   "features": [
-    "all-v77-functions-preserved",
-    "unique-required-version-guard",
-    "settings-version-forced-to-v78",
-    "installer-verifies-service-worker-target",
-    "installer-verifies-version-guard-content",
-    "installation-stops-if-github-pages-is-stale",
-    "prevents-false-installed-message-with-old-settings-file"
+    "all-v78-functions-preserved",
+    "legacy-google-status-line-is-authoritative",
+    "completed-events-never-return-to-day-feed",
+    "completed-events-have-separate-tab",
+    "completed-events-grouped-by-completion-date",
+    "completed-counts-and-today-count",
+    "scoped-day-feed-observer-removes-hidden-statuses",
+    "verified-v79-version-guard"
   ]
 }
