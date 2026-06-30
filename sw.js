@@ -1,1 +1,1 @@
-importScripts('./sw-core-v73.js');
+importScripts('./sw-core-v74.js');
