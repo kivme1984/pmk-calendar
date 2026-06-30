@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Безопасное обновление ПМК Календаря до v81</title>
+<title>Безопасное обновление ПМК Календаря до v82</title>
 <style>
 body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-shadow:0 24px 70px rgba(0,0,0,.38)}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}
 </style>
 </head>
 <body>
 <main>
-<h1>Устанавливаем версию v81</h1>
-<p>Карточка удаляется до тяжёлой перерисовки. Проверено на двух событиях при искусственной задержке синхронизации 4 секунды.</p>
+<h1>Устанавливаем версию v82</h1>
+<p>Компактная вкладка «Выполнено» и автоматический переход завершённых заявок в архив через 7 дней.</p>
 <p id="status" class="status">Проверяем все файлы новой сборки…</p>
-<div class="actions"><button id="retry" type="button" hidden>Повторить обновление</button><a id="safe" href="./safe.html?v=81" hidden>Открыть безопасный режим</a><a id="open" href="./?v=81" hidden>Открыть приложение</a></div>
+<div class="actions"><button id="retry" type="button" hidden>Повторить обновление</button><a id="safe" href="./safe.html?v=82" hidden>Открыть безопасный режим</a><a id="open" href="./?v=82" hidden>Открыть приложение</a></div>
 </main>
 <script>
 (() => {
-  const VERSION='81';
+  const VERSION='82';
   const status=document.querySelector('#status');
   const retry=document.querySelector('#retry');
   const safe=document.querySelector('#safe');
@@ -36,32 +36,49 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     });
   }
 
+  function testArchivePolicy(policyText){
+    delete globalThis.PMK_ARCHIVE_POLICY_V82;
+    delete globalThis.PMK_ARCHIVE_POLICY_V82_API;
+    new Function(policyText)();
+    const policy=globalThis.PMK_ARCHIVE_POLICY_V82_API;
+    if(!policy)throw new Error('Не удалось запустить правило архива v82.');
+    const now=Date.parse('2026-07-01T12:00:00Z');
+    const recent='2026-06-25T12:00:01Z';
+    const weekOld='2026-06-24T12:00:00Z';
+    if(policy.isArchived(recent,now))throw new Error('Тест архива: недавняя заявка ошибочно попала в архив.');
+    if(!policy.isArchived(weekOld,now))throw new Error('Тест архива: заявка старше недели не перешла в архив.');
+    const result=policy.split([{id:1,t:recent},{id:2,t:weekOld}],item=>item.t,now);
+    if(result.active.length!==1||result.archived.length!==1)throw new Error('Тест распределения Выполнено/Архив не пройден.');
+  }
+
   async function verifyFiles(){
     const stamp=Date.now();
-    const urls=['./sw.js','./version-guard-v81.js','./status-ledger-v80.js','./status-pipeline-v81.js','./completed-workflow-v80.js'];
+    const urls=['./sw.js','./sw-special-router-v82.js','./version-guard-v82.js','./archive-policy-v82.js','./completed-archive-workflow-v82.js','./completed-archive-workflow-v82.css'];
     const responses=await Promise.all(urls.map(url=>fetch(`${url}?v=${VERSION}-verify-${stamp}`,{cache:'no-store'})));
-    if(responses.some(response=>!response.ok))throw new Error('Файлы v81 ещё не распространились на GitHub Pages.');
-    const [swText,guardText,ledgerText,pipelineText,completedText]=await Promise.all(responses.map(response=>response.text()));
-    if(!swText.includes('sw-core-v81.js'))throw new Error('GitHub Pages пока отдаёт старый service worker. Повторите через минуту.');
-    if(!guardText.includes("const VERSION = '81'"))throw new Error('Контрольный файл v81 ещё не опубликован. Повторите через минуту.');
-    if(!ledgerText.includes('PMK_STATUS_LEDGER_V80'))throw new Error('Реестр статусов ещё не опубликован. Повторите через минуту.');
-    if(!pipelineText.includes('PMK_STATUS_PIPELINE_V81'))throw new Error('Быстрый обработчик статусов v81 ещё не опубликован. Повторите через минуту.');
-    if(!pipelineText.includes('removeCardNextPaint'))throw new Error('В опубликованном обработчике отсутствует мгновенное удаление карточки.');
-    if(pipelineText.includes('rerenderSafe()'))throw new Error('GitHub Pages отдаёт старый медленный обработчик.');
-    if(!completedText.includes('PMK_COMPLETED_WORKFLOW_V80'))throw new Error('Раздел выполненных заявок ещё не опубликован. Повторите через минуту.');
+    if(responses.some(response=>!response.ok))throw new Error('Файлы v82 ещё не распространились на GitHub Pages.');
+    const [swText,routerText,guardText,policyText,workflowText,cssText]=await Promise.all(responses.map(response=>response.text()));
+    if(!swText.includes('sw-special-router-v82.js')||!swText.includes('sw-core-v82.js'))throw new Error('GitHub Pages пока отдаёт старый service worker. Повторите через минуту.');
+    if(!routerText.includes('reset.html')||!routerText.includes('stopImmediatePropagation'))throw new Error('Маршрутизатор обновлений v82 ещё не опубликован.');
+    if(!guardText.includes("const VERSION = '82'"))throw new Error('Контрольный файл v82 ещё не опубликован.');
+    if(!workflowText.includes('PMK_COMPLETED_ARCHIVE_WORKFLOW_V82'))throw new Error('Новый раздел Выполнено/Архив ещё не опубликован.');
+    if(!workflowText.includes('history-compact-card')||workflowText.includes('renderEventCard(event)'))throw new Error('Сервер отдаёт старую широкую карточку вместо компактной.');
+    if(!workflowText.includes('ARCHIVE_PAGE_SIZE = 50'))throw new Error('Постраничная загрузка архива не найдена.');
+    if(!cssText.includes('.history-compact-card')||!cssText.includes('overflow-wrap:anywhere'))throw new Error('Мобильные стили компактных карточек ещё не опубликованы.');
+    new Function(workflowText);
+    testArchivePolicy(policyText);
   }
 
   async function update(){
     retry.hidden=true;safe.hidden=true;open.hidden=true;
-    status.className='status';status.textContent='Проверяем все файлы версии v81…';
+    status.className='status';status.textContent='Проверяем компактные карточки и правило 7 дней…';
     try{
       await verifyFiles();
       if(!('serviceWorker' in navigator))throw new Error('Браузер не поддерживает обновление приложения.');
-      status.textContent='Собираем проверенный пакет v81…';
+      status.textContent='Собираем проверенный пакет v82…';
       const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}-${Date.now()}`,{updateViaCache:'none'});
       await registration.update().catch(()=>null);
       await waitForActivation(registration);
-      status.textContent='Версия v81 проверена и установлена. Открываем приложение…';
+      status.textContent='Версия v82 проверена и установлена. Открываем приложение…';
       open.hidden=false;
       await delay(500);
       location.replace(`./?v=${VERSION}&verified=${Date.now()}`);
