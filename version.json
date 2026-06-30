@@ -1,19 +1,17 @@
 {
-  "version": "74",
-  "release": "green-note-status-and-light-ui",
+  "version": "75",
+  "release": "contract-required-work-feed-fix",
   "date": "2026-06-30",
   "features": [
-    "all-v73-functions-preserved",
-    "remove-stuck-client-note-saved-panel",
-    "green-floating-manager-note",
-    "strong-note-shadow-and-separate-visual-style",
-    "drag-closed-note-button",
-    "directional-swipe-note-to-screen-edge",
-    "instant-picked-up-removal-from-day-feed",
-    "instant-addition-to-in-work-tab",
-    "status-overrides-reconciled-after-calendar-sync",
-    "lighter-day-interface",
-    "reduced-card-borders-and-shadows",
-    "google-and-yandex-status-save-preserved"
+    "all-v74-functions-preserved",
+    "hard-filter-picked-up-and-in-progress-from-day-feed",
+    "work-status-cannot-enter-day-renderer",
+    "contract-number-required-before-picked-up",
+    "contract-number-required-before-in-progress",
+    "contract-entry-dialog-with-courier-explanation",
+    "save-contract-and-transfer-in-one-action",
+    "contract-and-status-saved-to-google-or-yandex",
+    "instant-removal-from-day-feed",
+    "instant-addition-to-in-work-tab"
   ]
 }
