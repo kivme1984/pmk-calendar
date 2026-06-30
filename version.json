@@ -1,14 +1,20 @@
 {
-  "version": "71",
-  "release": "unlimited-overlapping-events",
+  "version": "72",
+  "release": "any-calendar-edit-and-floating-note",
   "date": "2026-06-30",
   "features": [
-    "all-v70-google-and-yandex-sync-features-preserved",
-    "allow-unlimited-events-in-the-same-time-period",
-    "allow-evening-window-overlaps",
-    "allow-overlaps-between-different-districts",
-    "overlap-warning-is-informational-only",
-    "existing-event-count-and-names-remain-visible",
-    "create-and-edit-events-never-blocked-by-overlap"
+    "all-v71-functions-preserved",
+    "create-request-with-yandex-only",
+    "edit-request-with-yandex-only",
+    "edit-contract-with-yandex-only",
+    "change-status-with-yandex-only",
+    "delete-request-with-yandex-only",
+    "available-calendars-operate-independently",
+    "disconnected-google-does-not-block-yandex",
+    "floating-manager-note-widget",
+    "automatic-note-saving",
+    "note-text-preserved-after-close",
+    "note-open-state-preserved",
+    "move-note-left-or-right"
   ]
 }
