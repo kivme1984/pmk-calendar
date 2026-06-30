@@ -10,16 +10,17 @@
   const previousRenderAll = renderAll;
   const previousUpdateEventStatus = updateEventStatus;
   let busy = false;
+  let overrides = loadOverrides();
 
-  function readOverrides() {
+  function loadOverrides() {
     try {
       const value = JSON.parse(localStorage.getItem(OVERRIDES_KEY) || '{}');
       return value && typeof value === 'object' ? value : {};
     } catch { return {}; }
   }
 
-  function writeOverrides(value) {
-    try { localStorage.setItem(OVERRIDES_KEY, JSON.stringify(value)); } catch {}
+  function persistOverrides() {
+    try { localStorage.setItem(OVERRIDES_KEY, JSON.stringify(overrides)); } catch {}
   }
 
   function keyFor(event, data = {}) {
@@ -29,18 +30,32 @@
   function setOverride(event, data, nextStatus, workStartedAt = '') {
     const key = keyFor(event, data);
     if (!key) return;
-    const map = readOverrides();
-    map[key] = {
+    overrides[key] = {
       status: nextStatus,
       workStartedAt: workStartedAt || data.workStartedAt || '',
       updatedAt: new Date().toISOString(),
     };
-    writeOverrides(map);
+    persistOverrides();
+  }
+
+  function reconcileOverrides() {
+    let changed = false;
+    getAllEvents().forEach(event => {
+      const base = previousEventMeta(event);
+      const key = keyFor(event, base);
+      const override = overrides[key];
+      if (!override) return;
+      if (base.requestStatus === override.status && (!override.workStartedAt || base.workStartedAt === override.workStartedAt)) {
+        delete overrides[key];
+        changed = true;
+      }
+    });
+    if (changed) persistOverrides();
   }
 
   eventMeta = function eventMetaWithStatusOverrideV74(event) {
     const base = previousEventMeta(event);
-    const override = readOverrides()[keyFor(event, base)];
+    const override = overrides[keyFor(event, base)];
     if (!override) return base;
     return {
       ...base,
@@ -126,6 +141,7 @@
       }
 
       try { await refreshEvents(); } catch {}
+      reconcileOverrides();
       invalidateEventCaches();
       renderAll();
     } catch (error) {
@@ -148,11 +164,13 @@
   }, true);
 
   window.addEventListener('pmk-calendar-sync-done', () => {
+    reconcileOverrides();
     invalidateEventCaches();
     renderAll();
   });
 
   requestAnimationFrame(() => {
+    reconcileOverrides();
     renderDayWithoutWork();
     window.PMK_IN_WORK_WORKFLOW_V73_API?.render?.();
   });
