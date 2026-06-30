@@ -1,15 +1,14 @@
 {
-  "version": "77",
-  "release": "instant-status-feedback",
+  "version": "78",
+  "release": "verified-version-install",
   "date": "2026-06-30",
   "features": [
-    "all-v76-functions-preserved",
-    "instant-button-accepted-feedback",
-    "instant-card-removal-before-network",
-    "background-google-and-yandex-status-sync",
-    "independent-per-order-status-processing",
-    "picked-up-in-progress-and-completed-hide-immediately",
-    "contract-required-before-picked-up-or-in-progress",
-    "local-status-override-prevents-card-return-during-sync"
+    "all-v77-functions-preserved",
+    "unique-required-version-guard",
+    "settings-version-forced-to-v78",
+    "installer-verifies-service-worker-target",
+    "installer-verifies-version-guard-content",
+    "installation-stops-if-github-pages-is-stale",
+    "prevents-false-installed-message-with-old-settings-file"
   ]
 }
