@@ -6,7 +6,7 @@
 
   const CACHE_NAME = 'pmk-calendar-data-v68';
   const CACHE_PATH = './__pmk-calendar-events-v68.json';
-  const SYNC_TOKEN_KEY = 'pmk-calendar-sync-token-v68';
+  const LAST_SYNC_KEY = 'pmk-calendar-last-sync-v68';
   const CALENDAR_KEY = 'pmk-calendar-cache-id-v68';
   let activeSync = null;
   let cachePromise = null;
@@ -23,18 +23,18 @@
     window.PMK_EVENTS_REVISION = Number(window.PMK_EVENTS_REVISION || 0) + 1;
   }
 
-  function readSyncToken() {
+  function readLastSync() {
     try {
       if (localStorage.getItem(CALENDAR_KEY) !== calendarId()) return '';
-      return localStorage.getItem(SYNC_TOKEN_KEY) || '';
+      return localStorage.getItem(LAST_SYNC_KEY) || '';
     } catch { return ''; }
   }
 
-  function saveSyncToken(token) {
+  function saveLastSync(value) {
     try {
       localStorage.setItem(CALENDAR_KEY, calendarId());
-      if (token) localStorage.setItem(SYNC_TOKEN_KEY, token);
-      else localStorage.removeItem(SYNC_TOKEN_KEY);
+      if (value) localStorage.setItem(LAST_SYNC_KEY, value);
+      else localStorage.removeItem(LAST_SYNC_KEY);
     } catch {}
   }
 
@@ -54,8 +54,8 @@
     if (!('caches' in window)) return;
     try {
       const cache = await caches.open(CACHE_NAME);
-      const payload = JSON.stringify({ calendarId: calendarId(), savedAt: Date.now(), events });
-      await cache.put(CACHE_PATH, new Response(payload, { headers: { 'Content-Type': 'application/json' } }));
+      const payload = JSON.stringify({ calendarId:calendarId(), savedAt:Date.now(), events });
+      await cache.put(CACHE_PATH, new Response(payload, { headers:{ 'Content-Type':'application/json' } }));
     } catch {}
   }
 
@@ -72,7 +72,7 @@
         bumpRevision();
         invalidateEventCaches();
         renderAll();
-        emit('pmk-calendar-cache-ready', { count: payload.events.length, savedAt: payload.savedAt || 0 });
+        emit('pmk-calendar-cache-ready', { count:payload.events.length, savedAt:payload.savedAt || 0 });
       }
       return true;
     })().finally(() => { cachePromise = null; });
@@ -83,7 +83,6 @@
     const id = encodeURIComponent(calendarId());
     let pageToken = '';
     let page = 0;
-    let nextSyncToken = '';
     do {
       const query = new URLSearchParams(params);
       if (pageToken) query.set('pageToken', pageToken);
@@ -91,30 +90,27 @@
       const items = Array.isArray(result?.items) ? result.items : [];
       onPage(items);
       pageToken = result?.nextPageToken || '';
-      nextSyncToken = result?.nextSyncToken || nextSyncToken;
       page += 1;
-      emit('pmk-calendar-sync-progress', { page, count: Number(onPage.count?.() || 0) });
+      emit('pmk-calendar-sync-progress', { page, count:Number(onPage.count?.() || 0) });
     } while (pageToken && page < 200);
-    return nextSyncToken;
   }
 
   async function fullSync() {
     const events = [];
     const append = items => events.push(...items);
     append.count = () => events.length;
-    const nextSyncToken = await requestPages({
-      timeMin: '1970-01-01T00:00:00Z',
-      timeMax: '2100-01-01T00:00:00Z',
-      singleEvents: 'true',
-      orderBy: 'startTime',
-      showDeleted: 'false',
-      maxResults: '2500',
+    await requestPages({
+      timeMin:'1970-01-01T00:00:00Z',
+      timeMax:'2100-01-01T00:00:00Z',
+      singleEvents:'true',
+      orderBy:'startTime',
+      showDeleted:'false',
+      maxResults:'2500',
     }, append);
-    saveSyncToken(nextSyncToken);
     return events;
   }
 
-  async function incrementalSync(token) {
+  async function incrementalSync(updatedMin) {
     const map = new Map((state.events || []).map(event => [event.id, event]));
     let processed = 0;
     const apply = items => {
@@ -126,12 +122,12 @@
       });
     };
     apply.count = () => processed;
-    const nextSyncToken = await requestPages({
-      syncToken: token,
-      showDeleted: 'true',
-      maxResults: '2500',
+    await requestPages({
+      updatedMin,
+      singleEvents:'true',
+      showDeleted:'true',
+      maxResults:'2500',
     }, apply);
-    saveSyncToken(nextSyncToken || token);
     return [...map.values()].sort((a, b) => new Date(a.start?.dateTime || a.start?.date || 0) - new Date(b.start?.dateTime || b.start?.date || 0));
   }
 
@@ -146,22 +142,22 @@
 
     activeSync = (async () => {
       emit('pmk-calendar-sync-start');
+      const syncStartedAt = new Date().toISOString();
       try {
         await hydrateCachedEvents();
-        const token = readSyncToken();
+        const lastSync = readLastSync();
         let events;
-        if (token) {
+        if (lastSync && state.events.length) {
           try {
-            events = await incrementalSync(token);
-          } catch (error) {
-            if (!/Google Calendar:\s*410|Sync token/i.test(String(error?.message || error))) throw error;
-            saveSyncToken('');
+            events = await incrementalSync(lastSync);
+          } catch {
             events = await fullSync();
           }
         } else {
           events = await fullSync();
         }
         state.events = events;
+        saveLastSync(syncStartedAt);
         window.PMK_FULL_CALENDAR_SYNC_READY = true;
         window.PMK_FULL_CALENDAR_CACHE_READY = true;
         window.PMK_FULL_CALENDAR_EVENT_COUNT = events.length;
@@ -170,12 +166,12 @@
         renderAll();
         checkUpcomingNotifications();
         await writeCache(events);
-        emit('pmk-calendar-sync-done', { count: events.length });
+        emit('pmk-calendar-sync-done', { count:events.length });
       } catch (error) {
         window.PMK_FULL_CALENDAR_SYNC_READY = Boolean(state.events.length);
         invalidateEventCaches();
         renderAll();
-        emit('pmk-calendar-sync-error', { message: error?.message || String(error) });
+        emit('pmk-calendar-sync-error', { message:error?.message || String(error) });
         showToast(error?.message || 'Не удалось синхронизировать Google Calendar.', 'error');
       } finally {
         activeSync = null;
@@ -186,17 +182,17 @@
   }
 
   refreshEvents = performSync;
-  window.PMK_FULL_CALENDAR_SYNC = { refresh: performSync, hydrate: hydrateCachedEvents };
+  window.PMK_FULL_CALENDAR_SYNC = { refresh:performSync, hydrate:hydrateCachedEvents };
 
   const previousPersistLocalEvents = persistLocalEvents;
   persistLocalEvents = function persistLocalEventsWithRevisionV68() {
     const result = previousPersistLocalEvents();
     bumpRevision();
-    emit('pmk-local-events-changed', { count: state.localEvents.length });
+    emit('pmk-local-events-changed', { count:state.localEvents.length });
     return result;
   };
 
   const start = () => requestAnimationFrame(() => hydrateCachedEvents());
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once:true });
   else start();
 })();
