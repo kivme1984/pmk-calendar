@@ -1,17 +1,14 @@
 {
-  "version": "70",
-  "release": "provider-status-and-manager-device-setup",
+  "version": "71",
+  "release": "unlimited-overlapping-events",
   "date": "2026-06-30",
   "features": [
-    "separate-google-connection-status",
-    "separate-yandex-connection-status",
-    "last-successful-sync-time",
-    "provider-error-and-queue-indicators",
-    "one-button-dual-calendar-sync",
-    "manager-device-setup-card",
-    "copy-manager-connection-instructions",
-    "technical-token-only-on-manager-devices",
-    "yandex-login-and-app-password-stay-in-cloudflare",
-    "existing-google-and-yandex-dual-sync-preserved"
+    "all-v70-google-and-yandex-sync-features-preserved",
+    "allow-unlimited-events-in-the-same-time-period",
+    "allow-evening-window-overlaps",
+    "allow-overlaps-between-different-districts",
+    "overlap-warning-is-informational-only",
+    "existing-event-count-and-names-remain-visible",
+    "create-and-edit-events-never-blocked-by-overlap"
   ]
 }
