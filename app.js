@@ -1652,14 +1652,27 @@ function openEvent(id) {
 
 let linkedEventOpened = false;
 function openLinkedEvent() {
-  if (linkedEventOpened) return;
+  if (linkedEventOpened) return true;
   const params = new URLSearchParams(location.search);
-  const id = params.get('event');
-  const pmkId = params.get('pmk');
-  const linkedEvent = getAllEvents().find(item => item.id === id || (pmkId && decodePmkData(item)?.pmkId === pmkId));
-  if (!linkedEvent) return;
+  const id = String(params.get('event') || '').trim();
+  const pmkId = String(params.get('pmk') || '').trim();
+  if (!id && !pmkId) return false;
+  const linkedEvent = getAllEvents().find(item => {
+    const itemPmkId = String(decodePmkData(item)?.pmkId || item.extendedProperties?.private?.pmkId || '').trim();
+    return (id && String(item.id || '').trim() === id) || (pmkId && itemPmkId === pmkId);
+  });
+  if (!linkedEvent) return false;
   linkedEventOpened = true;
   openEvent(linkedEvent.id);
+  return true;
+}
+
+function scheduleLinkedEventOpen() {
+  if (openLinkedEvent()) return;
+  const started = Date.now();
+  const timer = setInterval(() => {
+    if (openLinkedEvent() || Date.now() - started > 60000) clearInterval(timer);
+  }, 500);
 }
 
 function fillForm(data) {
@@ -1786,7 +1799,7 @@ function checkUpcomingNotifications() {
 
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme(); setupSettingsUI(); initializeForm(); renderAll(); updateConnectionUI(); registerServiceWorker();
-  openLinkedEvent();
+  scheduleLinkedEventOpen();
   setupSwipeNavigation();
   history.replaceState({ pmkView: state.currentView, selectedDayKey: state.selectedDayKey, periodAnchorKey: state.periodAnchorKey }, '', location.hash || '#day');
   scheduleGoogleAutoReconnect();
