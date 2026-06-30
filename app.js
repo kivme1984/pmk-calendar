@@ -1651,15 +1651,19 @@ function openEvent(id) {
 }
 
 let linkedEventOpened = false;
+function normalizedCalendarEventId(value) {
+  return String(value || '').trim().replace(/@google\.com$/i, '');
+}
+
 function openLinkedEvent() {
   if (linkedEventOpened) return true;
   const params = new URLSearchParams(location.search);
-  const id = String(params.get('event') || '').trim();
+  const id = normalizedCalendarEventId(params.get('event'));
   const pmkId = String(params.get('pmk') || '').trim();
   if (!id && !pmkId) return false;
   const linkedEvent = getAllEvents().find(item => {
     const itemPmkId = String(decodePmkData(item)?.pmkId || item.extendedProperties?.private?.pmkId || '').trim();
-    return (id && String(item.id || '').trim() === id) || (pmkId && itemPmkId === pmkId);
+    return (id && normalizedCalendarEventId(item.id) === id) || (pmkId && itemPmkId === pmkId);
   });
   if (!linkedEvent) return false;
   linkedEventOpened = true;
