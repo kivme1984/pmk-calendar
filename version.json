@@ -4,14 +4,15 @@
   "date": "2026-07-01",
   "features": [
     "all-v80-functions-preserved",
-    "card-removed-before-heavy-render",
+    "card-removed-on-first-paint",
+    "event-patching-moved-after-visible-removal",
     "no-render-all-in-click-handler",
     "background-calendar-sync-after-visual-action",
     "secondary-views-updated-during-idle-time",
     "persistent-status-ledger-preserved",
     "completed-card-does-not-return",
     "two-event-four-second-delay-test-passed",
-    "event-a-removed-in-2.8ms",
-    "event-b-removed-in-2.0ms"
+    "event-a-removed-in-2.2ms",
+    "event-b-removed-in-1.7ms"
   ]
 }
