@@ -1,0 +1,52 @@
+#connectionBadge{display:none!important}
+#pmkHeaderSync{display:none!important}
+.pmk-provider-status-panel{display:flex;align-items:stretch;gap:8px;min-width:0}
+.pmk-provider-card{appearance:none;border:1px solid var(--line,#ddd);background:var(--card,#fff);color:inherit;border-radius:14px;min-width:150px;padding:8px 10px;display:grid;grid-template-columns:30px minmax(0,1fr) 9px;gap:8px;align-items:center;text-align:left;cursor:pointer;transition:.18s ease;box-shadow:0 6px 20px rgba(0,0,0,.05)}
+.pmk-provider-card:hover{transform:translateY(-1px);border-color:rgba(255,190,0,.75)}
+.pmk-provider-logo{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-weight:900;font-size:14px;background:#f2f3f5}
+.pmk-provider-logo-google{background:linear-gradient(135deg,#4285f4,#34a853);color:#fff}
+.pmk-provider-logo-yandex{background:#fc3f1d;color:#fff}
+.pmk-provider-copy{min-width:0;display:flex;flex-direction:column;line-height:1.08}
+.pmk-provider-copy strong{font-size:12px;letter-spacing:.01em}
+.pmk-provider-copy small{font-size:11px;font-weight:800;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmk-provider-copy em{font-size:9px;font-style:normal;color:var(--muted,#777);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmk-provider-dot{width:9px;height:9px;border-radius:50%;background:#9aa0a6;box-shadow:0 0 0 4px rgba(154,160,166,.12)}
+.pmk-provider-card[data-status="success"] .pmk-provider-dot{background:#20a35a;box-shadow:0 0 0 4px rgba(32,163,90,.14)}
+.pmk-provider-card[data-status="pending"] .pmk-provider-dot,.pmk-provider-card[data-status="warning"] .pmk-provider-dot{background:#e5a300;box-shadow:0 0 0 4px rgba(229,163,0,.14)}
+.pmk-provider-card[data-status="error"] .pmk-provider-dot,.pmk-provider-card[data-status="offline"] .pmk-provider-dot{background:#dc3d43;box-shadow:0 0 0 4px rgba(220,61,67,.13)}
+.pmk-provider-card[data-status="syncing"] .pmk-provider-dot{background:#3478f6;animation:pmkProviderPulse 1s infinite}
+.pmk-provider-sync-button{width:40px;min-width:40px;border:1px solid var(--line,#ddd);border-radius:14px;background:var(--card,#fff);color:inherit;font-size:20px;cursor:pointer;position:relative}
+.pmk-provider-sync-button[data-queue]:not([data-queue="0"])::after{content:attr(data-queue);position:absolute;right:-5px;top:-6px;min-width:18px;height:18px;border-radius:9px;background:#e5a300;color:#111;font-size:10px;font-weight:900;display:grid;place-items:center;padding:0 4px}
+.pmk-provider-sync-button:disabled{opacity:.55;cursor:wait}
+@keyframes pmkProviderPulse{50%{transform:scale(.6);opacity:.55}}
+.pmk-manager-device-card{grid-column:1/-1}
+.pmk-manager-device-heading{display:flex;gap:16px;justify-content:space-between;align-items:flex-start}
+.pmk-manager-device-heading p{margin:6px 0 0;color:var(--muted,#777);max-width:760px}
+.pmk-manager-safe-badge{flex:0 0 auto;border-radius:999px;padding:7px 10px;background:rgba(32,163,90,.12);color:#168248;font-size:11px;font-weight:900}
+.pmk-manager-device-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.pmk-manager-token-field{grid-column:1/-1}
+.pmk-manager-token-wrap{display:flex;gap:8px;align-items:stretch}
+.pmk-manager-token-wrap input{flex:1;min-width:0}
+.pmk-manager-token-wrap .mini-button{flex:0 0 auto}
+.pmk-manager-device-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.pmk-manager-security-note{margin-top:14px}
+@media(max-width:980px){
+  .pmk-provider-card{min-width:126px;padding:7px 8px;grid-template-columns:26px minmax(0,1fr) 8px}
+  .pmk-provider-logo{width:26px;height:26px;border-radius:8px;font-size:12px}
+  .pmk-provider-copy em{display:none}
+}
+@media(max-width:720px){
+  .app-header .header-actions{gap:6px}
+  .pmk-provider-status-panel{gap:5px;flex:1;justify-content:flex-end}
+  .pmk-provider-card{min-width:0;width:96px;border-radius:12px;grid-template-columns:22px minmax(0,1fr) 7px;gap:5px;padding:6px}
+  .pmk-provider-logo{width:22px;height:22px;font-size:10px}
+  .pmk-provider-copy strong{font-size:10px}
+  .pmk-provider-copy small{font-size:8px}
+  .pmk-provider-sync-button{width:32px;min-width:32px;border-radius:12px;font-size:17px}
+  #connectGoogleBtn{display:none!important}
+  .pmk-manager-device-grid{grid-template-columns:1fr}
+  .pmk-manager-token-field{grid-column:auto}
+  .pmk-manager-device-heading{display:block}
+  .pmk-manager-safe-badge{display:inline-block;margin-top:10px}
+  .pmk-manager-device-actions .button{width:100%}
+}
