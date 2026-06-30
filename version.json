@@ -11,6 +11,8 @@
     "delete-request-with-yandex-only",
     "available-calendars-operate-independently",
     "disconnected-google-does-not-block-yandex",
+    "yandex-is-primary-source-when-google-is-disconnected",
+    "stale-google-cache-cannot-override-yandex-edits",
     "floating-manager-note-widget",
     "automatic-note-saving",
     "note-text-preserved-after-close",
