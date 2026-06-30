@@ -1,0 +1,14 @@
+.v50-sticky-actions{grid-template-columns:minmax(92px,.65fr) minmax(72px,.42fr) minmax(150px,1.25fr)!important;gap:8px!important}
+.v50-sticky-actions .pmk-clear-request{min-width:0;min-height:50px!important;padding:0 9px;border:0;border-radius:12px;background:#a52b25;color:#fff;font-size:14px!important;font-weight:850}
+.v50-sticky-actions .v50-draft,.v50-sticky-actions .v50-submit{min-width:0}
+.pmk-clear-request-inline{min-height:44px!important;padding:0 12px!important;font-size:14px!important;background:#a52b25!important;color:#fff!important}
+.pmk-manager-launchpad{background:#fff!important;backdrop-filter:none!important;contain:layout paint style}
+.pmk-workspace-dialog{contain:layout paint style}
+.client-quick-results,.pmk-slot-results,.pmk-draft-list,.week-board{overscroll-behavior:contain}
+.client-history-item,.event-card,.pmk-draft-card,.pmk-slot-option{content-visibility:auto;contain-intrinsic-size:120px}
+.pmk-slot-results,.pmk-calc-rugs{scrollbar-gutter:stable}
+@media(max-width:520px){
+  .v50-sticky-actions{grid-template-columns:minmax(82px,.68fr) 68px minmax(126px,1.2fr)!important;gap:6px!important;padding-left:8px!important;padding-right:8px!important}
+  .v50-sticky-actions button{min-height:50px!important;font-size:14px!important;border-radius:11px!important}
+  .v50-sticky-actions .pmk-clear-request{font-size:12px!important;padding:0 5px}
+}
