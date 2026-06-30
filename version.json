@@ -1,22 +1,20 @@
 {
-  "version": "72",
-  "release": "any-calendar-edit-and-floating-note",
+  "version": "73",
+  "release": "compact-note-and-in-work-tab",
   "date": "2026-06-30",
   "features": [
-    "all-v71-functions-preserved",
-    "create-request-with-yandex-only",
-    "edit-request-with-yandex-only",
-    "edit-contract-with-yandex-only",
-    "change-status-with-yandex-only",
-    "delete-request-with-yandex-only",
-    "available-calendars-operate-independently",
-    "disconnected-google-does-not-block-yandex",
-    "yandex-is-primary-source-when-google-is-disconnected",
-    "stale-google-cache-cannot-override-yandex-edits",
-    "floating-manager-note-widget",
-    "automatic-note-saving",
-    "note-text-preserved-after-close",
-    "note-open-state-preserved",
-    "move-note-left-or-right"
+    "all-v72-functions-preserved",
+    "compact-floating-note-default-top-left",
+    "note-auto-height-from-one-line",
+    "drag-note-anywhere-by-touch-or-mouse",
+    "note-recognize-and-fill-request",
+    "note-clear-text-action",
+    "note-text-position-and-open-state-persisted",
+    "in-work-tab",
+    "picked-up-orders-hidden-from-day-feed",
+    "picked-up-orders-grouped-by-work-start-date",
+    "daily-in-work-counts",
+    "work-start-timestamp-preserved",
+    "google-and-yandex-status-update-supported"
   ]
 }
