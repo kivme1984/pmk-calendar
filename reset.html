@@ -3,35 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Безопасное обновление ПМК Календаря до v73</title>
+<title>Безопасное обновление ПМК Календаря до v74</title>
 <style>
-body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-shadow:0 24px 70px rgba(0,0,0,.38)}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-shadow:0 24px 70px rgba(0,0,0,.38)}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}
 </style>
 </head>
 <body>
 <main>
-<h1>Устанавливаем версию v73</h1>
-<p>Добавляем компактную перетаскиваемую заметку с распознаванием текста и отдельную вкладку «В работе» для заказов со статусом «Забрали».</p>
+<h1>Устанавливаем версию v74</h1>
+<p>Исправляем перенос заказов во «В работе», убираем зависшую панель «Заметка сохранена», добавляем зелёную перетаскиваемую заметку и облегчаем интерфейс.</p>
 <p id="status" class="status">Проверяем новую сборку…</p>
 <div class="actions">
 <button id="retry" type="button" hidden>Повторить обновление</button>
-<a id="safe" href="./safe.html?v=73" hidden>Открыть безопасный режим</a>
-<a id="open" href="./?v=73" hidden>Открыть приложение</a>
+<a id="safe" href="./safe.html?v=74" hidden>Открыть безопасный режим</a>
+<a id="open" href="./?v=74" hidden>Открыть приложение</a>
 </div>
 </main>
 <script>
 (() => {
-  const VERSION='73';
+  const VERSION='74';
   const status=document.querySelector('#status');
   const retry=document.querySelector('#retry');
   const safe=document.querySelector('#safe');
   const open=document.querySelector('#open');
   const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-
   function waitForActivation(registration){
     const worker=registration.installing||registration.waiting||registration.active;
-    if(!worker)return Promise.resolve();
-    if(worker.state==='activated')return Promise.resolve();
+    if(!worker||worker.state==='activated')return Promise.resolve();
     return new Promise((resolve,reject)=>{
       const timeout=setTimeout(()=>reject(new Error('Новая сборка не активировалась.')),30000);
       worker.addEventListener('statechange',()=>{
@@ -40,7 +38,6 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
       });
     });
   }
-
   async function update(){
     retry.hidden=true;safe.hidden=true;open.hidden=true;
     status.className='status';status.textContent='Проверяем новую сборку…';
@@ -52,19 +49,16 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
       const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}-${Date.now()}`,{updateViaCache:'none'});
       await registration.update().catch(()=>null);
       await waitForActivation(registration);
-      status.textContent='Версия v73 установлена. Открываем приложение…';
+      status.textContent='Версия v74 установлена. Открываем приложение…';
       open.hidden=false;
       await delay(500);
       location.replace(`./?v=${VERSION}&updated=${Date.now()}`);
     }catch(error){
-      status.className='status error';
-      status.textContent=`Обновление не завершено: ${error.message}`;
+      status.className='status error';status.textContent=`Обновление не завершено: ${error.message}`;
       retry.hidden=false;safe.hidden=false;open.hidden=false;
     }
   }
-
-  retry.addEventListener('click',update);
-  update();
+  retry.addEventListener('click',update);update();
 })();
 </script>
 </body>
