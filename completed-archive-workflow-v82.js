@@ -65,10 +65,9 @@
 
   function displayDay(dateKey) {
     const date = dateKeyForDisplay(dateKey);
-    const prefix = dateKey === businessTodayKey()
+    return dateKey === businessTodayKey()
       ? 'Сегодня'
       : date.toLocaleDateString('ru-RU', { weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'UTC' }).replace(/^./, char => char.toUpperCase());
-    return prefix;
   }
 
   function displayMonth(monthKey) {
@@ -148,7 +147,10 @@
       completedView.className = 'view';
       main.appendChild(completedView);
     }
-    completedView.innerHTML = '<div class="page-heading compact history-heading"><div><p class="eyebrow">Последние 7 дней</p><h1>Выполнено</h1><p>Недавние завершённые заявки. Через неделю они автоматически перейдут в архив.</p></div></div><div class="history-summary"><span>За 7 дней</span><strong id="completedTotal">0</strong><small id="completedToday">Сегодня: 0</small></div><div id="completedGroups" class="history-groups"></div>';
+    if (completedView.dataset.historyShellV82 !== '1') {
+      completedView.dataset.historyShellV82 = '1';
+      completedView.innerHTML = '<div class="page-heading compact history-heading"><div><p class="eyebrow">Последние 7 дней</p><h1>Выполнено</h1><p>Недавние завершённые заявки. Через неделю они автоматически перейдут в архив.</p></div></div><div class="history-summary"><span>За 7 дней</span><strong id="completedTotal">0</strong><small id="completedToday">Сегодня: 0</small></div><div id="completedGroups" class="history-groups"></div>';
+    }
 
     let archiveView = $('#view-archive');
     if (!archiveView) {
@@ -157,11 +159,14 @@
       archiveView.className = 'view';
       main.appendChild(archiveView);
     }
-    archiveView.innerHTML = '<div class="page-heading compact history-heading"><div><p class="eyebrow">Старше 7 дней</p><h1>Архив</h1><p>Завершённые заказы хранятся здесь и не мешают ежедневной работе.</p></div></div><div class="history-summary history-summary-archive"><span>В архиве</span><strong id="archiveTotal">0</strong><small>Показываем последние записи</small></div><div id="archiveGroups" class="history-groups"></div><button id="archiveLoadMore" class="button button-secondary archive-load-more" type="button" hidden>Показать ещё</button>';
-    $('#archiveLoadMore', archiveView)?.addEventListener('click', () => {
-      archiveLimit += ARCHIVE_PAGE_SIZE;
-      renderArchive();
-    });
+    if (archiveView.dataset.historyShellV82 !== '1') {
+      archiveView.dataset.historyShellV82 = '1';
+      archiveView.innerHTML = '<div class="page-heading compact history-heading"><div><p class="eyebrow">Старше 7 дней</p><h1>Архив</h1><p>Завершённые заказы хранятся здесь и не мешают ежедневной работе.</p></div></div><div class="history-summary history-summary-archive"><span>В архиве</span><strong id="archiveTotal">0</strong><small>Показываем последние записи</small></div><div id="archiveGroups" class="history-groups"></div><button id="archiveLoadMore" class="button button-secondary archive-load-more" type="button" hidden>Показать ещё</button>';
+      $('#archiveLoadMore', archiveView)?.addEventListener('click', () => {
+        archiveLimit += ARCHIVE_PAGE_SIZE;
+        renderArchive();
+      });
+    }
     return true;
   }
 
