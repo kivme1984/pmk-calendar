@@ -1022,6 +1022,7 @@ async function refreshEvents() {
     }
     invalidateEventCaches();
     renderAll();
+    openLinkedEvent();
     checkUpcomingNotifications();
   } catch (error) { invalidateEventCaches(); showToast(error.message, 'error'); renderAll(); }
 }
@@ -1649,6 +1650,18 @@ function openEvent(id) {
   setView('form');
 }
 
+let linkedEventOpened = false;
+function openLinkedEvent() {
+  if (linkedEventOpened) return;
+  const params = new URLSearchParams(location.search);
+  const id = params.get('event');
+  const pmkId = params.get('pmk');
+  const linkedEvent = getAllEvents().find(item => item.id === id || (pmkId && decodePmkData(item)?.pmkId === pmkId));
+  if (!linkedEvent) return;
+  linkedEventOpened = true;
+  openEvent(linkedEvent.id);
+}
+
 function fillForm(data) {
   const item = withAddressParts(data);
   resetForm(false);
@@ -1773,6 +1786,7 @@ function checkUpcomingNotifications() {
 
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme(); setupSettingsUI(); initializeForm(); renderAll(); updateConnectionUI(); registerServiceWorker();
+  openLinkedEvent();
   setupSwipeNavigation();
   history.replaceState({ pmkView: state.currentView, selectedDayKey: state.selectedDayKey, periodAnchorKey: state.periodAnchorKey }, '', location.hash || '#day');
   scheduleGoogleAutoReconnect();
