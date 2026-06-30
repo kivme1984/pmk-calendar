@@ -1,17 +1,13 @@
 {
-  "version": "75",
-  "release": "contract-required-work-feed-fix",
+  "version": "76",
+  "release": "completed-hidden-from-day-feed",
   "date": "2026-06-30",
   "features": [
-    "all-v74-functions-preserved",
-    "hard-filter-picked-up-and-in-progress-from-day-feed",
-    "work-status-cannot-enter-day-renderer",
-    "contract-number-required-before-picked-up",
-    "contract-number-required-before-in-progress",
-    "contract-entry-dialog-with-courier-explanation",
-    "save-contract-and-transfer-in-one-action",
-    "contract-and-status-saved-to-google-or-yandex",
-    "instant-removal-from-day-feed",
-    "instant-addition-to-in-work-tab"
+    "all-v75-functions-preserved",
+    "completed-orders-hidden-from-day-feed",
+    "completed-status-applied-immediately",
+    "completed-orders-remain-in-calendar-and-search",
+    "picked-up-and-in-progress-still-hidden-from-day-feed",
+    "contract-required-before-picked-up-or-in-progress"
   ]
 }
