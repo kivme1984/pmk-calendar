@@ -23,8 +23,8 @@ const JS=[
   './provider-status-manager-v70.js?v=70','./unlimited-overlaps-v69.js?v=71',
   './provider-crud-any-calendar-v72.js?v=72','./yandex-primary-refresh-v72.js?v=72',
   './compact-floating-note-v73.js?v=74','./in-work-workflow-v73.js?v=73',
-  './status-work-immediate-v74.js?v=77','./completed-workflow-v79.js?v=79',
-  './version-guard-v79.js?v=79'
+  './status-work-immediate-v74.js?v=77','./status-override-alias-v79.js?v=79',
+  './completed-workflow-v79.js?v=79','./version-guard-v79.js?v=79'
 ];
 
 const CSS=[
@@ -49,7 +49,7 @@ const REQUIRED_JS=new Set([
   './unlimited-overlaps-v69.js?v=71','./provider-crud-any-calendar-v72.js?v=72',
   './yandex-primary-refresh-v72.js?v=72','./compact-floating-note-v73.js?v=74',
   './in-work-workflow-v73.js?v=73','./status-work-immediate-v74.js?v=77',
-  './completed-workflow-v79.js?v=79','./version-guard-v79.js?v=79'
+  './status-override-alias-v79.js?v=79','./completed-workflow-v79.js?v=79','./version-guard-v79.js?v=79'
 ]);
 const REQUIRED_CSS=new Set([
   './client-search-workflow-v66.css?v=67','./manager-workspace-v66.css?v=67',
