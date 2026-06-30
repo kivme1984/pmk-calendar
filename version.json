@@ -1,15 +1,22 @@
 {
-  "version": "66",
-  "release": "reminder-save-button-and-confirmation",
-  "date": "2026-06-29",
+  "version": "67",
+  "release": "manager-workspace-search-parser-drafts",
+  "date": "2026-06-30",
   "features": [
-    "main-release-v65-features",
-    "visible-reminder-save-button",
-    "sticky-mobile-reminder-action",
-    "confirmation-dialog-before-calendar-create",
-    "reminder-date-time-and-text-preview",
-    "google-or-local-save-mode-label",
-    "explicit-success-or-error-feedback",
+    "main-release-v66-features",
+    "client-history-sorted-newest-first",
+    "exact-three-or-four-digit-contract-search",
+    "open-event-before-client-action",
+    "intuitive-client-text-parser",
+    "separate-multiple-draft-list",
+    "delete-unfinished-request-action",
+    "functional-route-slot-explorer",
+    "slot-load-and-client-names",
+    "standalone-quick-price-calculator",
+    "transfer-calculation-and-slot-to-request",
+    "prominent-manager-launchpad",
+    "preserve-header-manual-calendar-sync",
+    "preserve-reminder-save-confirmation",
     "preserve-instant-local-bundle-launch"
   ]
 }
