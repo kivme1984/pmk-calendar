@@ -1,18 +1,19 @@
 'use strict';
 
 (() => {
-  if (window.PMK_STATUS_WORK_IMMEDIATE_V76) return;
-  window.PMK_STATUS_WORK_IMMEDIATE_V76 = true;
+  if (window.PMK_STATUS_WORK_IMMEDIATE_V77) return;
+  window.PMK_STATUS_WORK_IMMEDIATE_V77 = true;
 
   const OVERRIDES_KEY = 'pmk-status-overrides-v74';
   const WORK_STATUSES = new Set(['picked-up', 'in-progress']);
   const HIDDEN_DAY_STATUSES = new Set(['picked-up', 'in-progress', 'completed']);
   const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const previousEventMeta = eventMeta;
   const previousRenderToday = renderToday;
   const previousRenderAll = renderAll;
   const previousUpdateEventStatus = updateEventStatus;
-  let busy = false;
+  const inFlight = new Set();
   let overrides = loadOverrides();
 
   function loadOverrides() {
@@ -32,6 +33,11 @@
 
   function contractNumber(data = {}) {
     return String(data.contractNumber || '').replace(/^\s*[№#]\s*/, '').trim();
+  }
+
+  function statusLabel(status, visitType = 'pickup') {
+    try { return statusInfo(status, visitType).label; }
+    catch { return status === 'completed' ? 'Выполнено' : status === 'picked-up' ? 'Забрали' : 'Статус изменён'; }
   }
 
   function setOverride(event, data, nextStatus, workStartedAt = '', contract = '') {
@@ -64,7 +70,7 @@
     if (changed) persistOverrides();
   }
 
-  eventMeta = function eventMetaWithStatusOverrideV76(event) {
+  eventMeta = function eventMetaWithStatusOverrideV77(event) {
     const base = previousEventMeta(event);
     const override = overrides[keyFor(event, base)];
     if (!override) return base;
@@ -80,22 +86,38 @@
     return !HIDDEN_DAY_STATUSES.has(eventMeta(event).requestStatus);
   }
 
-  renderToday = function renderTodayActiveOnlyV76(events = []) {
+  renderToday = function renderTodayActiveOnlyV77(events = []) {
     return previousRenderToday((events || []).filter(visibleInDay));
   };
 
+  function activeDayEvents() {
+    return getAllEvents().filter(event => eventDateKey(event) === state.selectedDayKey && visibleInDay(event));
+  }
+
+  function updateDayCountersOnly() {
+    if (state.currentView !== 'day') return;
+    const events = activeDayEvents();
+    const values = {
+      todayCount: events.length,
+      summaryTotal: events.length,
+      summaryPickup: events.filter(event => eventMeta(event).visitType === 'pickup').length,
+      summaryDelivery: events.filter(event => eventMeta(event).visitType === 'delivery').length,
+      summaryAttention: events.filter(event => !eventMeta(event).phone || !displayAddress(eventMeta(event), event)).length,
+    };
+    Object.entries(values).forEach(([id, value]) => {
+      const node = $(`#${id}`);
+      if (node) node.textContent = String(value);
+    });
+  }
+
   function renderDayActiveOnly() {
     if (state.currentView !== 'day') return;
-    const events = getAllEvents().filter(event => eventDateKey(event) === state.selectedDayKey && visibleInDay(event));
-    $('#todayCount').textContent = String(events.length);
-    $('#summaryTotal').textContent = String(events.length);
-    $('#summaryPickup').textContent = String(events.filter(event => eventMeta(event).visitType === 'pickup').length);
-    $('#summaryDelivery').textContent = String(events.filter(event => eventMeta(event).visitType === 'delivery').length);
-    $('#summaryAttention').textContent = String(events.filter(event => !eventMeta(event).phone || !displayAddress(eventMeta(event), event)).length);
+    const events = activeDayEvents();
+    updateDayCountersOnly();
     renderToday(events);
   }
 
-  renderAll = function renderAllWithActiveDayV76() {
+  renderAll = function renderAllWithActiveDayV77() {
     previousRenderAll();
     renderDayActiveOnly();
     window.PMK_IN_WORK_WORKFLOW_V73_API?.render?.();
@@ -123,6 +145,53 @@
     return [];
   }
 
+  function findStatusButton(id, status) {
+    return $$('[data-status-event][data-status]').find(button => button.dataset.statusEvent === id && button.dataset.status === status) || null;
+  }
+
+  function cardFor(button, id) {
+    return button?.closest('.event-card') || $$('[data-event-card]').find(card => card.dataset.eventCard === id) || null;
+  }
+
+  function showImmediateAcceptance(button, id, nextStatus, visitType) {
+    const label = statusLabel(nextStatus, visitType);
+    const target = button || findStatusButton(id, nextStatus);
+    if (target) {
+      target.dataset.originalText ||= target.textContent;
+      target.classList.add('pmk-status-accepted');
+      target.disabled = true;
+      target.textContent = '✓ Принято';
+    }
+
+    const card = cardFor(target, id);
+    if (card) {
+      card.classList.add('pmk-card-action-accepted');
+      const confirmation = document.createElement('div');
+      confirmation.className = 'pmk-card-action-confirmation';
+      confirmation.textContent = `✓ ${label}`;
+      card.appendChild(confirmation);
+      requestAnimationFrame(() => card.classList.add('pmk-card-action-removing'));
+      setTimeout(() => {
+        card.remove();
+        updateDayCountersOnly();
+        const list = $('#todayList');
+        if (list && !list.querySelector('.event-card') && state.currentView === 'day') {
+          list.innerHTML = '<div class="empty-state"><strong>Активных заявок на этот день нет.</strong><br>Забранные и выполненные заказы убраны из рабочей ленты.</div>';
+        }
+      }, 190);
+    }
+
+    showToast(`✓ ${label}. Действие принято, синхронизация идёт в фоне.`, 'success');
+  }
+
+  function restoreVisibleButton(id, nextStatus) {
+    const button = findStatusButton(id, nextStatus);
+    if (!button) return;
+    button.disabled = false;
+    button.classList.remove('pmk-status-accepted');
+    button.textContent = button.dataset.originalText || statusLabel(nextStatus);
+  }
+
   function contractDialog() {
     let dialog = $('#pmkContractRequiredDialog');
     if (dialog) return dialog;
@@ -148,7 +217,7 @@
     $('.pmk-contract-required-close', dialog).addEventListener('click', () => dialog.close());
     $('[data-contract-required-cancel]', dialog).addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
-    dialog.addEventListener('submit', async event => {
+    dialog.addEventListener('submit', event => {
       event.preventDefault();
       const input = $('#pmkContractRequiredInput');
       const number = contractNumber({ contractNumber: input.value });
@@ -161,12 +230,21 @@
       const id = dialog.dataset.eventId;
       const status = dialog.dataset.nextStatus || 'picked-up';
       dialog.close();
-      await applyStatus(id, status, { contractOverride:number, skipContractCheck:true });
+      applyStatus(id, status, { contractOverride:number, skipContractCheck:true });
     });
     return dialog;
   }
 
-  function requestContract(event, data, nextStatus) {
+  function requestContract(event, data, nextStatus, button) {
+    const target = button || findStatusButton(event.id, nextStatus);
+    if (target) {
+      target.classList.add('pmk-status-needs-contract');
+      target.textContent = 'Нужен № договора';
+      setTimeout(() => {
+        target.classList.remove('pmk-status-needs-contract');
+        target.textContent = target.dataset.originalText || statusLabel(nextStatus, data.visitType);
+      }, 1200);
+    }
     const dialog = contractDialog();
     dialog.dataset.eventId = event.id;
     dialog.dataset.nextStatus = nextStatus;
@@ -176,22 +254,51 @@
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
     requestAnimationFrame(() => input.focus());
-    showToast('Для статуса «Забрали» обязателен номер договора.', 'error');
   }
 
-  async function applyStatus(id, nextStatus, options = {}) {
-    if (busy) return;
+  function persistInBackground(event, nextData, id, nextStatus) {
+    setTimeout(async () => {
+      try {
+        const results = await saveStatus(event, nextData);
+        if (!results.length) {
+          await previousUpdateEventStatus(id, nextStatus);
+        } else if (!results.some(item => item.ok)) {
+          const message = results.map(item => item.error?.message).filter(Boolean).join(' ');
+          showToast(message || 'Изменение сохранено на устройстве и будет отправлено позже.', 'error');
+        }
+
+        try { await refreshEvents(); } catch {}
+        reconcileOverrides();
+        invalidateEventCaches();
+        requestAnimationFrame(() => {
+          renderDayActiveOnly();
+          window.PMK_IN_WORK_WORKFLOW_V73_API?.render?.();
+        });
+      } catch (error) {
+        showToast(error?.message || 'Изменение сохранено на устройстве и будет отправлено позже.', 'error');
+      } finally {
+        inFlight.delete(keyFor(event, nextData) || id);
+        if (!HIDDEN_DAY_STATUSES.has(nextStatus)) restoreVisibleButton(id, nextStatus);
+      }
+    }, 0);
+  }
+
+  function applyStatus(id, nextStatus, options = {}) {
     const event = getAllEvents().find(item => item.id === id);
     if (!event) return showToast('Заявка не найдена.', 'error');
 
     const current = eventMeta(event);
+    const flightKey = keyFor(event, current) || id;
+    if (inFlight.has(flightKey)) return;
+
+    const sourceButton = options.sourceButton || findStatusButton(id, nextStatus);
     const resolvedContract = options.contractOverride || contractNumber(current);
     if (WORK_STATUSES.has(nextStatus) && !resolvedContract && !options.skipContractCheck) {
-      requestContract(event, current, nextStatus);
+      requestContract(event, current, nextStatus, sourceButton);
       return;
     }
 
-    busy = true;
+    inFlight.add(flightKey);
     const workStartedAt = WORK_STATUSES.has(nextStatus)
       ? (current.workStartedAt || new Date().toISOString())
       : current.workStartedAt || '';
@@ -206,34 +313,23 @@
 
     setOverride(event, nextData, nextStatus, workStartedAt, resolvedContract);
     invalidateEventCaches();
-    renderAll();
+
     if (HIDDEN_DAY_STATUSES.has(nextStatus)) {
-      document.querySelector(`[data-event-card="${CSS.escape(id)}"]`)?.remove();
-    }
-
-    try {
-      const results = await saveStatus(event, nextData);
-      if (!results.length) {
-        await previousUpdateEventStatus(id, nextStatus);
-      } else if (!results.some(item => item.ok)) {
-        const message = results.map(item => item.error?.message).filter(Boolean).join(' ');
-        showToast(message || 'Статус сохранён локально и будет отправлен позже.', 'error');
-      } else {
-        const label = statusInfo(nextStatus, nextData.visitType).label;
-        showToast(WORK_STATUSES.has(nextStatus) ? `Договор № ${resolvedContract}. Заказ перенесён во «В работе».` : `Статус: ${label}`, 'success');
+      showImmediateAcceptance(sourceButton, id, nextStatus, nextData.visitType);
+      updateDayCountersOnly();
+      requestAnimationFrame(() => window.PMK_IN_WORK_WORKFLOW_V73_API?.render?.());
+    } else {
+      const target = sourceButton || findStatusButton(id, nextStatus);
+      if (target) {
+        target.dataset.originalText ||= target.textContent;
+        target.classList.add('pmk-status-accepted');
+        target.disabled = true;
+        target.textContent = '✓ Принято';
       }
-
-      try { await refreshEvents(); } catch {}
-      reconcileOverrides();
-      invalidateEventCaches();
-      renderAll();
-    } catch (error) {
-      showToast(error?.message || 'Статус сохранён локально и будет отправлен позже.', 'error');
-      invalidateEventCaches();
-      renderAll();
-    } finally {
-      busy = false;
+      showToast(`✓ ${statusLabel(nextStatus, nextData.visitType)}. Действие принято.`, 'success');
     }
+
+    persistInBackground(event, nextData, id, nextStatus);
   }
 
   updateEventStatus = applyStatus;
@@ -243,13 +339,16 @@
     if (!button) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    applyStatus(button.dataset.statusEvent, button.dataset.status);
+    applyStatus(button.dataset.statusEvent, button.dataset.status, { sourceButton:button });
   }, true);
 
   window.addEventListener('pmk-calendar-sync-done', () => {
     reconcileOverrides();
     invalidateEventCaches();
-    renderAll();
+    requestAnimationFrame(() => {
+      renderDayActiveOnly();
+      window.PMK_IN_WORK_WORKFLOW_V73_API?.render?.();
+    });
   });
 
   requestAnimationFrame(() => {
