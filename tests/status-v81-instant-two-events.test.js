@@ -1,5 +1,6 @@
 'use strict';
 
+// Regression run trigger: v81 instant removal after workflow installation.
 const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
