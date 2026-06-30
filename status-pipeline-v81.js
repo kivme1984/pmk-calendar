@@ -120,9 +120,12 @@
     card.classList.add('pmk-card-action-removing-fast');
     requestAnimationFrame(() => {
       card.remove();
-      updateVisibleCounters();
       if (container && !container.querySelector('.event-card,[data-event-card]')) container.innerHTML = emptyMessageForCurrentView();
     });
+  }
+
+  function afterVisualAction(callback) {
+    requestAnimationFrame(() => requestAnimationFrame(callback));
   }
 
   function immediateFeedback(event, nextStatus, button) {
@@ -248,11 +251,13 @@
       workStartedAt:transition.nextData.workStartedAt,
       completedAt:transition.nextData.completedAt,
     });
-    patchMatchingEvents(event, transition.current, transition.nextData);
     immediateFeedback(event, nextStatus, options.sourceButton);
-    updateVisibleCounters();
-    scheduleSecondaryViews();
-    persistTransition(event, transition.nextData, flightKey);
+    afterVisualAction(() => {
+      patchMatchingEvents(event, transition.current, transition.nextData);
+      updateVisibleCounters();
+      scheduleSecondaryViews();
+      persistTransition(event, transition.nextData, flightKey);
+    });
   }
 
   globalThis.updateEventStatus = applyStatus;
@@ -269,6 +274,7 @@
     prepareTransition,
     patchMatchingEvents,
     removeCardNextPaint,
+    afterVisualAction,
     hiddenStatuses:HIDDEN_STATUSES,
   };
 })();
