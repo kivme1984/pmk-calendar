@@ -12,7 +12,7 @@
       if (!response.ok) throw new Error('version unavailable');
       return await response.json();
     } catch {
-      return { version: '66', release: 'reminder-save-button-and-confirmation', date: '2026-06-29' };
+      return { version: '67', release: 'manager-workspace-search-parser-drafts', date: '2026-06-30' };
     }
   }
 
@@ -29,10 +29,10 @@
     panel.innerHTML = `
       <div class="settings-version-info">
         <span class="settings-version-label">Версия приложения</span>
-        <strong id="settingsVersionValue">v66</strong>
+        <strong id="settingsVersionValue">v67</strong>
         <small id="settingsVersionRelease">Основная версия</small>
       </div>
-      <a id="settingsUpdateButton" class="button button-primary settings-update-button" href="./reset.html?v=66-settings">
+      <a id="settingsUpdateButton" class="button button-primary settings-update-button" href="./reset.html?v=67-settings">
         Обновить приложение
       </a>`;
 
@@ -40,7 +40,7 @@
     oldUpdate?.remove();
 
     const info = await loadVersion();
-    const version = String(info?.version || '66');
+    const version = String(info?.version || '67');
     $('#settingsVersionValue').textContent = `v${version}`;
     $('#settingsVersionRelease').textContent = info?.date
       ? `Установленная сборка · ${info.date}`
