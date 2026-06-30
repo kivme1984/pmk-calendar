@@ -1,22 +1,21 @@
 {
-  "version": "67",
-  "release": "manager-workspace-search-parser-drafts",
+  "version": "68",
+  "release": "full-function-performance-parser-fix",
   "date": "2026-06-30",
   "features": [
-    "main-release-v66-features",
-    "client-history-sorted-newest-first",
-    "exact-three-or-four-digit-contract-search",
-    "open-event-before-client-action",
-    "intuitive-client-text-parser",
-    "separate-multiple-draft-list",
-    "delete-unfinished-request-action",
-    "functional-route-slot-explorer",
-    "slot-load-and-client-names",
-    "standalone-quick-price-calculator",
-    "transfer-calculation-and-slot-to-request",
-    "prominent-manager-launchpad",
-    "preserve-header-manual-calendar-sync",
-    "preserve-reminder-save-confirmation",
-    "preserve-instant-local-bundle-launch"
+    "all-v67-manager-functions-preserved",
+    "remove-repeated-workspace-render-loop",
+    "remove-global-body-draft-observer",
+    "cached-full-calendar-history",
+    "incremental-updated-events-sync",
+    "indexed-client-history-search",
+    "legacy-event-field-recovery",
+    "common-russian-name-dictionary",
+    "spoken-rug-dimensions",
+    "expanded-additional-service-synonyms",
+    "complete-unsaved-request-clearing",
+    "compact-three-button-action-row",
+    "faster-long-list-rendering",
+    "preserve-manual-sync-reminders-slots-calculator-and-drafts"
   ]
 }
