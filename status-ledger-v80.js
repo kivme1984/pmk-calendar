@@ -8,14 +8,17 @@
   const MAX_AGE_MS = 400 * 24 * 60 * 60 * 1000;
   const previousEventMeta = typeof globalThis.eventMeta === 'function' ? globalThis.eventMeta : (event => event?.pmkData || {});
 
-  function readStore() {
+  function loadStore() {
     try {
       const value = JSON.parse(globalThis.localStorage?.getItem(STORAGE_KEY) || '{}');
       return value && typeof value === 'object' ? value : {};
     } catch { return {}; }
   }
 
+  let storeCache = loadStore();
+
   function writeStore(store) {
+    storeCache = store;
     try { globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(store)); } catch {}
   }
 
@@ -82,8 +85,7 @@
   }
 
   function resolve(event = {}, data = {}) {
-    const store = readStore();
-    return newest(aliases(event, data).map(alias => store[alias]));
+    return newest(aliases(event, data).map(alias => storeCache[alias]));
   }
 
   function mark(event = {}, data = {}, status, extra = {}) {
@@ -97,7 +99,7 @@
       logicalKey: logicalKey(event, data),
       pmkId: stablePmkId(event, data),
     };
-    const store = readStore();
+    const store = { ...storeCache };
     aliases(event, { ...data, pmkId: record.pmkId }).forEach(alias => { store[alias] = record; });
     const cutoff = Date.now() - MAX_AGE_MS;
     Object.keys(store).forEach(alias => {
@@ -141,6 +143,10 @@
   function sameLogical(eventA = {}, dataA = {}, eventB = {}, dataB = {}) {
     return logicalKey(eventA, dataA) === logicalKey(eventB, dataB);
   }
+
+  globalThis.addEventListener?.('storage', event => {
+    if (event.key === STORAGE_KEY) storeCache = loadStore();
+  });
 
   globalThis.eventMeta = function eventMetaWithLedgerV80(event) {
     return apply(event, previousEventMeta(event));
