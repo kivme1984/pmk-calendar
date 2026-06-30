@@ -22,7 +22,7 @@ const JS=[
   './reminder-save-confirm-v66.js?v=66','./manager-workspace-fast-v68.js?v=68',
   './yandex-calendar-sync-v69.js?v=69','./provider-status-manager-v70.js?v=70',
   './unlimited-overlaps-v69.js?v=71','./provider-crud-any-calendar-v72.js?v=72',
-  './floating-manager-note-v72.js?v=72'
+  './yandex-primary-refresh-v72.js?v=72','./floating-manager-note-v72.js?v=72'
 ];
 
 const CSS=[
@@ -43,7 +43,7 @@ const REQUIRED_JS=new Set([
   './voice-parser-fast-v68.js?v=68','./manager-workspace-fast-v68.js?v=68',
   './yandex-calendar-sync-v69.js?v=69','./provider-status-manager-v70.js?v=70',
   './unlimited-overlaps-v69.js?v=71','./provider-crud-any-calendar-v72.js?v=72',
-  './floating-manager-note-v72.js?v=72'
+  './yandex-primary-refresh-v72.js?v=72','./floating-manager-note-v72.js?v=72'
 ]);
 const REQUIRED_CSS=new Set([
   './client-search-workflow-v66.css?v=67','./manager-workspace-v66.css?v=67','./performance-fixes-v68.css?v=68',
