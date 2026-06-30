@@ -1,8 +1,8 @@
 'use strict';
 
 (() => {
-  if (window.PMK_COMPACT_FLOATING_NOTE_V73) return;
-  window.PMK_COMPACT_FLOATING_NOTE_V73 = true;
+  if (window.PMK_COMPACT_FLOATING_NOTE_V74) return;
+  window.PMK_COMPACT_FLOATING_NOTE_V74 = true;
 
   const NOTE_KEY = 'pmk-floating-manager-note-v1';
   const OPEN_KEY = 'pmk-floating-manager-note-open-v1';
@@ -90,7 +90,7 @@
     smartInput.dispatchEvent(new Event('input', { bubbles: true }));
     parser.apply();
     setView('form');
-    showToast('Текст заметки распознан и распределён по заявке.', 'success');
+    showToast('Текст заметки распределён по заявке.', 'success');
   }
 
   function clearNote() {
@@ -104,15 +104,20 @@
     textarea.focus();
   }
 
-  function beginDrag(event) {
-    if (event.target.closest('button,textarea')) return;
+  function startDrag(event, source) {
+    if (source === 'panel' && event.target.closest('button,textarea')) return;
     const widget = $('#pmkCompactNoteWidget');
     if (!widget) return;
     const rect = widget.getBoundingClientRect();
     drag = {
       pointerId: event.pointerId,
+      source,
+      startedAt: Date.now(),
+      startX: event.clientX,
+      startY: event.clientY,
       dx: event.clientX - rect.left,
       dy: event.clientY - rect.top,
+      moved: false,
     };
     event.currentTarget.setPointerCapture?.(event.pointerId);
     widget.classList.add('is-dragging');
@@ -121,29 +126,59 @@
 
   function moveDrag(event) {
     if (!drag || drag.pointerId !== event.pointerId) return;
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+    if (Math.hypot(deltaX, deltaY) > 7) drag.moved = true;
     applyPosition(event.clientX - drag.dx, event.clientY - drag.dy, false);
     event.preventDefault();
   }
 
-  function endDrag(event) {
+  function finishDrag(event) {
     if (!drag || drag.pointerId !== event.pointerId) return;
     const widget = $('#pmkCompactNoteWidget');
+    const current = clampPosition(parseFloat(widget?.style.left) || 10, parseFloat(widget?.style.top) || 76);
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+    const fastSwipe = Date.now() - drag.startedAt < 500 && Math.max(Math.abs(deltaX), Math.abs(deltaY)) > 42;
+    let next = current;
+
+    if (fastSwipe) {
+      const width = widget?.offsetWidth || 44;
+      const height = widget?.offsetHeight || 44;
+      if (Math.abs(deltaX) >= Math.abs(deltaY)) {
+        next = { x: deltaX > 0 ? window.innerWidth - width - 8 : 8, y: current.y };
+      } else {
+        next = { x: current.x, y: deltaY > 0 ? window.innerHeight - height - 8 : 8 };
+      }
+    }
+
     widget?.classList.remove('is-dragging');
-    applyPosition(parseFloat(widget?.style.left) || 10, parseFloat(widget?.style.top) || 76, true);
+    applyPosition(next.x, next.y, true);
+    const shouldOpen = drag.source === 'button' && !drag.moved;
     drag = null;
+    if (shouldOpen) setOpen(true);
+    event.preventDefault();
+  }
+
+  function bindDrag(handle, source) {
+    handle.addEventListener('pointerdown', event => startDrag(event, source));
+    handle.addEventListener('pointermove', moveDrag);
+    handle.addEventListener('pointerup', finishDrag);
+    handle.addEventListener('pointercancel', finishDrag);
   }
 
   function install() {
     document.querySelector('#pmkFloatingNoteWidget')?.remove();
+    document.querySelector('#pmkClientInfoMirror')?.remove();
     if ($('#pmkCompactNoteWidget')) return true;
 
     const widget = document.createElement('aside');
     widget.id = 'pmkCompactNoteWidget';
     widget.className = 'pmk-compact-note-widget';
     widget.innerHTML = `
-      <button type="button" id="pmkCompactNoteButton" class="pmk-compact-note-button" aria-label="Открыть заметку" aria-expanded="false">✎</button>
+      <button type="button" id="pmkCompactNoteButton" class="pmk-compact-note-button" aria-label="Открыть или переместить заметку" aria-expanded="false">✎</button>
       <section id="pmkCompactNotePanel" class="pmk-compact-note-panel" aria-hidden="true">
-        <header id="pmkCompactNoteDrag"><strong>Заметка</strong><button type="button" id="pmkCompactNoteClose" aria-label="Закрыть">×</button></header>
+        <header id="pmkCompactNoteDrag"><strong>Заметка менеджера</strong><button type="button" id="pmkCompactNoteClose" aria-label="Закрыть">×</button></header>
         <textarea id="pmkCompactNoteText" rows="1" placeholder="Текст…"></textarea>
         <div class="pmk-compact-note-actions">
           <button type="button" id="pmkCompactNoteRecognize">Распознать</button>
@@ -161,16 +196,11 @@
     });
     textarea.addEventListener('change', saveText);
 
-    $('#pmkCompactNoteButton').addEventListener('click', () => setOpen(true));
     $('#pmkCompactNoteClose').addEventListener('click', () => setOpen(false));
     $('#pmkCompactNoteRecognize').addEventListener('click', recognize);
     $('#pmkCompactNoteClear').addEventListener('click', clearNote);
-
-    const dragHandle = $('#pmkCompactNoteDrag');
-    dragHandle.addEventListener('pointerdown', beginDrag);
-    dragHandle.addEventListener('pointermove', moveDrag);
-    dragHandle.addEventListener('pointerup', endDrag);
-    dragHandle.addEventListener('pointercancel', endDrag);
+    bindDrag($('#pmkCompactNoteButton'), 'button');
+    bindDrag($('#pmkCompactNoteDrag'), 'panel');
 
     window.addEventListener('resize', () => {
       const rect = widget.getBoundingClientRect();
