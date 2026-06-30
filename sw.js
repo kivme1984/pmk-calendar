@@ -1,17 +1,17 @@
-const VERSION='66';
+const VERSION='67';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v66.js';
-const BUNDLE_CSS='./__pmk-styles-v66.css';
+const BUNDLE_JS='./__pmk-app-v67.js';
+const BUNDLE_CSS='./__pmk-styles-v67.css';
 
 const JS=[
-  './app.js?source=66','./manager-planner-core.js','./manager-planner-hooks.js',
+  './app.js?source=67','./manager-planner-core.js','./manager-planner-hooks.js',
   './address-autocomplete.js?v=41','./address-mobile-v46.js','./stability-route.js?v=34',
   './stability-cache.js?v=34','./stability-copy.js?v=34','./stability-draft.js?v=34',
   './google-freeform-import.js?v=36','./runtime-stability-v37.js',
-  './calendar-full-sync-v57.js?v=57','./returning-client-search.js?v=57',
+  './calendar-full-sync-v57.js?v=57','./returning-client-search.js?v=57','./client-search-workflow-v66.js?v=67',
   './smart-paste-v38.js','./smart-paste-lifecycle-v38.js','./smart-parser-v45.js',
   './smart-parser-v45-runtime-fix.js','./smart-parser-v47.js','./smart-parser-v47-name-fix.js',
-  './smart-parser-v47-assignments.js','./hotfix-parser-v48.js','./parser-real-case-v49.js?v=49',
+  './smart-parser-v47-assignments.js','./hotfix-parser-v48.js','./parser-real-case-v49.js?v=49','./intuitive-parser-v66.js?v=67',
   './empty-rug-dimensions-v42.js','./unified-rug-services-v43.js?v=68','./pricing-v48.js?v=68',
   './pricing-settings-v67.js?v=70','./manager-ui-v50-preview.js?v=68',
   './manager-ui-v50-refinements.js?v=68','./manager-ui-v51.js?v=70',
@@ -19,21 +19,29 @@ const JS=[
   './android-autofill-off-v53.js?v=55','./preview-description-v53.js?v=54',
   './edit-save-hotfix-v54.js?v=55','./address-placeholders-off-v56.js?v=56',
   './client-note-safe-v64.js?v=64','./workshop-measurement-v58.js?v=58',
-  './settings-version-header-v59.js?v=66','./navigation-layer-swipe-fix-v60.js?v=60',
+  './settings-version-header-v59.js?v=67','./navigation-layer-swipe-fix-v60.js?v=60',
   './planning-refresh-remove-v62.js?v=62','./header-sync-status-v65.js?v=65',
-  './reminder-save-confirm-v66.js?v=66'
+  './reminder-save-confirm-v66.js?v=66','./manager-workspace-prereq-v66.js?v=67',
+  './manager-workspace-v66.js?v=67','./runtime-safety-v66.js?v=67'
 ];
 
 const CSS=[
-  './styles.css?source=66','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
+  './styles.css?source=67','./manager-planner.css?v=32','./address-autocomplete.css?v=39',
   './mobile-rug-layout.css?v=36','./manager-form-v40.css','./unified-rug-services-v43.css?v=46',
   './manager-ui-v50-preview.css?v=68','./manager-ui-v50-refinements.css?v=68',
   './manager-ui-v51.css?v=68','./v51-tools-stable.css?v=68','./pricing-settings-v67.css?v=69',
   './preview-readability-v56.css?v=56','./client-note-safe-v64.css?v=64',
   './workshop-measurement-v58.css?v=58','./settings-version-header-v59.css?v=59',
   './navigation-layer-swipe-fix-v60.css?v=60','./header-sync-status-v65.css?v=65',
-  './reminder-save-confirm-v66.css?v=66'
+  './reminder-save-confirm-v66.css?v=66','./client-search-workflow-v66.css?v=67',
+  './manager-workspace-v66.css?v=67'
 ];
+
+const REQUIRED_JS=new Set([
+  './client-search-workflow-v66.js?v=67','./intuitive-parser-v66.js?v=67',
+  './manager-workspace-prereq-v66.js?v=67','./manager-workspace-v66.js?v=67','./runtime-safety-v66.js?v=67'
+]);
+const REQUIRED_CSS=new Set(['./client-search-workflow-v66.css?v=67','./manager-workspace-v66.css?v=67']);
 
 const OPTIONAL_ASSETS=[
   './reset.html','./recovery.html','./safe.html','./v51-preview.html','./address-test.html','./worker-update.html',
@@ -71,8 +79,8 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
   await cacheResponse(cache,'./index.html',indexResponse);
   await cacheResponse(cache,'./',indexCopy);
 
-  const jsParts=await Promise.all(JS.map((url,index)=>textAsset(url,index===0)));
-  const cssParts=await Promise.all(CSS.map((url,index)=>textAsset(url,index===0)));
+  const jsParts=await Promise.all(JS.map((url,index)=>textAsset(url,index===0||REQUIRED_JS.has(url))));
+  const cssParts=await Promise.all(CSS.map((url,index)=>textAsset(url,index===0||REQUIRED_CSS.has(url))));
 
   await cacheResponse(cache,BUNDLE_JS,new Response(jsParts.join('\n\n'),{headers:{
     'Content-Type':'application/javascript; charset=utf-8',
