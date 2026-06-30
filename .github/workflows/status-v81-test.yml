@@ -1,0 +1,25 @@
+name: Status v81 regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'status-ledger-v80.js'
+      - 'status-pipeline-v81.js'
+      - 'tests/status-v81-instant-two-events.test.js'
+      - '.github/workflows/status-v81-test.yml'
+  workflow_dispatch:
+
+jobs:
+  test-two-events:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Test two delayed events
+        run: node tests/status-v81-instant-two-events.test.js
