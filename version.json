@@ -1,18 +1,17 @@
 {
-  "version": "81",
-  "release": "instant-card-removal-before-heavy-render",
+  "version": "82",
+  "release": "compact-completed-and-auto-archive",
   "date": "2026-07-01",
   "features": [
-    "all-v80-functions-preserved",
-    "card-removed-on-first-paint",
-    "event-patching-moved-after-visible-removal",
-    "no-render-all-in-click-handler",
-    "background-calendar-sync-after-visual-action",
-    "secondary-views-updated-during-idle-time",
-    "persistent-status-ledger-preserved",
-    "completed-card-does-not-return",
-    "two-event-four-second-delay-test-passed",
-    "event-a-removed-in-2.2ms",
-    "event-b-removed-in-1.7ms"
+    "all-v81-functions-preserved",
+    "compact-completed-cards-on-mobile",
+    "no-working-status-buttons-in-completed-view",
+    "completed-tab-keeps-only-last-seven-days",
+    "automatic-archive-after-seven-days",
+    "separate-archive-tab",
+    "archive-grouped-by-month",
+    "archive-loads-fifty-records-at-a-time",
+    "two-event-seven-day-boundary-test-passed",
+    "future-update-pages-remain-network-accessible"
   ]
 }
