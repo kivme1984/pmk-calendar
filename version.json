@@ -1,15 +1,16 @@
 {
-  "version": "79",
-  "release": "completed-tab-and-legacy-status-fix",
+  "version": "80",
+  "release": "persistent-status-ledger-two-event-tested",
   "date": "2026-06-30",
   "features": [
-    "all-v78-functions-preserved",
-    "legacy-google-status-line-is-authoritative",
-    "completed-events-never-return-to-day-feed",
-    "completed-events-have-separate-tab",
-    "completed-events-grouped-by-completion-date",
-    "completed-counts-and-today-count",
-    "scoped-day-feed-observer-removes-hidden-statuses",
-    "verified-v79-version-guard"
+    "all-v79-functions-preserved",
+    "persistent-status-ledger-by-logical-order",
+    "completed-status-survives-stale-calendar-refresh",
+    "legacy-google-and-yandex-mirror-deduplicated",
+    "delivery-waiting-feed-excludes-completed-logical-order",
+    "completed-tab-shows-one-card-per-logical-order",
+    "instant-status-feedback-preserved",
+    "contract-required-before-work-status-preserved",
+    "two-event-regression-test-passed"
   ]
 }
