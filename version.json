@@ -1,21 +1,16 @@
 {
-  "version": "68",
-  "release": "full-function-performance-parser-fix",
+  "version": "69",
+  "release": "yandex-calendar-dual-sync-preview",
   "date": "2026-06-30",
   "features": [
-    "all-v67-manager-functions-preserved",
-    "remove-repeated-workspace-render-loop",
-    "remove-global-body-draft-observer",
-    "cached-full-calendar-history",
-    "incremental-updated-events-sync",
-    "indexed-client-history-search",
-    "legacy-event-field-recovery",
-    "common-russian-name-dictionary",
-    "spoken-rug-dimensions",
-    "expanded-additional-service-synonyms",
-    "complete-unsaved-request-clearing",
-    "compact-three-button-action-row",
-    "faster-long-list-rendering",
-    "preserve-manual-sync-reminders-slots-calculator-and-drafts"
+    "google-and-yandex-dual-write",
+    "yandex-caldav-through-cloudflare-worker",
+    "provider-operation-queue",
+    "google-unavailable-yandex-fallback",
+    "yandex-calendar-event-reading",
+    "deduplicate-by-pmk-id",
+    "google-to-yandex-backfill",
+    "protected-browser-to-worker-sync-token",
+    "existing-v68-performance-and-manager-tools-preserved"
   ]
 }
