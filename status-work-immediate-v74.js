@@ -1,12 +1,14 @@
 'use strict';
 
 (() => {
-  if (window.PMK_STATUS_WORK_IMMEDIATE_V74) return;
-  window.PMK_STATUS_WORK_IMMEDIATE_V74 = true;
+  if (window.PMK_STATUS_WORK_IMMEDIATE_V75) return;
+  window.PMK_STATUS_WORK_IMMEDIATE_V75 = true;
 
   const OVERRIDES_KEY = 'pmk-status-overrides-v74';
+  const WORK_STATUSES = new Set(['picked-up', 'in-progress']);
   const $ = (selector, root = document) => root.querySelector(selector);
   const previousEventMeta = eventMeta;
+  const previousRenderToday = renderToday;
   const previousRenderAll = renderAll;
   const previousUpdateEventStatus = updateEventStatus;
   let busy = false;
@@ -27,12 +29,17 @@
     return String(data.pmkId || event?._pmkId || event?.id || '').trim();
   }
 
-  function setOverride(event, data, nextStatus, workStartedAt = '') {
+  function contractNumber(data = {}) {
+    return String(data.contractNumber || '').replace(/^\s*[№#]\s*/, '').trim();
+  }
+
+  function setOverride(event, data, nextStatus, workStartedAt = '', contract = '') {
     const key = keyFor(event, data);
     if (!key) return;
     overrides[key] = {
       status: nextStatus,
       workStartedAt: workStartedAt || data.workStartedAt || '',
+      contractNumber: contract || contractNumber(data),
       updatedAt: new Date().toISOString(),
     };
     persistOverrides();
@@ -45,7 +52,10 @@
       const key = keyFor(event, base);
       const override = overrides[key];
       if (!override) return;
-      if (base.requestStatus === override.status && (!override.workStartedAt || base.workStartedAt === override.workStartedAt)) {
+      const statusReady = base.requestStatus === override.status;
+      const timeReady = !override.workStartedAt || base.workStartedAt === override.workStartedAt;
+      const contractReady = !override.contractNumber || contractNumber(base) === override.contractNumber;
+      if (statusReady && timeReady && contractReady) {
         delete overrides[key];
         changed = true;
       }
@@ -53,7 +63,7 @@
     if (changed) persistOverrides();
   }
 
-  eventMeta = function eventMetaWithStatusOverrideV74(event) {
+  eventMeta = function eventMetaWithStatusOverrideV75(event) {
     const base = previousEventMeta(event);
     const override = overrides[keyFor(event, base)];
     if (!override) return base;
@@ -61,15 +71,21 @@
       ...base,
       requestStatus: override.status || base.requestStatus,
       workStartedAt: override.workStartedAt || base.workStartedAt || '',
+      contractNumber: override.contractNumber || base.contractNumber || '',
     };
+  };
+
+  function notInWork(event) {
+    return !WORK_STATUSES.has(eventMeta(event).requestStatus);
+  }
+
+  renderToday = function renderTodayWithoutWorkV75(events = []) {
+    return previousRenderToday((events || []).filter(notInWork));
   };
 
   function renderDayWithoutWork() {
     if (state.currentView !== 'day') return;
-    const events = getAllEvents().filter(event => {
-      const data = eventMeta(event);
-      return eventDateKey(event) === state.selectedDayKey && !['picked-up', 'in-progress'].includes(data.requestStatus);
-    });
+    const events = getAllEvents().filter(event => eventDateKey(event) === state.selectedDayKey && notInWork(event));
     $('#todayCount').textContent = String(events.length);
     $('#summaryTotal').textContent = String(events.length);
     $('#summaryPickup').textContent = String(events.filter(event => eventMeta(event).visitType === 'pickup').length);
@@ -78,7 +94,7 @@
     renderToday(events);
   }
 
-  renderAll = function renderAllWithImmediateWorkV74() {
+  renderAll = function renderAllWithImmediateWorkV75() {
     previousRenderAll();
     renderDayWithoutWork();
     window.PMK_IN_WORK_WORKFLOW_V73_API?.render?.();
@@ -106,27 +122,91 @@
     return [];
   }
 
-  async function applyStatus(id, nextStatus) {
+  function contractDialog() {
+    let dialog = $('#pmkContractRequiredDialog');
+    if (dialog) return dialog;
+    dialog = document.createElement('dialog');
+    dialog.id = 'pmkContractRequiredDialog';
+    dialog.className = 'pmk-contract-required-dialog';
+    dialog.innerHTML = `
+      <form method="dialog" class="pmk-contract-required-shell">
+        <button type="button" class="pmk-contract-required-close" aria-label="Закрыть">×</button>
+        <span class="pmk-contract-required-icon">№</span>
+        <h2>Сначала укажите номер договора</h2>
+        <p id="pmkContractRequiredText">Без номера договора заказ нельзя отметить как забранный.</p>
+        <label>Номер договора
+          <input id="pmkContractRequiredInput" inputmode="numeric" autocomplete="off" placeholder="Например, 453">
+        </label>
+        <small>Номер нужен, чтобы курьер и фабрика точно видели, какой договор принят в работу.</small>
+        <div class="pmk-contract-required-actions">
+          <button type="button" class="button button-secondary" data-contract-required-cancel>Отмена</button>
+          <button type="submit" class="button button-primary">Сохранить и перенести</button>
+        </div>
+      </form>`;
+    document.body.appendChild(dialog);
+    $('.pmk-contract-required-close', dialog).addEventListener('click', () => dialog.close());
+    $('[data-contract-required-cancel]', dialog).addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+    dialog.addEventListener('submit', async event => {
+      event.preventDefault();
+      const input = $('#pmkContractRequiredInput');
+      const number = contractNumber({ contractNumber: input.value });
+      if (!number) {
+        input.focus();
+        input.classList.add('invalid');
+        return showToast('Введите номер договора.', 'error');
+      }
+      input.classList.remove('invalid');
+      const id = dialog.dataset.eventId;
+      const status = dialog.dataset.nextStatus || 'picked-up';
+      dialog.close();
+      await applyStatus(id, status, { contractOverride:number, skipContractCheck:true });
+    });
+    return dialog;
+  }
+
+  function requestContract(event, data, nextStatus) {
+    const dialog = contractDialog();
+    dialog.dataset.eventId = event.id;
+    dialog.dataset.nextStatus = nextStatus;
+    $('#pmkContractRequiredText').textContent = `${data.customerName || 'У заявки'} не указан номер договора. До его внесения заказ не будет переведён во вкладку «В работе».`;
+    const input = $('#pmkContractRequiredInput');
+    input.value = contractNumber(data);
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+    requestAnimationFrame(() => input.focus());
+    showToast('Для статуса «Забрали» обязателен номер договора.', 'error');
+  }
+
+  async function applyStatus(id, nextStatus, options = {}) {
     if (busy) return;
     const event = getAllEvents().find(item => item.id === id);
     if (!event) return showToast('Заявка не найдена.', 'error');
 
-    busy = true;
     const current = eventMeta(event);
-    const workStartedAt = ['picked-up', 'in-progress'].includes(nextStatus)
+    const resolvedContract = options.contractOverride || contractNumber(current);
+    if (WORK_STATUSES.has(nextStatus) && !resolvedContract && !options.skipContractCheck) {
+      requestContract(event, current, nextStatus);
+      return;
+    }
+
+    busy = true;
+    const workStartedAt = WORK_STATUSES.has(nextStatus)
       ? (current.workStartedAt || new Date().toISOString())
       : current.workStartedAt || '';
     const nextData = {
       ...current,
       eventId: id,
       pmkId: current.pmkId || event._pmkId || makeId(),
+      contractNumber: resolvedContract || current.contractNumber || '',
       requestStatus: nextStatus,
       workStartedAt,
     };
 
-    setOverride(event, nextData, nextStatus, workStartedAt);
+    setOverride(event, nextData, nextStatus, workStartedAt, resolvedContract);
     invalidateEventCaches();
     renderAll();
+    document.querySelector(`[data-event-card="${CSS.escape(id)}"]`)?.remove();
 
     try {
       const results = await saveStatus(event, nextData);
@@ -137,7 +217,7 @@
         showToast(message || 'Статус сохранён локально и будет отправлен позже.', 'error');
       } else {
         const label = statusInfo(nextStatus, nextData.visitType).label;
-        showToast(['picked-up','in-progress'].includes(nextStatus) ? 'Заказ перенесён во вкладку «В работе».' : `Статус: ${label}`, 'success');
+        showToast(WORK_STATUSES.has(nextStatus) ? `Договор № ${resolvedContract}. Заказ перенесён во «В работе».` : `Статус: ${label}`, 'success');
       }
 
       try { await refreshEvents(); } catch {}
