@@ -11,7 +11,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 <body>
 <main>
 <h1>Безопасный запуск</h1>
-<p>Запускаем базовую версию напрямую, без повреждённого service worker. Заявки, настройки и черновики остаются на устройстве.</p>
+<p>Открываем базовую версию напрямую, без service worker. Заявки и настройки на устройстве сохраняются.</p>
 <p id="status" class="status">Отключаем повреждённый кэш…</p>
 <button id="retry" type="button" hidden>Повторить запуск</button>
 </main>
@@ -37,9 +37,9 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
       const response=await fetch(`./index.html?safe-source=${Date.now()}`,{cache:'no-store'});
       if(!response.ok)throw new Error(`index.html: ${response.status}`);
       let html=await response.text();
-      const guard=`<script>window.PMK_SAFE_MODE=true;try{navigator.serviceWorker.register=()=>Promise.reject(new Error('safe mode'));}catch(e){}<\/script>`;
+      const guard=`<script>window.PMK_SAFE_MODE=true;try{Object.defineProperty(navigator,'serviceWorker',{value:undefined,configurable:true});}catch(e){}<\/script>`;
       html=html.replace(/<link rel="manifest"[^>]*>/i,'');
-      html=html.replace(/<script src="app\.js[^>]*><\/script>/i,`${guard}<script src="app.js?safe=${Date.now()}" defer><\/script>`);
+      html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}<script src="app.js?safe=${Date.now()}" defer><\/script>`);
       document.open();
       document.write(html);
       document.close();
