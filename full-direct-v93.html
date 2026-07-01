@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ПМК Календарь v93</title>
+<style>
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
+main{width:min(600px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-sizing:border-box}
+h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}
+.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
+</style>
+</head>
+<body>
+<main>
+<h1>Запускаем рабочую версию</h1>
+<p>Сначала открываем основной календарь. Остальные функции подключатся уже после открытия и не заблокируют кнопки.</p>
+<p id="status" class="status">Загружаем основу…</p>
+<div class="actions">
+<button id="retry" hidden>Повторить запуск</button>
+<a id="reserve" href="./safe.html?smooth=91" hidden>Открыть резервную версию</a>
+</div>
+</main>
+<script>
+(() => {
+  const VERSION='93';
+  const status=document.querySelector('#status');
+  const retry=document.querySelector('#retry');
+  const reserve=document.querySelector('#reserve');
+
+  const EXTRA_CSS=[
+    './manager-planner.css','./address-autocomplete.css','./mobile-rug-layout.css','./manager-form-v40.css',
+    './unified-rug-services-v43.css','./manager-ui-v50-preview.css','./manager-ui-v50-refinements.css',
+    './manager-ui-v51.css','./v51-tools-stable.css','./pricing-settings-v67.css','./preview-readability-v56.css',
+    './workshop-measurement-v58.css','./settings-version-header-v59.css','./header-sync-status-v65.css',
+    './reminder-save-confirm-v66.css','./client-search-workflow-v66.css','./manager-workspace-v66.css',
+    './performance-fixes-v68.css','./provider-status-manager-v70.css','./compact-floating-note-v73.css',
+    './in-work-workflow-v73.css','./light-interface-v74.css','./contract-required-v75.css',
+    './instant-status-feedback-v77.css','./completed-archive-workflow-v82.css','./mobile-period-workday-v83.css',
+    './period-class-fix-v83.css','./period-header-provider-v85.css','./workday-period-note-v86.css'
+  ];
+
+  const EXTRA_JS=[
+    './manager-planner-core.js','./manager-planner-hooks.js','./address-autocomplete.js','./address-mobile-v46.js',
+    './stability-route.js','./stability-cache.js','./stability-copy.js','./stability-draft.js',
+    './google-freeform-import.js','./runtime-stability-v37.js','./fast-calendar-sync-v68.js',
+    './returning-client-search.js','./client-search-fast-v68.js','./smart-paste-v38.js',
+    './smart-paste-lifecycle-v38.js','./smart-parser-v45.js','./voice-parser-fast-v68.js',
+    './empty-rug-dimensions-v42.js','./unified-rug-services-v43.js','./pricing-v48.js',
+    './pricing-settings-v67.js','./manager-ui-v50-preview.js','./manager-ui-v50-refinements.js',
+    './manager-ui-v51.js','./manager-ui-v51-tools-stable.js','./android-autofill-off-v53.js',
+    './preview-description-v53.js','./edit-save-hotfix-v54.js','./address-placeholders-off-v56.js',
+    './workshop-measurement-v58.js','./settings-version-header-v59.js','./planning-refresh-remove-v62.js',
+    './header-sync-status-v65.js','./reminder-save-confirm-v66.js','./manager-workspace-fast-v68.js',
+    './yandex-calendar-sync-v69.js','./provider-status-manager-v70.js','./unlimited-overlaps-v69.js',
+    './provider-crud-any-calendar-v72.js','./yandex-primary-refresh-v72.js','./compact-floating-note-v73.js',
+    './status-ledger-v80.js','./in-work-workflow-v73.js','./status-pipeline-v81.js',
+    './archive-policy-v82.js','./completed-archive-workflow-v82.js','./period-model-v83.js',
+    './mobile-period-workday-v83.js','./period-class-fix-v83.js','./period-header-provider-v85.js',
+    './workday-period-note-v86.js','./direct-version-header-v92.js','./direct-healthcheck-v92.js'
+  ];
+
+  async function disableInstall(){
+    if('serviceWorker' in navigator){
+      const registrations=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
+    }
+    if('caches' in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.filter(key=>key!=='pmk-calendar-data-v68'&&key.startsWith('pmk-calendar-')).map(key=>caches.delete(key).catch(()=>false)));
+    }
+  }
+
+  async function launch(){
+    retry.hidden=true;
+    reserve.hidden=true;
+    status.className='status';
+    try{
+      await disableInstall();
+      const stamp=Date.now();
+      status.textContent='Загружаем основной календарь…';
+
+      const [indexResponse,cssResponse,appResponse,swipeResponse,statusJsResponse,statusCssResponse]=await Promise.all([
+        fetch(`./index.html?v=${VERSION}-${stamp}`,{cache:'no-store'}),
+        fetch(`./styles.css?v=${VERSION}-${stamp}`,{cache:'no-store'}),
+        fetch(`./app.js?v=${VERSION}-${stamp}`,{cache:'no-store'}),
+        fetch(`./direct-swipe-performance-v91.js?v=${VERSION}-${stamp}`,{cache:'no-store'}),
+        fetch(`./direct-status-layout-v92.js?v=${VERSION}-${stamp}`,{cache:'no-store'}),
+        fetch(`./direct-status-layout-v92.css?v=${VERSION}-${stamp}`,{cache:'no-store'})
+      ]);
+
+      if([indexResponse,cssResponse,appResponse,swipeResponse,statusJsResponse,statusCssResponse].some(response=>!response.ok)){
+        throw new Error('Не удалось получить основные файлы');
+      }
+
+      let html=await indexResponse.text();
+      const css=(await cssResponse.text())+'\n'+(await statusCssResponse.text());
+      let app=await appResponse.text();
+      let swipe=await swipeResponse.text();
+      let statusPatch=await statusJsResponse.text();
+
+      app=app.replace(/function\s+registerServiceWorker\s*\(\)\s*\{[\s\S]*?\n\}/,'function registerServiceWorker() {}');
+      app=app.replace(/<\/script/gi,'<\\/script');
+      swipe=swipe.replace(/<\/script/gi,'<\\/script');
+      statusPatch=statusPatch.replace(/<\/script/gi,'<\\/script');
+
+      const closeScript='</scr'+'ipt>';
+      const background=`<script>
+        window.PMK_DIRECT_FULL_MODE='93';
+        document.addEventListener('DOMContentLoaded',()=>{
+          const stamp=${stamp};
+          const cssFiles=${JSON.stringify(EXTRA_CSS)};
+          const jsFiles=${JSON.stringify(EXTRA_JS)};
+
+          const badge=document.createElement('div');
+          badge.id='pmkV93LoadBadge';
+          badge.style.cssText='position:fixed;left:12px;right:12px;bottom:78px;z-index:99999;padding:10px 14px;border-radius:14px;background:rgba(20,20,20,.92);color:#fff;font:700 13px/1.25 Arial,sans-serif;text-align:center;pointer-events:none;box-shadow:0 8px 28px rgba(0,0,0,.24)';
+          badge.textContent='Подключаем дополнительные функции…';
+          document.body.appendChild(badge);
+
+          cssFiles.forEach(url=>{
+            const link=document.createElement('link');
+            link.rel='stylesheet';
+            link.href=url+'?v=93-'+stamp;
+            document.head.appendChild(link);
+          });
+
+          let loaded=0;
+          let failed=0;
+          const total=jsFiles.length;
+          const done=()=>{
+            loaded+=1;
+            badge.textContent='Подключаем функции: '+loaded+' из '+total;
+            if(loaded>=total){
+              try{if(typeof renderAll==='function')renderAll();}catch(e){}
+              badge.textContent=failed?'Рабочая версия открыта. Не загрузилось модулей: '+failed:'Все функции подключены';
+              setTimeout(()=>badge.remove(),failed?6000:1800);
+              window.dispatchEvent(new CustomEvent('pmk-direct-full-ready',{detail:{version:'93',failed}}));
+            }
+          };
+
+          jsFiles.forEach(url=>{
+            const script=document.createElement('script');
+            script.src=url+'?v=93-'+stamp;
+            script.async=false;
+            script.onload=done;
+            script.onerror=()=>{failed+=1;done();};
+            document.body.appendChild(script);
+          });
+        },{once:true});
+      ${closeScript}`;
+
+      html=html.replace(/<link rel="manifest"[^>]*>/i,'');
+      html=html.replace(/<link rel="stylesheet"[^>]*>/i,`<style>${css}</style>`);
+      html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`<script>${app}<\/script><script>${swipe}<\/script><script>${statusPatch}<\/script>${background}`);
+
+      status.textContent='Открываем календарь…';
+      document.open();
+      document.write(html);
+      document.close();
+    }catch(error){
+      status.className='status error';
+      status.textContent=`Запуск остановлен: ${error.message}`;
+      retry.hidden=false;
+      reserve.hidden=false;
+    }
+  }
+
+  retry.addEventListener('click',launch);
+  launch();
+})();
+</script>
+</body>
+</html>
