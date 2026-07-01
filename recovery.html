@@ -3,65 +3,100 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Восстановление ПМК Календаря v82</title>
+<title>Полное восстановление ПМК v82</title>
 <style>
 body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
-main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a}
-h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}
-.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}
+main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-sizing:border-box}
+h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}
+.progress{height:9px;margin-top:14px;border-radius:999px;background:#303030;overflow:hidden}.progress>span{display:block;width:4%;height:100%;border-radius:inherit;background:#f7b500;transition:width .2s ease}
+.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
 </style>
 </head>
 <body>
 <main>
-<h1>Восстановление ПМК Календаря</h1>
-<p>Устанавливаем пакет v82 с компактными завершёнными заявками и автоматическим архивом через 7 дней. Данные не удаляются.</p>
-<p id="status" class="status">Проверяем сборку…</p>
+<h1>Возвращаем рабочую v82</h1>
+<p>Полностью отключаем все поздние сборки, очищаем только файлы приложения и заново устанавливаем последнюю версию до переделки режимов «3 дня» и «Неделя».</p>
+<p>Заявки, настройки Google и календарные данные не удаляются.</p>
+<p id="status" class="status">Подготовка…</p>
+<div class="progress"><span id="bar"></span></div>
 <div class="actions">
 <button id="retry" type="button" hidden>Повторить восстановление</button>
-<a id="safe" href="./safe.html?v=82" hidden>Открыть безопасный режим</a>
-<a id="open" href="./?v=82-recovery" hidden>Открыть приложение</a>
+<a id="open" href="./?rollback=82" hidden>Открыть приложение</a>
 </div>
 </main>
 <script>
 (() => {
   const VERSION='82';
+  const DATA_CACHE='pmk-calendar-data-v68';
   const status=document.querySelector('#status');
+  const bar=document.querySelector('#bar');
   const retry=document.querySelector('#retry');
-  const safe=document.querySelector('#safe');
   const open=document.querySelector('#open');
-  const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  const set=(text,percent)=>{status.textContent=text;bar.style.width=`${percent}%`;};
 
   function waitForActivation(registration){
     const worker=registration.installing||registration.waiting||registration.active;
     if(!worker||worker.state==='activated')return Promise.resolve();
     return new Promise((resolve,reject)=>{
-      const timeout=setTimeout(()=>reject(new Error('Новая сборка не активировалась.')),30000);
+      const timeout=setTimeout(()=>reject(new Error('v82 не активировалась за 90 секунд')),90000);
       worker.addEventListener('statechange',()=>{
         if(worker.state==='activated'){clearTimeout(timeout);resolve();}
-        if(worker.state==='redundant'){clearTimeout(timeout);reject(new Error('Установка новой сборки была отклонена.'));}
+        if(worker.state==='redundant'){clearTimeout(timeout);reject(new Error('Установка v82 была отклонена браузером'));}
       });
     });
   }
 
+  async function verifyNetwork(stamp){
+    const urls=['./sw.js','./sw-special-router-v82.js','./sw-core-v82.js','./version-guard-v82.js'];
+    const responses=await Promise.all(urls.map(url=>fetch(`${url}?rollback=${stamp}`,{cache:'no-store'})));
+    if(responses.some(response=>!response.ok))throw new Error('Не все файлы v82 доступны на GitHub Pages');
+    const [sw,router,core,guard]=await Promise.all(responses.map(response=>response.text()));
+    if(!sw.includes('sw-special-router-v82.js')||!sw.includes('sw-core-v82.js'))throw new Error('GitHub Pages пока отдаёт не v82');
+    if(!router.includes('stopImmediatePropagation'))throw new Error('Маршрутизатор v82 повреждён');
+    if(!core.includes("const VERSION='82'"))throw new Error('Основной пакет v82 повреждён');
+    if(!guard.includes("const VERSION = '82'"))throw new Error('Контроль версии v82 повреждён');
+  }
+
   async function recover(){
-    retry.hidden=true;safe.hidden=true;open.hidden=true;
-    status.className='status';status.textContent='Проверяем сборку v82…';
+    retry.hidden=true;
+    open.hidden=true;
+    status.className='status';
     try{
-      const check=await fetch(`./sw.js?v=${VERSION}-check-${Date.now()}`,{cache:'no-store'});
-      if(!check.ok)throw new Error('Файл новой сборки пока недоступен.');
-      const text=await check.text();
-      if(!text.includes('sw-special-router-v82.js')||!text.includes('sw-core-v82.js'))throw new Error('GitHub Pages пока отдаёт старую версию. Повторите через минуту.');
-      if(!('serviceWorker' in navigator))throw new Error('Браузер не поддерживает восстановление приложения.');
-      const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}-recovery-${Date.now()}`,{updateViaCache:'none'});
+      const stamp=Date.now();
+      set('Отключаем все поздние версии…',12);
+      if('serviceWorker' in navigator){
+        const registrations=await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
+      }
+
+      set('Удаляем повреждённые файлы приложения…',28);
+      if('caches' in window){
+        const keys=await caches.keys();
+        await Promise.all(keys.filter(key=>key!==DATA_CACHE&&key.startsWith('pmk-calendar-')).map(key=>caches.delete(key).catch(()=>false)));
+      }
+
+      set('Проверяем исходную рабочую v82…',45);
+      await verifyNetwork(stamp);
+
+      set('Собираем и устанавливаем v82…',62);
+      if(!('serviceWorker' in navigator))throw new Error('Chrome не поддерживает Service Worker');
+      const registration=await navigator.serviceWorker.register(`./sw.js?rollback=${VERSION}-${stamp}`,{updateViaCache:'none'});
       await registration.update().catch(()=>null);
       await waitForActivation(registration);
-      status.textContent='Сборка восстановлена. Открываем приложение…';
+
+      set('Проверяем, что v82 стала активной…',86);
+      const ready=await navigator.serviceWorker.ready;
+      if(!ready?.active)throw new Error('v82 установлена, но не стала активной');
+
+      set('Готово. Открываем рабочий календарь…',100);
       open.hidden=false;
-      await delay(500);
-      location.replace(`./?v=${VERSION}&recovery=${Date.now()}`);
+      setTimeout(()=>location.replace(`./?rollback=${VERSION}&t=${Date.now()}`),900);
     }catch(error){
-      status.className='status error';status.textContent=`Восстановление не завершено: ${error.message}`;
-      retry.hidden=false;safe.hidden=false;open.hidden=false;
+      status.className='status error';
+      status.textContent=`Восстановление остановилось: ${error.message}`;
+      bar.style.width='100%';
+      retry.hidden=false;
+      open.hidden=false;
     }
   }
 
