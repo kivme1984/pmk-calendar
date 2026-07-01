@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Безопасное обновление ПМК Календаря до v83</title>
+<title>Безопасное обновление ПМК Календаря до v84</title>
 <style>
 body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(580px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-shadow:0 24px 70px rgba(0,0,0,.38)}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}
 </style>
 </head>
 <body>
 <main>
-<h1>Устанавливаем версию v83</h1>
-<p>Исправленная прокрутка 3 дней и недели, компактный рабочий день, кнопки статусов слева и месяц в виде таблицы.</p>
+<h1>Устанавливаем версию v84</h1>
+<p>Кликабельные «Всего точек», зелёная кнопка звонка под линией даты и принудительная прокрутка карточек в режимах «3 дня» и «Неделя».</p>
 <p id="status" class="status">Проверяем все файлы новой сборки…</p>
-<div class="actions"><button id="retry" type="button" hidden>Повторить обновление</button><a id="safe" href="./safe.html?v=83" hidden>Открыть безопасный режим</a><a id="open" href="./?v=83" hidden>Открыть приложение</a></div>
+<div class="actions"><button id="retry" type="button" hidden>Повторить обновление</button><a id="safe" href="./safe.html?v=84" hidden>Открыть безопасный режим</a><a id="open" href="./?v=84" hidden>Открыть приложение</a></div>
 </main>
 <script>
 (() => {
-  const VERSION='83';
+  const VERSION='84';
   const status=document.querySelector('#status');
   const retry=document.querySelector('#retry');
   const safe=document.querySelector('#safe');
@@ -36,52 +36,33 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     });
   }
 
-  function testPeriodModel(modelText){
-    delete globalThis.PMK_PERIOD_MODEL_V83;
-    delete globalThis.PMK_PERIOD_MODEL_V83_API;
-    new Function(modelText)();
-    const model=globalThis.PMK_PERIOD_MODEL_V83_API;
-    if(!model)throw new Error('Не удалось запустить модель периодов v83.');
-    const june=Array.from({length:30},(_,index)=>`2026-06-${String(index+1).padStart(2,'0')}`);
-    const cells=model.monthCells(june);
-    if(cells[0]!=='2026-06-01'||cells.length%7!==0)throw new Error('Таблица месяца сформирована неверно.');
-    const schedule={1:[['14','16','Автозаводский'],['16','17','Ленинский'],['18','19','Ленинский']]};
-    const districts=model.workingDistricts(schedule,'2026-06-29');
-    if(districts.join('|')!=='Автозаводский|Ленинский')throw new Error('Рабочие районы определяются неверно.');
-    const events=[{id:'p',visitType:'pickup',phone:'1',address:'a'},{id:'d',visitType:'delivery',phone:'2',address:'b'},{id:'a',visitType:'pickup',phone:'',address:'c'}];
-    if(model.filterDayEvents(events,'attention',item=>item,item=>item.address).map(item=>item.id).join(',')!=='a')throw new Error('Фильтр внимания работает неверно.');
-  }
-
   async function verifyFiles(){
     const stamp=Date.now();
-    const urls=['./sw.js','./sw-special-router-v83.js','./version-guard-v83.js','./period-model-v83.js','./mobile-period-workday-v83.js','./mobile-period-workday-v83.css','./period-class-fix-v83.js','./period-class-fix-v83.css'];
+    const urls=['./sw.js','./sw-special-router-v84.js','./version-guard-v84.js','./mobile-period-hotfix-v84.js','./mobile-period-hotfix-v84.css'];
     const responses=await Promise.all(urls.map(url=>fetch(`${url}?v=${VERSION}-verify-${stamp}`,{cache:'no-store'})));
-    if(responses.some(response=>!response.ok))throw new Error('Файлы v83 ещё не распространились на GitHub Pages.');
-    const [swText,routerText,guardText,modelText,uiText,cssText,classText,classCssText]=await Promise.all(responses.map(response=>response.text()));
-    if(!swText.includes('sw-special-router-v83.js')||!swText.includes('sw-core-v83.js'))throw new Error('GitHub Pages пока отдаёт старый service worker. Повторите через минуту.');
-    if(!routerText.includes('reset.html')||!routerText.includes('stopImmediatePropagation'))throw new Error('Маршрутизатор обновлений v83 ещё не опубликован.');
-    if(!guardText.includes("const VERSION = '83'"))throw new Error('Контрольный файл v83 ещё не опубликован.');
-    if(!uiText.includes('PMK_MOBILE_PERIOD_WORKDAY_V83')||!uiText.includes('installBoardDrag'))throw new Error('Новый обработчик мобильных периодов ещё не опубликован.');
-    if(!uiText.includes('event-time-statuses')||!uiText.includes('call-ahead-badge')||!uiText.includes('pmk-month-table'))throw new Error('Сервер отдаёт неполный интерфейс рабочего дня.');
-    if(!cssText.includes('touch-action:pan-y')||!cssText.includes('.event-time-statuses')||!cssText.includes('.call-ahead-badge')||!cssText.includes('.pmk-month-table'))throw new Error('Мобильные стили v83 ещё не опубликованы.');
-    if(!cssText.includes('[data-open-form]{display:none')||!cssText.includes('[data-workspace-action="drafts"]'))throw new Error('Лишние кнопки периодов ещё не отключены.');
-    if(!classText.includes('pmk-three-days-period')||!classText.includes('pmk-week-period')||!classCssText.includes('.week-board.pmk-three-days-period'))throw new Error('Безопасные классы 3 дней и недели ещё не опубликованы.');
-    new Function(uiText);
-    new Function(classText);
-    testPeriodModel(modelText);
+    if(responses.some(response=>!response.ok))throw new Error('Файлы v84 ещё не распространились на GitHub Pages.');
+    const [swText,routerText,guardText,jsText,cssText]=await Promise.all(responses.map(response=>response.text()));
+    if(!swText.includes('sw-special-router-v84.js')||!swText.includes('sw-core-v84.js'))throw new Error('GitHub Pages пока отдаёт старый service worker. Повторите через минуту.');
+    if(!routerText.includes('reset.html')||!routerText.includes('stopImmediatePropagation'))throw new Error('Маршрутизатор обновлений v84 ещё не опубликован.');
+    if(!guardText.includes("const VERSION = '84'"))throw new Error('Контрольный файл v84 ещё не опубликован.');
+    if(!jsText.includes('PMK_MOBILE_PERIOD_HOTFIX_V84')||!jsText.includes('scrollingElement().scrollTop'))throw new Error('Вертикальная прокрутка карточек v84 ещё не опубликована.');
+    if(!jsText.includes("axis === 'x'")||!jsText.includes('board.scrollLeft'))throw new Error('Горизонтальная прокрутка карточек v84 ещё не опубликована.');
+    if(!jsText.includes('data-summary-total-v84')||!jsText.includes('event-card-footer-v84')||!jsText.includes('☎ Позвонить'))throw new Error('Новый рабочий день v84 опубликован не полностью.');
+    if(!cssText.includes('touch-action:none!important')||!cssText.includes('background:#1fa35d!important')||!cssText.includes('grid-area:footer'))throw new Error('Стили прокрутки и кнопки звонка v84 ещё не опубликованы.');
+    new Function(jsText);
   }
 
   async function update(){
     retry.hidden=true;safe.hidden=true;open.hidden=true;
-    status.className='status';status.textContent='Проверяем прокрутку, карточки, фильтры и таблицу месяца…';
+    status.className='status';status.textContent='Проверяем двухосевую прокрутку и новый футер карточки…';
     try{
       await verifyFiles();
       if(!('serviceWorker' in navigator))throw new Error('Браузер не поддерживает обновление приложения.');
-      status.textContent='Собираем проверенный пакет v83…';
+      status.textContent='Собираем проверенный пакет v84…';
       const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}-${Date.now()}`,{updateViaCache:'none'});
       await registration.update().catch(()=>null);
       await waitForActivation(registration);
-      status.textContent='Версия v83 проверена и установлена. Открываем приложение…';
+      status.textContent='Версия v84 проверена и установлена. Открываем приложение…';
       open.hidden=false;
       await delay(500);
       location.replace(`./?v=${VERSION}&verified=${Date.now()}`);
