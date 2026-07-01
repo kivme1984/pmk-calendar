@@ -1,2 +1,2 @@
-importScripts('./sw-special-router-v87.js');
-importScripts('./sw-core-v87.js');
+importScripts('./sw-special-router-v88.js');
+importScripts('./sw-core-v88.js');
