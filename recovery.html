@@ -3,83 +3,89 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Восстановление ПМК</title>
+<title>Аварийное восстановление ПМК</title>
 <style>
 body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
 main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a}
 h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}
+.progress{height:8px;margin-top:14px;border-radius:999px;background:#303030;overflow:hidden}.progress>span{display:block;width:8%;height:100%;border-radius:inherit;background:#f7b500;transition:width .25s ease}
 .actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
 </style>
 </head>
 <body>
 <main>
 <h1>Восстанавливаем ПМК Календарь</h1>
-<p>Удаляем зависшую сборку и возвращаем последнюю стабильную версию v87.</p>
-<p>Заявки, настройки и данные входа не удаляются.</p>
-<p id="status" class="status">Начинаем восстановление…</p>
+<p>Сейчас ставится облегчённая аварийная версия без тяжёлой сборки. Она должна открыться быстро.</p>
+<p>Заявки и настройки на телефоне не удаляются.</p>
+<p id="status" class="status">Подготовка…</p>
+<div class="progress"><span id="bar"></span></div>
 <div class="actions">
 <button id="retry" hidden>Повторить восстановление</button>
-<a id="open" href="./?recovered=87" hidden>Открыть приложение</a>
+<a id="direct" href="./safe.html?rescue=90" hidden>Открыть без установки</a>
+<a id="open" href="./?rescue=90" hidden>Открыть ПМК Календарь</a>
 </div>
 </main>
 <script>
 (() => {
-  const VERSION='87';
   const status=document.querySelector('#status');
   const retry=document.querySelector('#retry');
+  const direct=document.querySelector('#direct');
   const open=document.querySelector('#open');
+  const bar=document.querySelector('#bar');
+  const set=(text,percent)=>{status.textContent=text;bar.style.width=`${percent}%`;};
 
   function waitForActivation(registration){
     const worker=registration.installing||registration.waiting||registration.active;
     if(!worker||worker.state==='activated')return Promise.resolve();
     return new Promise((resolve,reject)=>{
-      const timeout=setTimeout(()=>reject(new Error('Установка заняла слишком много времени')),60000);
+      const timeout=setTimeout(()=>reject(new Error('Установка не завершилась за 25 секунд')),25000);
       worker.addEventListener('statechange',()=>{
         if(worker.state==='activated'){clearTimeout(timeout);resolve();}
-        if(worker.state==='redundant'){clearTimeout(timeout);reject(new Error('Сборка не установилась'));}
+        if(worker.state==='redundant'){clearTimeout(timeout);reject(new Error('Аварийная версия не установилась'));}
       });
     });
   }
 
   async function run(){
-    retry.hidden=true;
-    open.hidden=true;
+    retry.hidden=true;direct.hidden=true;open.hidden=true;
     status.className='status';
     try{
-      status.textContent='Отключаем зависшую версию…';
+      set('Отключаем зависшую сборку…',15);
       if('serviceWorker' in navigator){
         const registrations=await navigator.serviceWorker.getRegistrations();
         await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
       }
 
-      status.textContent='Очищаем повреждённые файлы…';
+      set('Удаляем только повреждённые файлы приложения…',32);
       if('caches' in window){
         const keys=await caches.keys();
-        await Promise.all(keys.filter(key=>/^pmk-calendar-v\d+$/.test(key)).map(key=>caches.delete(key).catch(()=>false)));
+        await Promise.all(keys.filter(key=>key!=='pmk-calendar-data-v68'&&key.startsWith('pmk-calendar-')).map(key=>caches.delete(key).catch(()=>false)));
       }
 
       const stamp=Date.now();
-      status.textContent='Проверяем стабильную сборку v87…';
-      const urls=['./sw.js','./sw-special-router-v87.js','./sw-core-v87.js','./version-guard-v87.js'];
-      const responses=await Promise.all(urls.map(url=>fetch(`${url}?recovery=${stamp}`,{cache:'no-store'})));
-      if(responses.some(response=>!response.ok))throw new Error('Файлы восстановления ещё не опубликованы');
-      const [swText,,coreText,guardText]=await Promise.all(responses.map(response=>response.text()));
-      if(!swText.includes('sw-core-v87.js'))throw new Error('GitHub Pages пока отдаёт старую сборку');
-      if(!coreText.includes("const VERSION='87'"))throw new Error('Стабильная сборка не готова');
-      if(!guardText.includes("const VERSION = '87'"))throw new Error('Контроль версии не готов');
+      set('Проверяем облегчённую версию…',48);
+      const [swResponse,rescueResponse]=await Promise.all([
+        fetch(`./sw.js?rescue=${stamp}`,{cache:'no-store'}),
+        fetch(`./sw-rescue-v90.js?rescue=${stamp}`,{cache:'no-store'})
+      ]);
+      if(!swResponse.ok||!rescueResponse.ok)throw new Error('Файлы восстановления ещё не опубликованы');
+      const [swText,rescueText]=await Promise.all([swResponse.text(),rescueResponse.text()]);
+      if(!swText.includes('sw-rescue-v90.js')||!rescueText.includes("pmk-calendar-rescue-v90"))throw new Error('GitHub Pages пока отдаёт прежнюю версию');
 
-      status.textContent='Устанавливаем стабильную версию…';
-      const registration=await navigator.serviceWorker.register(`./sw.js?recovery=${stamp}`,{updateViaCache:'none'});
+      set('Устанавливаем аварийную версию…',68);
+      const registration=await navigator.serviceWorker.register(`./sw.js?rescue=${stamp}`,{updateViaCache:'none'});
       await registration.update().catch(()=>null);
       await waitForActivation(registration);
 
-      status.textContent='Готово. Открываем ПМК Календарь…';
+      set('Готово. Открываем календарь…',100);
       open.hidden=false;
-      setTimeout(()=>location.replace(`./?recovered=${VERSION}&t=${Date.now()}`),700);
+      setTimeout(()=>location.replace(`./?rescue=90&t=${Date.now()}`),650);
     }catch(error){
       status.className='status error';
-      status.textContent=`Не удалось восстановить: ${error.message}`;
+      status.textContent=`Восстановление остановилось: ${error.message}`;
+      bar.style.width='100%';
       retry.hidden=false;
+      direct.hidden=false;
       open.hidden=false;
     }
   }
