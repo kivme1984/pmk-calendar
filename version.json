@@ -1,17 +1,18 @@
 {
-  "version": "84",
-  "release": "guaranteed-card-pan-and-phone-footer",
+  "version": "85",
+  "release": "visible-period-scroll-provider-marks-readable-header",
   "date": "2026-07-01",
   "features": [
-    "all-v83-functions-preserved",
-    "total-points-card-is-clickable-and-resets-filters",
-    "phone-action-moved-below-date-divider",
-    "green-phone-button-with-text",
-    "manual-horizontal-scroll-inside-three-day-and-week-cards",
-    "manual-vertical-page-scroll-inside-three-day-and-week-cards",
-    "accidental-card-open-after-swipe-blocked",
-    "android-touchlist-compatibility",
-    "mobile-period-hotfix-syntax-check-added",
-    "mobile-period-regression-checks-added"
+    "all-v84-business-functions-preserved",
+    "visible-horizontal-scrollbar-for-three-days-and-week",
+    "scrollbar-thumb-drag-and-left-right-buttons",
+    "vertical-page-scroll-restored-on-period-cards",
+    "four-status-actions-evenly-spaced-full-width",
+    "google-provider-mark-next-to-contract",
+    "yandex-provider-mark-next-to-contract",
+    "combined-google-yandex-provider-marks",
+    "readable-google-and-yandex-header-statuses",
+    "sync-button-labeled",
+    "provider-and-scroll-regression-checks-added"
   ]
 }
