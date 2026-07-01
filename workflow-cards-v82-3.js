@@ -21,6 +21,11 @@
     }
   }
 
+  function setText(node, value) {
+    const next = String(value);
+    if (node && node.textContent !== next) node.textContent = next;
+  }
+
   function pmkId(event, data = {}) {
     return String(data.pmkId || event?._pmkId || event?.pmkData?.pmkId || '').trim();
   }
@@ -62,12 +67,10 @@
     return { state: 'missing', label: 'Нет копии' };
   }
 
-  function marker(provider, state) {
+  function marker(provider, value) {
     const isGoogle = provider === 'google';
-    const title = `${isGoogle ? 'Google' : 'Яндекс'}: ${state.label}`;
-    return `<span class="pmk-card-provider pmk-card-provider-${provider}" data-sync-state="${state.state}" title="${title}" aria-label="${title}">
-      <b>${isGoogle ? 'G' : 'Я'}</b><i aria-hidden="true"></i>
-    </span>`;
+    const title = `${isGoogle ? 'Google' : 'Яндекс'}: ${value.label}`;
+    return `<span class="pmk-card-provider pmk-card-provider-${provider}" data-sync-state="${value.state}" title="${title}" aria-label="${title}"><b>${isGoogle ? 'G' : 'Я'}</b><i aria-hidden="true"></i></span>`;
   }
 
   function decorateCard(card) {
@@ -87,7 +90,13 @@
       if (contract) contract.insertAdjacentElement('afterend', sync);
       else header.prepend(sync);
     }
-    sync.innerHTML = marker('google', providerState(event, 'google')) + marker('yandex', providerState(event, 'yandex'));
+    const google = providerState(event, 'google');
+    const yandex = providerState(event, 'yandex');
+    const signature = `${google.state}:${google.label}|${yandex.state}:${yandex.label}`;
+    if (sync.dataset.signature !== signature) {
+      sync.dataset.signature = signature;
+      sync.innerHTML = marker('google', google) + marker('yandex', yandex);
+    }
 
     $('.manage-row', card)?.classList.add('pmk-card-bottom-actions');
   }
@@ -129,11 +138,14 @@
     const strip = createWorkflowStrip();
     if (!strip) return;
     const counts = workflowCounts();
-    $('#pmkWorkflowWorkCount', strip).textContent = String(counts.work);
-    $('#pmkWorkflowDeliveryCount', strip).textContent = String(counts.delivery);
-    $('#pmkWorkflowCompletedCount', strip).textContent = String(counts.completed);
+    setText($('#pmkWorkflowWorkCount', strip), counts.work);
+    setText($('#pmkWorkflowDeliveryCount', strip), counts.delivery);
+    setText($('#pmkWorkflowCompletedCount', strip), counts.completed);
     const current = typeof state !== 'undefined' ? state.currentView : '';
-    $$('[data-workflow-view]', strip).forEach(button => button.classList.toggle('active', button.dataset.workflowView === current));
+    $$('[data-workflow-view]', strip).forEach(button => {
+      const active = button.dataset.workflowView === current;
+      if (button.classList.contains('active') !== active) button.classList.toggle('active', active);
+    });
   }
 
   function applyAll() {
@@ -153,11 +165,9 @@
     rerenderTimer = setTimeout(() => {
       try { globalThis.PMK_IN_WORK_WORKFLOW_V73_API?.render?.(); } catch {}
       try { globalThis.PMK_COMPLETED_ARCHIVE_WORKFLOW_V82_API?.render?.(); } catch {}
-      try {
-        if (typeof renderAll === 'function') renderAll();
-      } catch {}
+      try { if (typeof renderAll === 'function') renderAll(); } catch {}
       schedule();
-    }, 25);
+    }, 35);
   }
 
   function bind() {
@@ -167,7 +177,6 @@
     }, true);
 
     [
-      'pmk-status-ledger-updated',
       'pmk-calendar-sync-start',
       'pmk-calendar-sync-done',
       'pmk-calendar-sync-error',
@@ -175,7 +184,8 @@
       'pmk-yandex-sync-error',
       'storage',
       'popstate',
-    ].forEach(name => globalThis.addEventListener(name, name === 'pmk-status-ledger-updated' ? rerenderWorkflowViews : schedule));
+    ].forEach(name => globalThis.addEventListener(name, schedule));
+    globalThis.addEventListener('pmk-status-ledger-updated', rerenderWorkflowViews);
   }
 
   function watch() {
