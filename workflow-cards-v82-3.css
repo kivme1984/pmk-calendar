@@ -18,7 +18,9 @@
 .event-card .pmk-card-bottom-actions>.primary-card-action,.event-card .pmk-card-bottom-actions>.secondary-card-action,.event-card .pmk-card-bottom-actions>.card-menu>.menu-button{min-height:54px!important;border-radius:14px!important;border:1px solid var(--line)!important;background:var(--surface)!important;box-shadow:0 4px 14px rgba(20,30,45,.05)!important;font-size:13px!important;font-weight:850!important}
 .event-card .pmk-card-bottom-actions>.call-button{color:#fff!important;border-color:#169252!important;background:#20aa61!important;box-shadow:0 7px 20px rgba(32,170,97,.22)!important}.event-card .pmk-card-bottom-actions>.call-button:active{background:#178d4f!important}.event-card .pmk-card-bottom-actions>.primary-card-action:disabled{color:#8a8d8f!important;background:#f4f4f1!important;box-shadow:none!important}.event-card .pmk-card-bottom-actions>.card-menu{min-width:0}.event-card .pmk-card-bottom-actions>.card-menu>.menu-button{width:58px!important;font-size:28px!important}
 
+/* In 3-day/week planning the request-level status controls and oversized utility actions are intentionally absent. */
 #view-week #weekEvents .status-row,#view-week #weekEvents [data-status-event],#view-week .pmk-status-left-stack-v82-2{display:none!important}
+#view-week.active .heading-actions #refreshBtn,#view-week.active .heading-actions [data-open-form]{display:none!important}
 
 @media(max-width:760px){
   .pmk-workflow-strip{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:-2px}
