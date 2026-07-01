@@ -1,17 +1,14 @@
 {
-  "version": "87",
-  "release": "real-period-scroll-status-grid-and-two-line-note",
+  "version": "88",
+  "release": "vertical-status-column-four-by-one",
   "date": "2026-07-01",
   "features": [
-    "all-v86-business-functions-preserved",
-    "three-day-board-constrained-to-screen-width",
-    "week-board-constrained-to-screen-width",
-    "native-horizontal-swipe-now-has-real-scroll-range",
-    "visible-period-scrollbar-now-has-real-scroll-range",
-    "vertical-page-scroll-preserved",
-    "four-status-buttons-fill-left-column-in-two-by-two-grid",
-    "status-buttons-have-large-separated-touch-targets",
-    "google-and-yandex-marks-preserved-near-contract",
-    "floating-note-empty-field-is-two-lines"
+    "all-v87-functions-preserved",
+    "four-status-buttons-in-one-vertical-column",
+    "status-buttons-evenly-fill-left-field",
+    "larger-separated-touch-targets",
+    "three-day-and-week-scroll-preserved",
+    "google-and-yandex-marks-preserved",
+    "two-line-floating-note-preserved"
   ]
 }
