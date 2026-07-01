@@ -69,16 +69,18 @@
 
   function showAllPoints() {
     const active = $('.summary-card.summary-filterable.active');
-    if (active) {
-      active.click();
-    } else {
-      globalThis.PMK_MOBILE_PERIOD_WORKDAY_V83_API?.renderFilteredDay?.();
-    }
+    if (active) active.click();
+    else globalThis.PMK_MOBILE_PERIOD_WORKDAY_V83_API?.renderFilteredDay?.();
     requestAnimationFrame(decorateTotalCard);
   }
 
   function scrollingElement() {
     return document.scrollingElement || document.documentElement || document.body;
+  }
+
+  function findTouch(event, identifier) {
+    const touches = Array.from(event.changedTouches || []);
+    return touches.find(item => item.identifier === identifier) || touches[0] || null;
   }
 
   function installTouchPan(board) {
@@ -109,7 +111,7 @@
 
     board.addEventListener('touchmove', event => {
       if (touchId == null || !['three-days', 'week'].includes(state.currentView)) return;
-      const touch = [...event.changedTouches].find(item => item.identifier === touchId) || event.changedTouches?.[0];
+      const touch = findTouch(event, touchId);
       if (!touch) return;
       const dx = touch.clientX - startX;
       const dy = touch.clientY - startY;
@@ -122,7 +124,7 @@
       else scrollingElement().scrollTop = startPageTop - dy;
     }, { capture:true, passive:false });
 
-    const finish = event => {
+    const finish = () => {
       if (touchId == null) return;
       if (moved) suppressPeriodClickUntil = Date.now() + 450;
       touchId = null;
@@ -142,8 +144,7 @@
 
   function installPeriodBoard() {
     const board = $('#weekEvents');
-    if (!board) return;
-    installTouchPan(board);
+    if (board) installTouchPan(board);
   }
 
   document.addEventListener('click', event => {
@@ -172,7 +173,7 @@
     if (target) observer.observe(target, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
   }
 
-  globalThis.PMK_MOBILE_PERIOD_HOTFIX_V84_API = { installTouchPan, decorateTotalCard, renderCardV84 };
+  globalThis.PMK_MOBILE_PERIOD_HOTFIX_V84_API = { installTouchPan, decorateTotalCard, renderCardV84, findTouch };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(install), { once:true });
   else requestAnimationFrame(install);
