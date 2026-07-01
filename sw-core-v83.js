@@ -54,6 +54,7 @@ const JS=`
 ./completed-archive-workflow-v82.js?v=83
 ./period-model-v83.js?v=83
 ./mobile-period-workday-v83.js?v=83
+./period-class-fix-v83.js?v=83
 ./version-guard-v83.js?v=83
 `.trim().split(/\s+/);
 
@@ -86,6 +87,7 @@ const CSS=`
 ./instant-status-feedback-v77.css?v=83
 ./completed-archive-workflow-v82.css?v=83
 ./mobile-period-workday-v83.css?v=83
+./period-class-fix-v83.css?v=83
 `.trim().split(/\s+/);
 
 const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./icons/icon-192.png','./icons/icon-512.png'];
