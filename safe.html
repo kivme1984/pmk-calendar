@@ -22,7 +22,8 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 (() => {
   const params=new URLSearchParams(location.search);
   const testName=params.get('test')||'';
-  const statusTest=testName==='ui-swipe-note-status-v3';
+  const workflowTest=testName==='ui-workflow-v4';
+  const statusTest=testName==='ui-swipe-note-status-v3'||workflowTest;
   const noteTest=testName==='ui-swipe-note-v2'||statusTest;
   const testMode=testName==='ui-swipe-v1'||noteTest;
   const installVersion=params.get('install')||'';
@@ -40,6 +41,9 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   }else if(installVersion==='82-1'){
     title.textContent='Устанавливаем v82.1';
     description.textContent='Стабильная v82 с проверенной шапкой, рабочей кнопкой обновления, свайпами во все стороны и улучшенной плавающей заметкой.';
+  }else if(workflowTest){
+    title.textContent='Тест v82.3 · рабочие категории';
+    description.textContent='Проверяем карточки действий, индикаторы Google/Яндекс, активные счётчики категорий и автоматический перенос по статусам.';
   }else if(statusTest){
     title.textContent='Тест v82.2 · статусы слева';
     description.textContent='Проверяем одобренную шапку, свайпы и заметку, а также четыре кнопки статуса в левой колонке сверху вниз.';
@@ -141,6 +145,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
       const testUrls=['./test-v82-ui-swipe-v1.js','./test-v82-ui-swipe-v1.css'];
       if(noteTest)testUrls.push('./floating-note-mobile-v82-1.js','./floating-note-mobile-v82-1.css');
       if(statusTest)testUrls.push('./status-left-column-v82-2.js','./status-left-column-v82-2.css');
+      if(workflowTest)testUrls.push('./workflow-cards-v82-3.js','./workflow-cards-v82-3.css');
       if(testMode){
         status.textContent='Проверяем отдельную тестовую версию…';
         await preflight(testUrls,stamp);
@@ -166,11 +171,11 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 
       html=html.replace(/<link rel="manifest"[^>]*>/i,'');
       if(testMode){
-        const extraCss=`<link rel="stylesheet" href="test-v82-ui-swipe-v1.css?test=${stamp}">${noteTest?`<link rel="stylesheet" href="floating-note-mobile-v82-1.css?test=${stamp}">`:''}${statusTest?`<link rel="stylesheet" href="status-left-column-v82-2.css?test=${stamp}">`:''}`;
-        const extraJs=`<script src="test-v82-ui-swipe-v1.js?test=${stamp}" defer>${closeScript}${noteTest?`<script src="floating-note-mobile-v82-1.js?test=${stamp}" defer>${closeScript}`:''}${statusTest?`<script src="status-left-column-v82-2.js?test=${stamp}" defer>${closeScript}`:''}`;
+        const extraCss=`<link rel="stylesheet" href="test-v82-ui-swipe-v1.css?test=${stamp}">${noteTest?`<link rel="stylesheet" href="floating-note-mobile-v82-1.css?test=${stamp}">`:''}${statusTest?`<link rel="stylesheet" href="status-left-column-v82-2.css?test=${stamp}">`:''}${workflowTest?`<link rel="stylesheet" href="workflow-cards-v82-3.css?test=${stamp}">`:''}`;
+        const extraJs=`<script src="test-v82-ui-swipe-v1.js?test=${stamp}" defer>${closeScript}${noteTest?`<script src="floating-note-mobile-v82-1.js?test=${stamp}" defer>${closeScript}`:''}${statusTest?`<script src="status-left-column-v82-2.js?test=${stamp}" defer>${closeScript}`:''}${workflowTest?`<script src="workflow-cards-v82-3.js?test=${stamp}" defer>${closeScript}`:''}`;
         html=html.replace(/<link rel="stylesheet"[^>]*>/i,match=>`${match}${extraCss}`);
         html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}<script src="app.js?test-base=${stamp}" defer>${closeScript}${extraJs}`);
-        html=html.replace('<title>ПМК Календарь</title>',statusTest?'<title>ПМК Календарь · тест v82.2</title>':noteTest?'<title>ПМК Календарь · тест v82.1</title>':'<title>ПМК Календарь · тест v82</title>');
+        html=html.replace('<title>ПМК Календарь</title>',workflowTest?'<title>ПМК Календарь · тест v82.3</title>':statusTest?'<title>ПМК Календарь · тест v82.2</title>':noteTest?'<title>ПМК Календарь · тест v82.1</title>':'<title>ПМК Календарь · тест v82</title>');
       }else{
         html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}<script src="app.js?safe=${stamp}" defer>${closeScript}`);
       }
