@@ -4,9 +4,18 @@
   if (globalThis.PMK_STATUS_LEFT_COLUMN_V82_2) return;
   globalThis.PMK_STATUS_LEFT_COLUMN_V82_2 = true;
 
-  const CARD_SELECTOR = '.event-card[data-event-card]';
+  const CARD_SELECTOR = '.event-card';
   let scheduled = false;
   let observer = null;
+
+  function installBadge() {
+    if (document.querySelector('#pmkV822Badge')) return;
+    const badge = document.createElement('div');
+    badge.id = 'pmkV822Badge';
+    badge.className = 'pmk-v82-2-badge';
+    badge.textContent = 'ТЕСТ 82.2';
+    document.body.appendChild(badge);
+  }
 
   function moveStatuses(card) {
     if (!card) return;
@@ -25,6 +34,7 @@
 
   function applyAll() {
     scheduled = false;
+    installBadge();
     document.querySelectorAll(CARD_SELECTOR).forEach(moveStatuses);
   }
 
@@ -36,7 +46,7 @@
 
   function watch() {
     if (observer) return;
-    const root = document.querySelector('#todayEvents') || document.querySelector('.main-content') || document.body;
+    const root = document.querySelector('.main-content') || document.body;
     observer = new MutationObserver(schedule);
     observer.observe(root, { childList: true, subtree: true });
   }
@@ -55,6 +65,13 @@
     document.addEventListener('click', event => {
       if (event.target.closest('[data-status-event],.nav-item,[data-open-day]')) setTimeout(schedule, 0);
     }, true);
+
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      applyAll();
+      if (document.querySelector('.pmk-status-left-card-v82-2') || attempts > 120) clearInterval(timer);
+    }, 80);
   }
 
   document.readyState === 'loading'
