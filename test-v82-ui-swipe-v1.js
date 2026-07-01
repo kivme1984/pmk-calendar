@@ -23,7 +23,6 @@
       scheduled = false;
       applyHeaderFix();
       applyPeriodFix();
-      applyFloatingNoteFix();
     });
   }
 
@@ -192,61 +191,6 @@
     if (!mode) lastPeriodSignature = '';
   }
 
-  function textareaInput(textarea) {
-    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    textarea.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-
-  async function pasteIntoNote() {
-    const textarea = $('#pmkCompactNoteText');
-    if (!textarea) return;
-    try {
-      const text = await navigator.clipboard.readText();
-      if (!text) return typeof showToast === 'function' && showToast('В буфере обмена нет текста.', 'error');
-      const start = Number.isFinite(textarea.selectionStart) ? textarea.selectionStart : textarea.value.length;
-      const end = Number.isFinite(textarea.selectionEnd) ? textarea.selectionEnd : start;
-      textarea.setRangeText(text, start, end, 'end');
-      textareaInput(textarea);
-      textarea.focus();
-      if (typeof showToast === 'function') showToast('Текст вставлен в заметку.', 'success');
-    } catch {
-      textarea.focus();
-      if (typeof showToast === 'function') showToast('Разрешите доступ к буферу или вставьте долгим нажатием.', 'error');
-    }
-  }
-
-  async function copyFromNote() {
-    const textarea = $('#pmkCompactNoteText');
-    const text = textarea?.value || '';
-    if (!text.trim()) return typeof showToast === 'function' && showToast('В заметке нет текста.', 'error');
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      textarea.focus();
-      textarea.select();
-      document.execCommand('copy');
-      textarea.setSelectionRange(text.length, text.length);
-    }
-    if (typeof showToast === 'function') showToast('Текст заметки скопирован.', 'success');
-  }
-
-  function applyFloatingNoteFix() {
-    const panel = $('#pmkCompactNotePanel');
-    const actions = $('.pmk-compact-note-actions', panel || document);
-    if (!panel || !actions || $('#pmkCompactNoteClipboardActions')) return;
-
-    panel.classList.add('pmk-test-note-panel');
-    const clipboard = document.createElement('div');
-    clipboard.id = 'pmkCompactNoteClipboardActions';
-    clipboard.className = 'pmk-test-note-clipboard';
-    clipboard.innerHTML = `
-      <button type="button" id="pmkCompactNotePaste" title="Вставить текст" aria-label="Вставить текст"><span aria-hidden="true">↓</span></button>
-      <button type="button" id="pmkCompactNoteCopy" title="Скопировать текст" aria-label="Скопировать текст"><span aria-hidden="true">⧉</span></button>`;
-    actions.prepend(clipboard);
-    $('#pmkCompactNotePaste')?.addEventListener('click', pasteIntoNote);
-    $('#pmkCompactNoteCopy')?.addEventListener('click', copyFromNote);
-  }
-
   function bindSwipeClickGuard() {
     document.addEventListener('click', event => {
       if (Date.now() > suppressClickUntil) return;
@@ -264,7 +208,7 @@
       'pmk-status-ledger-updated', 'popstate', 'resize',
     ].forEach(name => globalThis.addEventListener(name, scheduleApply));
     document.addEventListener('click', event => {
-      if (event.target.closest('.nav-item,[data-open-day],#prevPeriodBtn,#nextPeriodBtn,#pmkCompactNoteButton')) setTimeout(scheduleApply, 0);
+      if (event.target.closest('.nav-item,[data-open-day],#prevPeriodBtn,#nextPeriodBtn')) setTimeout(scheduleApply, 0);
     }, true);
   }
 
@@ -274,14 +218,12 @@
     bindRuntimeEvents();
     applyHeaderFix();
     applyPeriodFix();
-    applyFloatingNoteFix();
     let attempts = 0;
     const timer = setInterval(() => {
       attempts += 1;
       applyHeaderFix();
       applyPeriodFix();
-      applyFloatingNoteFix();
-      if (($('#pmkProviderStatusPanel') && $('#weekEvents') && $('#pmkCompactNoteClipboardActions')) || attempts > 140) clearInterval(timer);
+      if (($('#pmkProviderStatusPanel') && $('#weekEvents')) || attempts > 100) clearInterval(timer);
     }, 80);
   }
 
