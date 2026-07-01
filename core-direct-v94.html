@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ПМК Календарь v94</title>
+<style>
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
+main{width:min(600px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-sizing:border-box}
+h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}
+.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
+</style>
+</head>
+<body>
+<main>
+<h1>Запускаем стабильное рабочее ядро</h1>
+<p>Сначала открывается основной календарь. Затем по одному подключаются статусы, «В работе», завершённые, архив и улучшенные периоды.</p>
+<p id="status" class="status">Загружаем основу…</p>
+<div class="actions">
+<button id="retry" hidden>Повторить запуск</button>
+<a id="reserve" href="./safe.html?smooth=91" hidden>Открыть резервную версию</a>
+</div>
+</main>
+<script>
+(() => {
+  const VERSION='94';
+  const status=document.querySelector('#status');
+  const retry=document.querySelector('#retry');
+  const reserve=document.querySelector('#reserve');
+
+  const EXTRA_CSS=[
+    './instant-status-feedback-v77.css',
+    './in-work-workflow-v73.css',
+    './completed-archive-workflow-v82.css',
+    './mobile-period-workday-v83.css',
+    './period-class-fix-v83.css',
+    './period-header-provider-v85.css',
+    './workday-period-note-v86.css'
+  ];
+
+  const EXTRA_JS=[
+    './status-ledger-v80.js',
+    './in-work-workflow-v73.js',
+    './status-pipeline-v81.js',
+    './archive-policy-v82.js',
+    './completed-archive-workflow-v82.js',
+    './period-model-v83.js',
+    './mobile-period-workday-v83.js',
+    './period-class-fix-v83.js',
+    './period-header-provider-v85.js',
+    './workday-period-note-v86.js'
+  ];
+
+  async function disableInstall(){
+    if('serviceWorker' in navigator){
+      const registrations=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
+    }
+    if('caches' in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.filter(key=>key!=='pmk-calendar-data-v68'&&key.startsWith('pmk-calendar-')).map(key=>caches.delete(key).catch(()=>false)));
+    }
+  }
+
+  async function launch(){
+    retry.hidden=true;
+    reserve.hidden=true;
+    status.className='status';
+    try{
+      await disableInstall();
+      const stamp=Date.now();
+      status.textContent='Загружаем основной календарь…';
+
+      const [indexResponse,cssResponse,appResponse,swipeResponse,statusJsResponse,statusCssResponse]=await Promise.all([
+        fetch(`./index.html?v=${VERSION}-${stamp}`,{cache:'no-store'}),
+        fetch(`./styles.css?v=${VERSION}-${stamp}`,{cache:'no-store'}),
+        fetch(`./app.js?v=${VERSION}-${stamp}`,{cache:'no-store'}),
+        fetch(`./direct-swipe-performance-v91.js?v=${VERSION}-${stamp}`,{cache:'no-store'}),
+        fetch(`./direct-status-layout-v92.js?v=${VERSION}-${stamp}`,{cache:'no-store'}),
+        fetch(`./direct-status-layout-v92.css?v=${VERSION}-${stamp}`,{cache:'no-store'})
+      ]);
+
+      if([indexResponse,cssResponse,appResponse,swipeResponse,statusJsResponse,statusCssResponse].some(response=>!response.ok)){
+        throw new Error('Не удалось получить основные файлы');
+      }
+
+      let html=await indexResponse.text();
+      const css=(await cssResponse.text())+'\n'+(await statusCssResponse.text());
+      let app=await appResponse.text();
+      let swipe=await swipeResponse.text();
+      let statusPatch=await statusJsResponse.text();
+
+      app=app.replace(/function\s+registerServiceWorker\s*\(\)\s*\{[\s\S]*?\n\}/,'function registerServiceWorker() {}');
+      app=app.replace(/<\/script/gi,'<\\/script');
+      swipe=swipe.replace(/<\/script/gi,'<\\/script');
+      statusPatch=statusPatch.replace(/<\/script/gi,'<\\/script');
+
+      const closeScript='</scr'+'ipt>';
+      const staged=`<script>
+        window.PMK_DIRECT_CORE_MODE='94';
+        document.addEventListener('DOMContentLoaded',()=>{
+          const stamp=${stamp};
+          const cssFiles=${JSON.stringify(EXTRA_CSS)};
+          const jsFiles=${JSON.stringify(EXTRA_JS)};
+
+          cssFiles.forEach(url=>{
+            const link=document.createElement('link');
+            link.rel='stylesheet';
+            link.href=url+'?v=94-'+stamp;
+            document.head.appendChild(link);
+          });
+
+          const badge=document.createElement('div');
+          badge.id='pmkV94Badge';
+          badge.style.cssText='position:fixed;right:10px;bottom:72px;z-index:99999;padding:7px 10px;border-radius:12px;background:rgba(20,20,20,.86);color:#fff;font:700 11px/1.2 Arial,sans-serif;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.2)';
+          badge.textContent='Функции 0 из '+jsFiles.length;
+          document.body.appendChild(badge);
+
+          let index=0;
+          let failed=0;
+          const next=()=>{
+            if(index>=jsFiles.length){
+              try{if(typeof renderAll==='function')renderAll();}catch(e){}
+              badge.textContent=failed?'Ядро открыто · ошибок: '+failed:'Рабочее ядро готово';
+              setTimeout(()=>badge.remove(),failed?6000:1700);
+              window.dispatchEvent(new CustomEvent('pmk-direct-core-ready',{detail:{version:'94',failed}}));
+              return;
+            }
+            const url=jsFiles[index];
+            const number=index+1;
+            const script=document.createElement('script');
+            script.src=url+'?v=94-'+stamp;
+            script.async=false;
+            script.onload=()=>{
+              index=number;
+              badge.textContent='Функции '+index+' из '+jsFiles.length;
+              setTimeout(next,180);
+            };
+            script.onerror=()=>{
+              failed+=1;
+              index=number;
+              badge.textContent='Функции '+index+' из '+jsFiles.length+' · ошибка';
+              setTimeout(next,180);
+            };
+            document.body.appendChild(script);
+          };
+
+          setTimeout(next,1200);
+        },{once:true});
+      ${closeScript}`;
+
+      html=html.replace(/<link rel="manifest"[^>]*>/i,'');
+      html=html.replace(/<link rel="stylesheet"[^>]*>/i,`<style>${css}</style>`);
+      html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`<script>${app}<\/script><script>${swipe}<\/script><script>${statusPatch}<\/script>${staged}`);
+
+      status.textContent='Открываем календарь…';
+      document.open();
+      document.write(html);
+      document.close();
+    }catch(error){
+      status.className='status error';
+      status.textContent=`Запуск остановлен: ${error.message}`;
+      retry.hidden=false;
+      reserve.hidden=false;
+    }
+  }
+
+  retry.addEventListener('click',launch);
+  launch();
+})();
+</script>
+</body>
+</html>
