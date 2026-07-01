@@ -49,8 +49,7 @@
   function applyRouteSubtitle() {
     const subtitle = $('#todaySubtitle');
     if (!subtitle) return;
-    const dateKey = selectedDateKey();
-    const districts = districtsForDate(dateKey);
+    const districts = districtsForDate(selectedDateKey());
     const next = districts.length
       ? `Районы по графику: ${districts.join(', ')}.`
       : 'Выходной: маршрутов забора и доставки нет.';
@@ -66,7 +65,7 @@
   function providerMarkup(provider, title, letter) {
     return `<button type="button" class="pmk-provider-card" data-provider="${provider}" aria-label="Статус ${title}">
       <span class="pmk-provider-logo pmk-provider-logo-${provider}" aria-hidden="true">${letter}</span>
-      <span class="pmk-provider-copy"><strong>${title}</strong><small data-provider-text>Проверяем…</small><em data-provider-detail></em></span>
+      <span class="pmk-provider-copy"><strong>${title}</strong><small data-provider-text></small><em data-provider-detail></em></span>
       <span class="pmk-provider-dot" aria-hidden="true"></span>
     </button>`;
   }
@@ -131,23 +130,22 @@
     const googleConnected = Boolean(typeof state !== 'undefined' && state.token);
     const yandexReady = yandexConfigured();
 
-    if (google && !google.dataset.status) google.dataset.status = googleConnected ? 'success' : 'offline';
-    if (yandex && !yandex.dataset.status) yandex.dataset.status = yandexReady ? 'pending' : 'offline';
-    const googleText = $('[data-provider-text]', google || panel);
-    const yandexText = $('[data-provider-text]', yandex || panel);
-    if (googleText && !googleText.textContent.trim()) googleText.textContent = googleConnected ? 'Подключён' : 'Не подключён';
-    if (yandexText && !yandexText.textContent.trim()) yandexText.textContent = yandexReady ? 'Настроен' : 'Не настроен';
-  }
-
-  function removeDuplicateWorkflowStrip() {
-    $('#pmkWorkflowStrip')?.remove();
+    if (google) google.dataset.status = googleConnected ? 'success' : 'offline';
+    if (yandex) yandex.dataset.status = yandexReady ? 'pending' : 'offline';
+    const googleText = google ? $('[data-provider-text]', google) : null;
+    const yandexText = yandex ? $('[data-provider-text]', yandex) : null;
+    if (googleText && (!googleText.textContent.trim() || googleText.textContent.trim() === 'Проверяем…')) {
+      googleText.textContent = googleConnected ? 'Подключён' : 'Не подключён';
+    }
+    if (yandexText && (!yandexText.textContent.trim() || yandexText.textContent.trim() === 'Проверяем…')) {
+      yandexText.textContent = yandexReady ? 'Настроен' : 'Не настроен';
+    }
   }
 
   function apply() {
     scheduled = false;
     applyRouteSubtitle();
     ensureHeaderPanel();
-    removeDuplicateWorkflowStrip();
   }
 
   function schedule() {
