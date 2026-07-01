@@ -1,5 +1,21 @@
 /* Vertical status rail for the isolated v82.2 browser candidate. */
 
+.pmk-v82-2-badge{
+  position:fixed;
+  right:8px;
+  bottom:8px;
+  z-index:50000;
+  padding:6px 9px;
+  border-radius:999px;
+  color:#171717;
+  background:#f7b500;
+  box-shadow:0 6px 18px rgba(0,0,0,.22);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.04em;
+  pointer-events:none;
+}
+
 .event-card.pmk-status-left-card-v82-2{
   grid-template-columns:138px minmax(0,1fr)!important;
   grid-template-areas:
