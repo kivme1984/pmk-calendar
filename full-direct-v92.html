@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Полное восстановление ПМК</title>
+<style>
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
+main{width:min(600px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-sizing:border-box}
+h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}
+.progress{height:8px;margin-top:14px;border-radius:999px;background:#303030;overflow:hidden}.progress>span{display:block;width:8%;height:100%;border-radius:inherit;background:#f7b500;transition:width .2s ease}
+.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
+</style>
+</head>
+<body>
+<main>
+<h1>Возвращаем полную версию</h1>
+<p>Загружаем расширенную форму, статусы, рабочие разделы, поиск клиента, расчёты и синхронизацию календарей.</p>
+<p>Установка ярлыка и service worker пока отключены — сначала проверяем полноценную работу в Chrome.</p>
+<p id="status" class="status">Подготовка…</p>
+<div class="progress"><span id="bar"></span></div>
+<div class="actions">
+<button id="retry" hidden>Повторить загрузку</button>
+<a id="reserve" href="./safe.html?smooth=91" hidden>Вернуться к резервной версии</a>
+</div>
+</main>
+<script>
+(() => {
+  const VERSION='92';
+  const status=document.querySelector('#status');
+  const retry=document.querySelector('#retry');
+  const reserve=document.querySelector('#reserve');
+  const bar=document.querySelector('#bar');
+
+  const CSS=[
+    './styles.css',
+    './manager-planner.css',
+    './address-autocomplete.css',
+    './mobile-rug-layout.css',
+    './manager-form-v40.css',
+    './unified-rug-services-v43.css',
+    './manager-ui-v50-preview.css',
+    './manager-ui-v50-refinements.css',
+    './manager-ui-v51.css',
+    './v51-tools-stable.css',
+    './pricing-settings-v67.css',
+    './preview-readability-v56.css',
+    './workshop-measurement-v58.css',
+    './settings-version-header-v59.css',
+    './navigation-layer-swipe-fix-v60.css',
+    './header-sync-status-v65.css',
+    './reminder-save-confirm-v66.css',
+    './client-search-workflow-v66.css',
+    './manager-workspace-v66.css',
+    './performance-fixes-v68.css',
+    './provider-status-manager-v70.css',
+    './compact-floating-note-v73.css',
+    './in-work-workflow-v73.css',
+    './light-interface-v74.css',
+    './contract-required-v75.css',
+    './instant-status-feedback-v77.css',
+    './completed-archive-workflow-v82.css',
+    './mobile-period-workday-v83.css',
+    './period-class-fix-v83.css',
+    './period-header-provider-v85.css',
+    './mobile-workflow-fixes-v86.css',
+    './workday-period-note-v86.css',
+    './direct-status-layout-v92.css'
+  ];
+
+  const JS=[
+    './app.js',
+    './manager-planner-core.js',
+    './manager-planner-hooks.js',
+    './address-autocomplete.js',
+    './address-mobile-v46.js',
+    './stability-route.js',
+    './stability-cache.js',
+    './stability-copy.js',
+    './stability-draft.js',
+    './google-freeform-import.js',
+    './runtime-stability-v37.js',
+    './fast-calendar-sync-v68.js',
+    './returning-client-search.js',
+    './client-search-fast-v68.js',
+    './smart-paste-v38.js',
+    './smart-paste-lifecycle-v38.js',
+    './smart-parser-v45.js',
+    './voice-parser-fast-v68.js',
+    './empty-rug-dimensions-v42.js',
+    './unified-rug-services-v43.js',
+    './pricing-v48.js',
+    './pricing-settings-v67.js',
+    './manager-ui-v50-preview.js',
+    './manager-ui-v50-refinements.js',
+    './manager-ui-v51.js',
+    './manager-ui-v51-tools-stable.js',
+    './android-autofill-off-v53.js',
+    './preview-description-v53.js',
+    './edit-save-hotfix-v54.js',
+    './address-placeholders-off-v56.js',
+    './workshop-measurement-v58.js',
+    './settings-version-header-v59.js',
+    './navigation-layer-swipe-fix-v60.js',
+    './planning-refresh-remove-v62.js',
+    './header-sync-status-v65.js',
+    './reminder-save-confirm-v66.js',
+    './manager-workspace-fast-v68.js',
+    './yandex-calendar-sync-v69.js',
+    './provider-status-manager-v70.js',
+    './unlimited-overlaps-v69.js',
+    './provider-crud-any-calendar-v72.js',
+    './yandex-primary-refresh-v72.js',
+    './compact-floating-note-v73.js',
+    './status-ledger-v80.js',
+    './in-work-workflow-v73.js',
+    './status-pipeline-v81.js',
+    './archive-policy-v82.js',
+    './completed-archive-workflow-v82.js',
+    './period-model-v83.js',
+    './mobile-period-workday-v83.js',
+    './period-class-fix-v83.js',
+    './period-header-provider-v85.js',
+    './mobile-workflow-fixes-v86.js',
+    './workday-period-note-v86.js',
+    './direct-status-layout-v92.js',
+    './direct-swipe-performance-v91.js'
+  ];
+
+  const set=(text,percent)=>{status.textContent=text;bar.style.width=`${percent}%`;};
+
+  async function disableBrokenInstall(){
+    if('serviceWorker' in navigator){
+      const registrations=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
+    }
+    if('caches' in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.filter(key=>key!=='pmk-calendar-data-v68'&&key.startsWith('pmk-calendar-')).map(key=>caches.delete(key).catch(()=>false)));
+    }
+  }
+
+  async function preflight(stamp){
+    const required=['./index.html','./app.js','./styles.css','./direct-status-layout-v92.js','./direct-status-layout-v92.css','./direct-swipe-performance-v91.js'];
+    const responses=await Promise.all(required.map(url=>fetch(`${url}?full=${VERSION}-${stamp}`,{cache:'no-store'})));
+    if(responses.some(response=>!response.ok))throw new Error('Основные файлы полной версии ещё не опубликованы');
+  }
+
+  async function launch(){
+    retry.hidden=true;
+    reserve.hidden=true;
+    status.className='status';
+    try{
+      set('Отключаем зависшую установку…',12);
+      await disableBrokenInstall();
+      const stamp=Date.now();
+
+      set('Проверяем основные модули…',26);
+      await preflight(stamp);
+
+      set('Загружаем интерфейс полной версии…',42);
+      const indexResponse=await fetch(`./index.html?full=${VERSION}-${stamp}`,{cache:'no-store'});
+      if(!indexResponse.ok)throw new Error(`index.html: ${indexResponse.status}`);
+      let html=await indexResponse.text();
+
+      const closeScript='</scr'+'ipt>';
+      const guard=`<script>
+        window.PMK_DIRECT_FULL_MODE='92';
+        window.PMK_SAFE_MODE=true;
+        try{
+          if(navigator.serviceWorker){
+            Object.defineProperty(navigator.serviceWorker,'register',{configurable:true,value:()=>Promise.resolve({active:null,installing:null,waiting:null,update:()=>Promise.resolve()})});
+          }
+        }catch(e){}
+        window.addEventListener('error',event=>{
+          try{localStorage.setItem('pmk-direct-v92-last-error',String(event.message||event.error||'unknown error'));}catch(e){}
+        });
+      ${closeScript}`;
+
+      const cssTags=CSS.map(url=>`<link rel="stylesheet" href="${url}?full=${VERSION}-${stamp}">`).join('');
+      const jsTags=JS.map(url=>`<script src="${url}?full=${VERSION}-${stamp}" defer>${closeScript}`).join('');
+      const ready=`<script defer>
+        document.addEventListener('DOMContentLoaded',()=>{
+          document.documentElement.dataset.pmkDirectFull='92';
+          window.dispatchEvent(new CustomEvent('pmk-direct-full-ready',{detail:{version:'92'}}));
+        },{once:true});
+      ${closeScript}`;
+
+      html=html.replace(/<link rel="manifest"[^>]*>/i,'');
+      html=html.replace(/<link rel="stylesheet"[^>]*>/i,cssTags);
+      html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}${jsTags}${ready}`);
+
+      set('Запускаем все рабочие модули…',88);
+      document.open();
+      document.write(html);
+      document.close();
+    }catch(error){
+      status.className='status error';
+      status.textContent=`Полная версия не запущена: ${error.message}`;
+      bar.style.width='100%';
+      retry.hidden=false;
+      reserve.hidden=false;
+    }
+  }
+
+  retry.addEventListener('click',launch);
+  launch();
+})();
+</script>
+</body>
+</html>
