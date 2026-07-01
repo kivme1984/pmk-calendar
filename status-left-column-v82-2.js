@@ -9,16 +9,18 @@
   let observer = null;
 
   function installBadge() {
-    if (document.querySelector('#pmkV822Badge')) return;
-    const badge = document.createElement('div');
-    badge.id = 'pmkV822Badge';
-    badge.className = 'pmk-v82-2-badge';
-    badge.textContent = 'ТЕСТ 82.2';
-    document.body.appendChild(badge);
+    let badge = document.querySelector('#pmkV822Badge');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'pmkV822Badge';
+      badge.className = 'pmk-v82-2-badge';
+      document.body.appendChild(badge);
+    }
+    badge.textContent = globalThis.PMK_WORKFLOW_CARDS_V82_3 ? 'ТЕСТ 82.3' : 'ТЕСТ 82.2';
   }
 
   function moveStatuses(card) {
-    if (!card) return;
+    if (!card || card.closest('#weekEvents')) return;
     const time = card.querySelector('.event-time');
     const actions = card.querySelector('.event-actions');
     const statusRow = card.querySelector('.status-row');
