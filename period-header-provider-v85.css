@@ -23,6 +23,9 @@
 .event-card-footer-v85 .secondary-card-action{display:grid;place-items:center}
 .event-card-footer-v85 .menu-button{width:44px}
 
+.week-board.pmk-three-days-period,.week-board.pmk-week-period{touch-action:pan-y pinch-zoom!important;overscroll-behavior-x:contain!important;overflow-x:auto!important}
+.week-board.pmk-three-days-period *,.week-board.pmk-week-period *{touch-action:pan-y pinch-zoom!important}
+
 .pmk-visible-period-scroll{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;align-items:center;gap:8px;margin:0 0 12px;padding:8px;border:1px solid #dfe5e1;border-radius:14px;background:#fff;box-shadow:0 5px 16px rgba(25,35,29,.06)}
 .pmk-visible-period-scroll.is-hidden{display:none}
 .pmk-period-scroll-arrow{display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid #dce3de;border-radius:11px;background:#f4f7f5;color:#17201b;font-size:27px;line-height:1;cursor:pointer}
@@ -40,7 +43,8 @@
 .pmk-provider-sync-button>span{display:block;font-size:18px;line-height:1}
 
 @media(max-width:720px){
-  .app-header{grid-template-columns:auto auto minmax(0,1fr);gap:9px;padding:10px 12px}
+  .app-header{display:grid!important;grid-template-columns:auto auto minmax(0,1fr);gap:9px;padding:10px 12px;height:auto;min-height:72px}
+  .app-header .mobile-menu{display:block;min-width:38px;padding:0}
   .app-header .brand{min-width:48px}
   .app-header .brand>div{display:none!important}
   .app-header .brand-mark{width:43px;height:43px}
