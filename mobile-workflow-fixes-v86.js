@@ -213,9 +213,6 @@
   function bindBoardGestures(board) {
     if (!board || board.dataset.pmkGestureV86 === '1') return;
     board.dataset.pmkGestureV86 = '1';
-    board.addEventListener('pointermove', event => {
-      if (event.pointerType === 'touch') event.stopImmediatePropagation();
-    }, { capture:true, passive:true });
     let startX = 0;
     let startY = 0;
     let moved = false;
