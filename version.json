@@ -1,22 +1,17 @@
 {
-  "version": "83",
-  "release": "mobile-periods-and-workday-redesign",
+  "version": "84",
+  "release": "guaranteed-card-pan-and-phone-footer",
   "date": "2026-07-01",
   "features": [
-    "all-v82-functions-preserved",
-    "three-day-and-week-horizontal-drag-from-day-cards",
-    "vertical-page-scroll-preserved-inside-period-cards",
-    "workday-subtitle-shows-working-districts",
-    "compact-single-row-day-counters",
-    "pickup-delivery-attention-counters-are-filters",
-    "call-ahead-badge-is-red",
-    "phone-button-restored-with-description-fallback",
-    "status-buttons-moved-under-time-column",
-    "animated-previous-next-day-switch",
-    "period-add-request-button-hidden",
-    "compact-period-navigation-buttons",
-    "month-is-count-only-calendar-table",
-    "drafts-removed-from-period-launchpad",
-    "period-model-and-syntax-tests-passed"
+    "all-v83-functions-preserved",
+    "total-points-card-is-clickable-and-resets-filters",
+    "phone-action-moved-below-date-divider",
+    "green-phone-button-with-text",
+    "manual-horizontal-scroll-inside-three-day-and-week-cards",
+    "manual-vertical-page-scroll-inside-three-day-and-week-cards",
+    "accidental-card-open-after-swipe-blocked",
+    "android-touchlist-compatibility",
+    "mobile-period-hotfix-syntax-check-added",
+    "mobile-period-regression-checks-added"
   ]
 }
