@@ -13,7 +13,7 @@
     const panel = document.createElement('section');
     panel.id = 'settingsVersionHeader';
     panel.className = 'settings-version-header';
-    panel.innerHTML = '<div class="settings-version-info"><span class="settings-version-label">Версия приложения</span><strong id="settingsVersionValue">v84</strong><small id="settingsVersionRelease">Двухосевая прокрутка и кнопка звонка · 2026-07-01</small></div><a id="settingsUpdateButton" class="button button-primary settings-update-button" href="./reset.html?v=84-settings">Обновить приложение</a>';
+    panel.innerHTML = '<div class="settings-version-info"><span class="settings-version-label">Версия приложения</span><strong id="settingsVersionValue">v85</strong><small id="settingsVersionRelease">Видимый скролл и календари заявки · 2026-07-01</small></div><a id="settingsUpdateButton" class="button button-primary settings-update-button" href="./reset.html?v=85-settings">Обновить приложение</a>';
     heading.insertAdjacentElement('afterend', panel);
     return true;
   }
