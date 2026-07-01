@@ -36,22 +36,25 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 
       status.textContent='Загружаем рабочие файлы…';
       const stamp=Date.now();
-      const [indexResponse,cssResponse,appResponse]=await Promise.all([
+      const [indexResponse,cssResponse,appResponse,swipeResponse]=await Promise.all([
         fetch(`./index.html?direct=${stamp}`,{cache:'no-store'}),
         fetch(`./styles.css?direct=${stamp}`,{cache:'no-store'}),
-        fetch(`./app.js?direct=${stamp}`,{cache:'no-store'})
+        fetch(`./app.js?direct=${stamp}`,{cache:'no-store'}),
+        fetch(`./direct-swipe-performance-v91.js?direct=${stamp}`,{cache:'no-store'})
       ]);
-      if(!indexResponse.ok||!cssResponse.ok||!appResponse.ok)throw new Error('Не удалось получить основные файлы приложения');
+      if(!indexResponse.ok||!cssResponse.ok||!appResponse.ok||!swipeResponse.ok)throw new Error('Не удалось получить основные файлы приложения');
 
       let html=await indexResponse.text();
       const css=await cssResponse.text();
       let app=await appResponse.text();
+      let swipe=await swipeResponse.text();
       app=app.replace(/function\s+registerServiceWorker\s*\(\)\s*\{[\s\S]*?\n\}/,'function registerServiceWorker() {}');
       app=app.replace(/<\/script/gi,'<\\/script');
+      swipe=swipe.replace(/<\/script/gi,'<\\/script');
 
       html=html.replace(/<link rel="manifest"[^>]*>/i,'');
       html=html.replace(/<link rel="stylesheet"[^>]*>/i,`<style>${css}</style>`);
-      html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`<script>${app}<\/script>`);
+      html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`<script>${app}<\/script><script>${swipe}<\/script>`);
 
       status.textContent='Открываем календарь…';
       document.open();
