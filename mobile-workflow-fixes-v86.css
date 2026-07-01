@@ -1,0 +1,162 @@
+/* PMK Calendar v86: mobile workflow, provider state and touch scrolling */
+.pmk-contract-providers{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-left:7px;
+  vertical-align:middle;
+}
+.pmk-contract-provider{
+  position:relative;
+  width:22px;
+  height:22px;
+  display:inline-grid;
+  place-items:center;
+  border:1px solid var(--line,#ddd);
+  border-radius:50%;
+  color:#6b6b66;
+  background:#f0f0ec;
+  font-size:10px;
+  font-weight:900;
+  line-height:1;
+}
+.pmk-contract-provider::after{
+  content:"";
+  position:absolute;
+  right:-2px;
+  bottom:-1px;
+  width:7px;
+  height:7px;
+  border:2px solid var(--surface,#fff);
+  border-radius:50%;
+  background:#9a9a95;
+}
+.pmk-contract-provider.is-synced{
+  color:#fff;
+  border-color:#188a51;
+  background:#188a51;
+}
+.pmk-contract-provider.is-synced::after{background:#20c875}
+.pmk-contract-provider.is-queued{
+  color:#3d3100;
+  border-color:#d69d00;
+  background:#ffe58b;
+}
+.pmk-contract-provider.is-queued::after{background:#f7b500}
+.pmk-contract-provider.is-missing{
+  color:#7a5200;
+  border-color:#e0b951;
+  background:#fff4c6;
+}
+.pmk-contract-provider.is-missing::after{background:#e0a400}
+.pmk-contract-provider.is-offline{opacity:.58}
+.pmk-contract-provider-google span{font-family:Arial,sans-serif}
+.pmk-contract-provider-yandex span{font-family:Arial,sans-serif}
+
+.pmk-settings-disclosure{
+  grid-column:1 / -1;
+}
+.pmk-settings-disclosure>summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  cursor:pointer;
+  list-style:none;
+  font-size:20px;
+  font-weight:850;
+}
+.pmk-settings-disclosure>summary::-webkit-details-marker{display:none}
+.pmk-settings-disclosure>summary::after{
+  content:"+";
+  flex:0 0 auto;
+  color:var(--accent,#f7b500);
+  font-size:24px;
+  line-height:1;
+}
+.pmk-settings-disclosure[open]>summary::after{content:"−"}
+.pmk-settings-disclosure-body{padding-top:16px}
+.pmk-settings-disclosure .pmk-manager-device-heading{margin-top:0}
+
+@media(max-width:760px){
+  .event-card-v85.pmk-mobile-status-layout{
+    grid-template-columns:128px minmax(0,1fr)!important;
+    grid-template-areas:"time main" "footer footer"!important;
+    align-items:stretch!important;
+  }
+  .event-card-v85.pmk-mobile-status-layout>.event-time{
+    grid-area:time;
+    display:flex!important;
+    flex-direction:column;
+    min-width:0;
+    padding:13px 8px!important;
+    border-right:1px solid var(--line)!important;
+    border-radius:14px 0 0 14px;
+  }
+  .event-card-v85.pmk-mobile-status-layout>.event-time>.event-date{margin:0 0 3px!important}
+  .event-card-v85.pmk-mobile-status-layout>.event-time>.event-weekday{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:capitalize}
+  .event-card-v85.pmk-mobile-status-layout>.event-time>strong{margin-top:8px!important;font-size:15px!important;line-height:1.15}
+  .event-card-v85.pmk-mobile-status-layout>.event-time>span{font-size:10px}
+  .event-card-v85.pmk-mobile-status-layout>.event-time>.event-status-grid-v85{
+    width:100%;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:4px!important;
+    margin-top:11px;
+    padding:9px 0 0!important;
+    border-top:1px solid var(--line)!important;
+    background:transparent!important;
+  }
+  .event-card-v85.pmk-mobile-status-layout>.event-time>.event-status-grid-v85 .status-action{
+    min-width:0;
+    min-height:34px;
+    padding:4px 2px;
+    border-radius:8px;
+    font-size:7.7px;
+    line-height:1.08;
+    white-space:normal;
+  }
+  .event-card-v85.pmk-mobile-status-layout>.event-main{grid-area:main!important;min-width:0}
+  .event-card-v85.pmk-mobile-status-layout>.event-card-footer-v85{grid-area:footer!important}
+
+  #weekEvents.week-board.pmk-three-days-period,
+  #weekEvents.week-board.pmk-week-period,
+  #weekEvents.three-days-board,
+  #weekEvents.week-board.week-board{
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    -webkit-overflow-scrolling:touch!important;
+    touch-action:pan-x pan-y!important;
+    overscroll-behavior-x:contain;
+    overscroll-behavior-y:auto;
+    scroll-snap-type:x proximity;
+  }
+  #weekEvents.week-board.pmk-three-days-period *,
+  #weekEvents.week-board.pmk-week-period *,
+  #weekEvents.three-days-board *,
+  #weekEvents.week-board.week-board *{
+    touch-action:pan-x pan-y!important;
+  }
+  #weekEvents .day-column{scroll-snap-align:start}
+  #weekEvents .day-event{-webkit-user-select:none;user-select:none}
+
+  .pmk-settings-disclosure>summary{font-size:18px}
+  .event-provider-mark.pmk-provider-state{width:24px;height:24px;border-radius:8px;font-size:11px}
+}
+@media(max-width:380px){
+  .event-card-v85.pmk-mobile-status-layout{grid-template-columns:120px minmax(0,1fr)!important}
+  .event-card-v85.pmk-mobile-status-layout>.event-time>.event-status-grid-v85 .status-action{font-size:7.1px;padding-left:1px;padding-right:1px}
+}
+
+/* v86 overrides for v85 provider marks */
+.event-provider-mark.pmk-provider-state{position:relative;box-shadow:none;transition:.15s ease}
+.event-provider-mark.pmk-provider-state::after{content:"";position:absolute;right:-2px;bottom:-2px;width:7px;height:7px;border:2px solid var(--surface,#fff);border-radius:50%;background:#929995}
+.event-provider-mark.pmk-provider-state.is-synced.event-provider-google{color:#fff;border:1px solid #4285f4;background:#4285f4}
+.event-provider-mark.pmk-provider-state.is-synced.event-provider-yandex{color:#fff;border:1px solid #fc3f1d;background:#fc3f1d}
+.event-provider-mark.pmk-provider-state.is-synced::after{background:#1dbc70}
+.event-provider-mark.pmk-provider-state.is-queued{color:#4c3900!important;border:1px solid #d7a100!important;background:#ffe28a!important}
+.event-provider-mark.pmk-provider-state.is-queued::after{background:#e8a900}
+.event-provider-mark.pmk-provider-state.is-missing{color:#6f746f!important;border:1px dashed #aeb5b0!important;background:#eef1ef!important}
+.event-provider-mark.pmk-provider-state.is-missing::after{background:#b78300}
+.event-provider-mark.pmk-provider-state.is-offline{color:#8b908c!important;border:1px solid #cfd4d1!important;background:#f1f3f2!important;opacity:.72}
+.event-provider-mark.pmk-provider-state.is-offline::after{background:#969c98}
