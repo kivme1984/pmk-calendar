@@ -1,18 +1,16 @@
 {
-  "version": "85",
-  "release": "visible-period-scroll-provider-marks-readable-header",
+  "version": "86",
+  "release": "mobile-workflow-and-dual-provider-fixes",
   "date": "2026-07-01",
   "features": [
-    "all-v84-business-functions-preserved",
-    "visible-horizontal-scrollbar-for-three-days-and-week",
-    "scrollbar-thumb-drag-and-left-right-buttons",
-    "vertical-page-scroll-restored-on-period-cards",
-    "four-status-actions-evenly-spaced-full-width",
-    "google-provider-mark-next-to-contract",
-    "yandex-provider-mark-next-to-contract",
-    "combined-google-yandex-provider-marks",
-    "readable-google-and-yandex-header-statuses",
-    "sync-button-labeled",
-    "provider-and-scroll-regression-checks-added"
+    "mobile-status-controls-under-date-and-time",
+    "equal-two-by-two-mobile-status-layout",
+    "native-horizontal-and-vertical-touch-scrolling-in-three-day-and-week-views",
+    "touch-scrolling-works-when-gesture-starts-on-an-event",
+    "google-and-yandex-state-visible-near-contract-number",
+    "workflow-navigation-order-in-work-delivery-completed-archive",
+    "yandex-settings-collapsed-by-default",
+    "manager-device-settings-collapsed-by-default",
+    "all-events-summary-filter-active-by-default"
   ]
 }
