@@ -1,0 +1,163 @@
+/* Workflow and card polish for isolated v82.3 browser test. */
+
+.pmk-workflow-strip{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  margin:-4px 0 20px;
+}
+
+.pmk-workflow-card{
+  min-width:0;
+  min-height:96px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"label count" "hint hint";
+  align-items:center;
+  gap:5px 12px;
+  padding:15px 16px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  color:var(--text);
+  background:var(--surface);
+  text-align:left;
+  box-shadow:0 8px 25px rgba(20,30,45,.07);
+}
+
+.pmk-workflow-card span{grid-area:label;font-size:14px;font-weight:850}
+.pmk-workflow-card strong{grid-area:count;font-size:30px;line-height:1}
+.pmk-workflow-card small{grid-area:hint;color:var(--muted);font-size:10px;font-weight:700}
+.pmk-workflow-card.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent),0 10px 26px rgba(247,181,0,.18)}
+.pmk-workflow-work strong{color:#aa7900}
+.pmk-workflow-delivery strong{color:#b43a32}
+.pmk-workflow-completed strong{color:#23804f}
+
+.pmk-card-sync{
+  flex:0 0 auto;
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+
+.pmk-card-provider{
+  position:relative;
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:#f3f3ef;
+  color:#777;
+  font-size:15px;
+  font-weight:900;
+}
+
+.pmk-card-provider i{
+  position:absolute;
+  right:-2px;
+  bottom:-2px;
+  width:10px;
+  height:10px;
+  border:2px solid var(--surface);
+  border-radius:50%;
+  background:#a8adb1;
+}
+
+.pmk-card-provider-google[data-sync-state="synced"]{color:#fff;border-color:#4285f4;background:#4285f4}
+.pmk-card-provider-yandex[data-sync-state="synced"]{color:#fff;border-color:#fc3f1d;background:#fc3f1d}
+.pmk-card-provider[data-sync-state="synced"] i{background:#21b66f}
+.pmk-card-provider[data-sync-state="pending"]{border-style:dashed;color:#655300;background:#fff8d7}
+.pmk-card-provider[data-sync-state="pending"] i{background:#e1aa00}
+.pmk-card-provider[data-sync-state="missing"]{border-style:dashed;background:#f4f4f1}
+.pmk-card-provider[data-sync-state="missing"] i{background:#dc3d43}
+.pmk-card-provider[data-sync-state="off"]{opacity:.58;border-style:dashed}
+.pmk-card-provider[data-sync-state="off"] i{background:#8b8f93}
+
+.event-card .pmk-card-bottom-actions{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.2fr) minmax(0,.85fr) 58px!important;
+  gap:10px!important;
+  margin-top:4px!important;
+}
+
+.event-card .pmk-card-bottom-actions>.primary-card-action,
+.event-card .pmk-card-bottom-actions>.secondary-card-action,
+.event-card .pmk-card-bottom-actions>.card-menu>.menu-button{
+  min-height:54px!important;
+  border-radius:14px!important;
+  border:1px solid var(--line)!important;
+  background:var(--surface)!important;
+  box-shadow:0 4px 14px rgba(20,30,45,.05)!important;
+  font-size:13px!important;
+  font-weight:850!important;
+}
+
+.event-card .pmk-card-bottom-actions>.call-button{
+  color:#fff!important;
+  border-color:#169252!important;
+  background:#20aa61!important;
+  box-shadow:0 7px 20px rgba(32,170,97,.22)!important;
+}
+
+.event-card .pmk-card-bottom-actions>.call-button:active{background:#178d4f!important}
+.event-card .pmk-card-bottom-actions>.primary-card-action:disabled{color:#8a8d8f!important;background:#f4f4f1!important;box-shadow:none!important}
+.event-card .pmk-card-bottom-actions>.card-menu{min-width:0}
+.event-card .pmk-card-bottom-actions>.card-menu>.menu-button{width:58px!important;font-size:28px!important}
+
+/* Status controls must never appear inside 3-day or week planning columns. */
+#view-week #weekEvents .status-row,
+#view-week #weekEvents [data-status-event],
+#view-week .pmk-status-left-stack-v82-2{
+  display:none!important;
+}
+
+@media(max-width:760px){
+  .pmk-workflow-strip{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
+    margin-top:-2px;
+  }
+
+  .pmk-workflow-card{
+    min-height:84px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:3px;
+    padding:11px 10px;
+    border-radius:15px;
+  }
+
+  .pmk-workflow-card span{font-size:10px;line-height:1.15}
+  .pmk-workflow-card strong{font-size:27px}
+  .pmk-workflow-card small{display:none}
+
+  .pmk-card-sync{gap:4px;margin-left:auto}
+  .pmk-card-provider{width:31px;height:31px;border-radius:10px;font-size:14px}
+
+  .event-card .pmk-card-bottom-actions{
+    grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr) 54px!important;
+    gap:7px!important;
+  }
+
+  .event-card .pmk-card-bottom-actions>.primary-card-action,
+  .event-card .pmk-card-bottom-actions>.secondary-card-action,
+  .event-card .pmk-card-bottom-actions>.card-menu>.menu-button{
+    min-height:52px!important;
+    border-radius:13px!important;
+    padding-left:7px!important;
+    padding-right:7px!important;
+    font-size:12px!important;
+  }
+
+  .event-card .pmk-card-bottom-actions>.card-menu>.menu-button{width:54px!important;font-size:27px!important}
+}
+
+@media(max-width:390px){
+  .pmk-workflow-strip{gap:5px}
+  .pmk-workflow-card{padding:9px 7px}
+  .pmk-workflow-card span{font-size:9px}
+  .pmk-card-provider{width:29px;height:29px}
+}
