@@ -18,7 +18,7 @@
     }
     panel.querySelector('#settingsVersionValue').textContent = 'v82.2';
     panel.querySelector('#settingsVersionRelease').textContent = 'Тест: стабильная v82 + шапка, свайпы, заметка и вертикальные статусы';
-    panel.querySelector('#settingsUpdateButton').href = './install-v82-2.html';
+    panel.querySelector('#settingsUpdateButton').href = './safe.html?install=82-2';
     return true;
   }
 
