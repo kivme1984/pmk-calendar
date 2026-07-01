@@ -3,28 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Обновление ПМК до v88</title>
+<title>Обновление ПМК до v89</title>
 <style>
 body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
 main{width:min(580px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a}
-h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}
-.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}
+h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}
+.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
 </style>
 </head>
 <body>
 <main>
-<h1>Устанавливаем версию v88</h1>
-<p>Четыре кнопки статуса размещаются вертикально 4×1 и равномерно заполняют левое поле карточки.</p>
+<h1>Устанавливаем версию v89</h1>
+<p>Исправляем вертикальное расположение четырёх статусов.</p>
+<p>Возвращаем горизонтальный и вертикальный свайп в режимах «3 дня» и «Неделя».</p>
+<p>Запускаем полную повторную загрузку событий Google Calendar.</p>
 <p id="status" class="status">Проверяем файлы…</p>
 <div class="actions">
 <button id="retry" hidden>Повторить</button>
-<a id="safe" href="./safe.html?v=88" hidden>Безопасный режим</a>
-<a id="open" href="./?v=88" hidden>Открыть приложение</a>
+<a id="safe" href="./safe.html?v=89" hidden>Безопасный режим</a>
+<a id="open" href="./?v=89" hidden>Открыть приложение</a>
 </div>
 </main>
 <script>
 (() => {
-  const VERSION = '88';
+  const VERSION = '89';
   const status = document.querySelector('#status');
   const retry = document.querySelector('#retry');
   const open = document.querySelector('#open');
@@ -34,7 +36,7 @@ h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.stat
     const worker = registration.installing || registration.waiting || registration.active;
     if (!worker || worker.state === 'activated') return Promise.resolve();
     return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Сборка не активировалась')), 30000);
+      const timeout = setTimeout(() => reject(new Error('Сборка не активировалась')), 45000);
       worker.addEventListener('statechange', () => {
         if (worker.state === 'activated') { clearTimeout(timeout); resolve(); }
         if (worker.state === 'redundant') { clearTimeout(timeout); reject(new Error('Установка отклонена')); }
@@ -44,16 +46,20 @@ h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.stat
 
   async function verify() {
     const stamp = Date.now();
-    const urls = ['./sw.js','./sw-special-router-v88.js','./sw-core-v88.js','./status-column-v88.css','./version-guard-v88.js'];
+    const urls = [
+      './sw.js', './sw-special-router-v89.js', './sw-core-v89.js',
+      './mobile-workflow-fixes-v89.js', './mobile-workflow-fixes-v89.css',
+      './version-guard-v89.js', './version.json'
+    ];
     const responses = await Promise.all(urls.map(url => fetch(`${url}?v=${VERSION}-${stamp}`, { cache:'no-store' })));
-    if (responses.some(response => !response.ok)) throw new Error('Файлы v88 ещё не опубликованы');
-    const [swText, routerText, coreText, cssText, guardText] = await Promise.all(responses.map(response => response.text()));
-    if (!swText.includes('sw-special-router-v88.js') || !swText.includes('sw-core-v88.js')) throw new Error('Пока отдаётся старая версия');
+    if (responses.some(response => !response.ok)) throw new Error('Файлы v89 ещё не опубликованы');
+    const [swText, routerText, coreText, jsText, cssText, guardText] = await Promise.all(responses.slice(0, 6).map(response => response.text()));
+    if (!swText.includes('sw-special-router-v89.js') || !swText.includes('sw-core-v89.js')) throw new Error('Пока отдаётся старая версия service worker');
     if (!routerText.includes('stopImmediatePropagation')) throw new Error('Маршрутизатор обновления не готов');
-    if (!coreText.includes('status-column-v88.css') || !coreText.includes('version-guard-v88.js')) throw new Error('Пакет v88 неполный');
-    if (!cssText.includes('grid-template-columns:1fr!important')) throw new Error('Вертикальная колонка ещё не опубликована');
-    if (!cssText.includes('grid-template-rows:repeat(4,minmax(0,1fr))!important')) throw new Error('Четыре вертикальные строки ещё не опубликованы');
-    if (!guardText.includes("const VERSION = '88'")) throw new Error('Контроль версии v88 не готов');
+    if (!coreText.includes('mobile-workflow-fixes-v89.js') || !coreText.includes('mobile-workflow-fixes-v89.css')) throw new Error('Пакет v89 неполный');
+    if (!jsText.includes('PMK_MOBILE_WORKFLOW_FIXES_V89') || !jsText.includes('clearFastSyncCheckpoint')) throw new Error('Исправление синхронизации не опубликовано');
+    if (!cssText.includes('pmk-status-column-v89') || !cssText.includes('repeat(4, minmax(56px, 1fr))')) throw new Error('Вертикальная колонка статусов не опубликована');
+    if (!guardText.includes("const VERSION = '89'")) throw new Error('Контроль версии v89 не готов');
   }
 
   async function run() {
@@ -61,16 +67,16 @@ h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.stat
     open.hidden = true;
     safe.hidden = true;
     status.className = 'status';
-    status.textContent = 'Проверяем вертикальную сетку статусов…';
+    status.textContent = 'Проверяем сборку v89…';
     try {
       await verify();
       if (!('serviceWorker' in navigator)) throw new Error('Service Worker не поддерживается');
       const registration = await navigator.serviceWorker.register(`./sw.js?v=${VERSION}-${Date.now()}`, { updateViaCache:'none' });
       await registration.update().catch(() => null);
       await waitForActivation(registration);
-      status.textContent = 'v88 установлена. Открываем приложение…';
+      status.textContent = 'v89 установлена. Открываем приложение и загружаем Google Calendar…';
       open.hidden = false;
-      setTimeout(() => location.replace(`./?v=${VERSION}&verified=${Date.now()}`), 500);
+      setTimeout(() => location.replace(`./?v=${VERSION}&verified=${Date.now()}`), 650);
     } catch (error) {
       status.className = 'status error';
       status.textContent = `Обновление не завершено: ${error.message}`;
