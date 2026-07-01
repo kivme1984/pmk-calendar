@@ -1,0 +1,27 @@
+name: Period v83 regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'period-model-v83.js'
+      - 'mobile-period-workday-v83.js'
+      - 'tests/period-v83.test.js'
+      - '.github/workflows/period-v83-test.yml'
+  workflow_dispatch:
+
+jobs:
+  period-model-and-syntax:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check syntax
+        run: |
+          node --check period-model-v83.js
+          node --check mobile-period-workday-v83.js
+      - name: Run period model tests
+        run: node tests/period-v83.test.js
