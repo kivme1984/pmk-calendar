@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Безопасное обновление ПМК Календаря до v84</title>
+<title>Безопасное обновление ПМК Календаря до v85</title>
 <style>
 body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(580px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-shadow:0 24px 70px rgba(0,0,0,.38)}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}
 </style>
 </head>
 <body>
 <main>
-<h1>Устанавливаем версию v84</h1>
-<p>Кликабельные «Всего точек», зелёная кнопка звонка под линией даты и принудительная прокрутка карточек в режимах «3 дня» и «Неделя».</p>
+<h1>Устанавливаем версию v85</h1>
+<p>Видимый скролл с бегунком и стрелками, равномерные статусы, метки G/Я у договора и понятная шапка календарей.</p>
 <p id="status" class="status">Проверяем все файлы новой сборки…</p>
-<div class="actions"><button id="retry" type="button" hidden>Повторить обновление</button><a id="safe" href="./safe.html?v=84" hidden>Открыть безопасный режим</a><a id="open" href="./?v=84" hidden>Открыть приложение</a></div>
+<div class="actions"><button id="retry" type="button" hidden>Повторить обновление</button><a id="safe" href="./safe.html?v=85" hidden>Открыть безопасный режим</a><a id="open" href="./?v=85" hidden>Открыть приложение</a></div>
 </main>
 <script>
 (() => {
-  const VERSION='84';
+  const VERSION='85';
   const status=document.querySelector('#status');
   const retry=document.querySelector('#retry');
   const safe=document.querySelector('#safe');
@@ -38,31 +38,31 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 
   async function verifyFiles(){
     const stamp=Date.now();
-    const urls=['./sw.js','./sw-special-router-v84.js','./version-guard-v84.js','./mobile-period-hotfix-v84.js','./mobile-period-hotfix-v84.css'];
+    const urls=['./sw.js','./sw-special-router-v85.js','./version-guard-v85.js','./period-header-provider-v85.js','./period-header-provider-v85.css'];
     const responses=await Promise.all(urls.map(url=>fetch(`${url}?v=${VERSION}-verify-${stamp}`,{cache:'no-store'})));
-    if(responses.some(response=>!response.ok))throw new Error('Файлы v84 ещё не распространились на GitHub Pages.');
+    if(responses.some(response=>!response.ok))throw new Error('Файлы v85 ещё не распространились на GitHub Pages.');
     const [swText,routerText,guardText,jsText,cssText]=await Promise.all(responses.map(response=>response.text()));
-    if(!swText.includes('sw-special-router-v84.js')||!swText.includes('sw-core-v84.js'))throw new Error('GitHub Pages пока отдаёт старый service worker. Повторите через минуту.');
-    if(!routerText.includes('reset.html')||!routerText.includes('stopImmediatePropagation'))throw new Error('Маршрутизатор обновлений v84 ещё не опубликован.');
-    if(!guardText.includes("const VERSION = '84'"))throw new Error('Контрольный файл v84 ещё не опубликован.');
-    if(!jsText.includes('PMK_MOBILE_PERIOD_HOTFIX_V84')||!jsText.includes('scrollingElement().scrollTop'))throw new Error('Вертикальная прокрутка карточек v84 ещё не опубликована.');
-    if(!jsText.includes("axis === 'x'")||!jsText.includes('board.scrollLeft'))throw new Error('Горизонтальная прокрутка карточек v84 ещё не опубликована.');
-    if(!jsText.includes('data-summary-total-v84')||!jsText.includes('event-card-footer-v84')||!jsText.includes('☎ Позвонить'))throw new Error('Новый рабочий день v84 опубликован не полностью.');
-    if(!cssText.includes('touch-action:none!important')||!cssText.includes('background:#1fa35d!important')||!cssText.includes('grid-area:footer'))throw new Error('Стили прокрутки и кнопки звонка v84 ещё не опубликованы.');
+    if(!swText.includes('sw-special-router-v85.js')||!swText.includes('sw-core-v85.js'))throw new Error('GitHub Pages пока отдаёт старый service worker. Повторите через минуту.');
+    if(!routerText.includes('reset.html')||!routerText.includes('stopImmediatePropagation'))throw new Error('Маршрутизатор обновлений v85 ещё не опубликован.');
+    if(!guardText.includes("const VERSION = '85'"))throw new Error('Контрольный файл v85 ещё не опубликован.');
+    if(!jsText.includes('pmk-period-scroll-thumb')||!jsText.includes('board.scrollLeft'))throw new Error('Видимый скролл v85 опубликован не полностью.');
+    if(!jsText.includes('event-provider-google')||!jsText.includes('event-provider-yandex'))throw new Error('Метки календарей G/Я ещё не опубликованы.');
+    if(!jsText.includes('event-status-grid-v85')||!jsText.includes('<small>Синхр.</small>'))throw new Error('Статусы заявки или шапка v85 опубликованы не полностью.');
+    if(!cssText.includes('repeat(4,minmax(0,1fr))')||!cssText.includes('.pmk-visible-period-scroll')||!cssText.includes('display:grid!important'))throw new Error('Стили v85 ещё не опубликованы.');
     new Function(jsText);
   }
 
   async function update(){
     retry.hidden=true;safe.hidden=true;open.hidden=true;
-    status.className='status';status.textContent='Проверяем двухосевую прокрутку и новый футер карточки…';
+    status.className='status';status.textContent='Проверяем бегунок, статусы, метки календарей и шапку…';
     try{
       await verifyFiles();
       if(!('serviceWorker' in navigator))throw new Error('Браузер не поддерживает обновление приложения.');
-      status.textContent='Собираем проверенный пакет v84…';
+      status.textContent='Собираем проверенный пакет v85…';
       const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}-${Date.now()}`,{updateViaCache:'none'});
       await registration.update().catch(()=>null);
       await waitForActivation(registration);
-      status.textContent='Версия v84 проверена и установлена. Открываем приложение…';
+      status.textContent='Версия v85 проверена и установлена. Открываем приложение…';
       open.hidden=false;
       await delay(500);
       location.replace(`./?v=${VERSION}&verified=${Date.now()}`);
