@@ -39,7 +39,8 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     './completed-archive-workflow-v82.js',
     './floating-note-mobile-v82-1.js',
     './status-left-column-v82-2.js',
-    './workflow-fast-v82-7.js'
+    './workflow-fast-v82-7.js',
+    './workflow-transition-fast-v82-7.js'
   ];
   const CSS=[
     './compact-floating-note-v73.css',
@@ -49,7 +50,8 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     './completed-archive-workflow-v82.css',
     './floating-note-mobile-v82-1.css',
     './status-left-column-v82-2.css',
-    './workflow-fast-v82-7.css'
+    './workflow-fast-v82-7.css',
+    './workflow-transition-fast-v82-7.css'
   ];
 
   function set(text,percent){status.textContent=text;bar.style.width=`${percent}%`;}
@@ -86,7 +88,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
       const closeScript='</scr'+'ipt>';
       const guard=`<script>window.PMK_SAFE_MODE=true;window.PMK_V82_ISOLATED_TEST=true;try{if(navigator.serviceWorker){Object.defineProperty(navigator.serviceWorker,'register',{configurable:true,value:()=>Promise.resolve({active:navigator.serviceWorker.controller||null})});}}catch(e){}${closeScript}`;
       const cssTags=CSS.map(url=>`<link rel="stylesheet" href="${url}?v=82-7-${stamp}">`).join('');
-      const jsTags=JS.map((url,index)=>index===0?`<script src="${url}?v=82-7-${stamp}" defer>${closeScript}`:`<script src="${url}?v=82-7-${stamp}" defer>${closeScript}`).join('');
+      const jsTags=JS.map(url=>`<script src="${url}?v=82-7-${stamp}" defer>${closeScript}`).join('');
       html=html.replace(/<link rel="manifest"[^>]*>/i,'');
       html=html.replace(/<link rel="stylesheet"[^>]*>/i,match=>`${match}${cssTags}`);
       html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}${jsTags}`);
