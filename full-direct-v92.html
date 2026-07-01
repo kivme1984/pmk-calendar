@@ -124,7 +124,9 @@ h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5
     './mobile-workflow-fixes-v86.js',
     './workday-period-note-v86.js',
     './direct-status-layout-v92.js',
-    './direct-swipe-performance-v91.js'
+    './direct-swipe-performance-v91.js',
+    './direct-version-header-v92.js',
+    './direct-healthcheck-v92.js'
   ];
 
   const set=(text,percent)=>{status.textContent=text;bar.style.width=`${percent}%`;};
@@ -141,7 +143,10 @@ h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5
   }
 
   async function preflight(stamp){
-    const required=['./index.html','./app.js','./styles.css','./direct-status-layout-v92.js','./direct-status-layout-v92.css','./direct-swipe-performance-v91.js'];
+    const required=[
+      './index.html','./app.js','./styles.css','./direct-status-layout-v92.js','./direct-status-layout-v92.css',
+      './direct-swipe-performance-v91.js','./direct-version-header-v92.js','./direct-healthcheck-v92.js'
+    ];
     const responses=await Promise.all(required.map(url=>fetch(`${url}?full=${VERSION}-${stamp}`,{cache:'no-store'})));
     if(responses.some(response=>!response.ok))throw new Error('Основные файлы полной версии ещё не опубликованы');
   }
