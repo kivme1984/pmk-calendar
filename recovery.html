@@ -1,1 +1,75 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Восстановление ПМК v87</title><style>body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}</style></head><body><main><h1>Восстановление ПМК Календаря</h1><p>Устанавливаем v87. Заявки и настройки не удаляются.</p><p id="status" class="status">Проверяем сборку…</p><div class="actions"><button id="retry" hidden>Повторить</button><a id="safe" href="./safe.html?v=87" hidden>Безопасный режим</a><a id="open" href="./?v=87-recovery" hidden>Открыть приложение</a></div></main><script>(()=>{const V='87',s=document.querySelector('#status'),r=document.querySelector('#retry'),o=document.querySelector('#open'),safe=document.querySelector('#safe');const wait=reg=>{const w=reg.installing||reg.waiting||reg.active;if(!w||w.state==='activated')return Promise.resolve();return new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error('Сборка не активировалась')),30000);w.addEventListener('statechange',()=>{if(w.state==='activated'){clearTimeout(t);res()}if(w.state==='redundant'){clearTimeout(t);rej(new Error('Установка отклонена'))}})})};async function run(){r.hidden=true;o.hidden=true;safe.hidden=true;s.className='status';s.textContent='Проверяем v87…';try{const x=await fetch(`./sw.js?v=${V}-${Date.now()}`,{cache:'no-store'}),text=await x.text();if(!x.ok||!text.includes('sw-special-router-v87.js')||!text.includes('sw-core-v87.js'))throw new Error('GitHub Pages пока отдаёт старую сборку');const reg=await navigator.serviceWorker.register(`./sw.js?v=${V}-${Date.now()}`,{updateViaCache:'none'});await reg.update().catch(()=>null);await wait(reg);s.textContent='v87 восстановлена. Открываем…';o.hidden=false;setTimeout(()=>location.replace(`./?v=${V}&recovery=${Date.now()}`),500)}catch(e){s.className='status error';s.textContent=`Восстановление не завершено: ${e.message}`;r.hidden=false;o.hidden=false;safe.hidden=false}}r.addEventListener('click',run);run()})();</script></body></html>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Восстановление ПМК v88</title>
+<style>
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
+main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a}
+h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}
+.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}
+</style>
+</head>
+<body>
+<main>
+<h1>Восстановление ПМК Календаря</h1>
+<p>Устанавливаем v88 с вертикальной колонкой статусов 4×1. Заявки и настройки не удаляются.</p>
+<p id="status" class="status">Проверяем сборку…</p>
+<div class="actions">
+<button id="retry" hidden>Повторить</button>
+<a id="safe" href="./safe.html?v=88" hidden>Безопасный режим</a>
+<a id="open" href="./?v=88-recovery" hidden>Открыть приложение</a>
+</div>
+</main>
+<script>
+(() => {
+  const VERSION = '88';
+  const status = document.querySelector('#status');
+  const retry = document.querySelector('#retry');
+  const open = document.querySelector('#open');
+  const safe = document.querySelector('#safe');
+
+  function waitForActivation(registration) {
+    const worker = registration.installing || registration.waiting || registration.active;
+    if (!worker || worker.state === 'activated') return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Сборка не активировалась')), 30000);
+      worker.addEventListener('statechange', () => {
+        if (worker.state === 'activated') { clearTimeout(timeout); resolve(); }
+        if (worker.state === 'redundant') { clearTimeout(timeout); reject(new Error('Установка отклонена')); }
+      });
+    });
+  }
+
+  async function run() {
+    retry.hidden = true;
+    open.hidden = true;
+    safe.hidden = true;
+    status.className = 'status';
+    status.textContent = 'Проверяем v88…';
+    try {
+      const response = await fetch(`./sw.js?v=${VERSION}-${Date.now()}`, { cache:'no-store' });
+      const text = await response.text();
+      if (!response.ok || !text.includes('sw-special-router-v88.js') || !text.includes('sw-core-v88.js')) throw new Error('GitHub Pages пока отдаёт старую сборку');
+      const registration = await navigator.serviceWorker.register(`./sw.js?v=${VERSION}-${Date.now()}`, { updateViaCache:'none' });
+      await registration.update().catch(() => null);
+      await waitForActivation(registration);
+      status.textContent = 'v88 восстановлена. Открываем приложение…';
+      open.hidden = false;
+      setTimeout(() => location.replace(`./?v=${VERSION}&recovery=${Date.now()}`), 500);
+    } catch (error) {
+      status.className = 'status error';
+      status.textContent = `Восстановление не завершено: ${error.message}`;
+      retry.hidden = false;
+      open.hidden = false;
+      safe.hidden = false;
+    }
+  }
+
+  retry.addEventListener('click', run);
+  run();
+})();
+</script>
+</body>
+</html>
