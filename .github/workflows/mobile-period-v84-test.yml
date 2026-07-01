@@ -1,0 +1,25 @@
+name: Mobile period v84 regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile-period-hotfix-v84.js'
+      - 'mobile-period-hotfix-v84.css'
+      - 'tests/mobile-period-v84.test.js'
+      - '.github/workflows/mobile-period-v84-test.yml'
+  workflow_dispatch:
+
+jobs:
+  check-v84:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check JavaScript syntax
+        run: node --check mobile-period-hotfix-v84.js
+      - name: Run v84 regression checks
+        run: node tests/mobile-period-v84.test.js
