@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Безопасный запуск ПМК</title>
 <style>
-body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a}h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}button{width:100%;min-height:48px;margin-top:18px;border:0;border-radius:12px;color:#171717;background:#f7b500;font-weight:800;font-size:15px}
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a}h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}.actions{display:grid;gap:10px;margin-top:18px}button,a{width:100%;min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;box-sizing:border-box;font-weight:800;font-size:15px;text-decoration:none}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
 </style>
 </head>
 <body>
@@ -13,24 +13,37 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 <h1 id="title">Безопасный запуск</h1>
 <p id="description">Запускаем базовую версию напрямую, без повреждённого service worker. Заявки, настройки и черновики остаются на устройстве.</p>
 <p id="status" class="status">Подготовка…</p>
-<button id="retry" type="button" hidden>Повторить запуск</button>
+<div class="actions">
+<button id="retry" type="button" hidden>Повторить</button>
+<a id="recovery" href="./recovery.html?force=82" hidden>Вернуть стабильную v82</a>
+</div>
 </main>
 <script>
 (() => {
   const params=new URLSearchParams(location.search);
-  const testMode=params.get('test')==='ui-swipe-v1';
+  const testName=params.get('test')||'';
+  const testMode=testName==='ui-swipe-v1'||testName==='ui-swipe-note-v2';
+  const noteTest=testName==='ui-swipe-note-v2';
+  const installMode=params.get('install')==='82-1';
   const title=document.querySelector('#title');
   const description=document.querySelector('#description');
   const status=document.querySelector('#status');
   const retry=document.querySelector('#retry');
+  const recovery=document.querySelector('#recovery');
   const DATA_CACHE='pmk-calendar-data-v68';
 
-  if(testMode){
+  if(installMode){
+    title.textContent='Устанавливаем v82.1';
+    description.textContent='Стабильная v82 с проверенной шапкой, рабочей кнопкой обновления, свайпами во все стороны и улучшенной плавающей заметкой.';
+  }else if(noteTest){
+    title.textContent='Тест v82.1 · заметка';
+    description.textContent='Проверяем уже одобренную шапку и свайпы, а также положение заметки и две кнопки-символа: вставить и скопировать.';
+  }else if(testMode){
     title.textContent='Тест v82 · шапка и свайпы';
     description.textContent='Рабочая v82 остаётся без изменений. Здесь отдельно проверяются статусы календарей, кнопка «Обновить» и управление режимами «3 дня» и «Неделя».';
   }
 
-  async function cleanSafeMode(){
+  async function removeWorkersAndCaches(){
     if('serviceWorker' in navigator){
       const registrations=await navigator.serviceWorker.getRegistrations();
       await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
@@ -41,30 +54,78 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     }
   }
 
-  async function preflightTest(stamp){
-    const urls=['./test-v82-ui-swipe-v1.js','./test-v82-ui-swipe-v1.css'];
-    const responses=await Promise.all(urls.map(url=>fetch(`${url}?test=${stamp}`,{cache:'no-store'})));
-    if(responses.some(response=>!response.ok))throw new Error('Тестовые файлы ещё не опубликованы');
+  async function preflight(urls,stamp){
+    const responses=await Promise.all(urls.map(url=>fetch(`${url}${url.includes('?')?'&':'?'}check=${stamp}`,{cache:'no-store'})));
+    if(responses.some(response=>!response.ok))throw new Error('Не все файлы ещё опубликованы');
+    return Promise.all(responses.map(response=>response.text()));
   }
 
-  async function launch(){
+  function waitForActivation(registration){
+    const worker=registration.installing||registration.waiting||registration.active;
+    if(!worker||worker.state==='activated')return Promise.resolve();
+    return new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>reject(new Error('v82.1 не активировалась за 90 секунд')),90000);
+      worker.addEventListener('statechange',()=>{
+        if(worker.state==='activated'){clearTimeout(timer);resolve();}
+        if(worker.state==='redundant'){clearTimeout(timer);reject(new Error('Установка v82.1 была отклонена браузером'));}
+      });
+    });
+  }
+
+  async function installV821(){
     retry.hidden=true;
+    recovery.hidden=true;
     status.className='status';
     try{
       const stamp=Date.now();
+      status.textContent='Проверяем пакет v82.1…';
+      const urls=['./sw-v82-1.js','./sw-core-v82-1.js','./version-guard-v82-1.js','./keep-worker-v82-1.js','./test-v82-ui-swipe-v1.js','./test-v82-ui-swipe-v1.css','./floating-note-mobile-v82-1.js','./floating-note-mobile-v82-1.css'];
+      const texts=await preflight(urls,stamp);
+      if(!texts[0].includes('sw-core-v82-1.js'))throw new Error('Неверная точка запуска v82.1');
+      if(!texts[1].includes("const VERSION='82.1'"))throw new Error('Неверный основной пакет v82.1');
+      if(!texts[2].includes("const VERSION = '82.1'"))throw new Error('Неверный контроль версии v82.1');
+      if(!texts[4].includes('PMK_V82_UI_SWIPE_TEST_V1'))throw new Error('Не найдено исправление шапки и свайпов');
+      if(!texts[6].includes('PMK_FLOATING_NOTE_MOBILE_V82_1'))throw new Error('Не найдено исправление заметки');
+
+      status.textContent='Отключаем прежнюю сборку…';
+      await removeWorkersAndCaches();
+      if(!('serviceWorker' in navigator))throw new Error('Chrome не поддерживает установку приложения');
+
+      status.textContent='Собираем проверенную v82.1…';
+      const registration=await navigator.serviceWorker.register(`./sw-v82-1.js?v=82-1-${stamp}`,{scope:'./',updateViaCache:'none'});
+      await registration.update().catch(()=>null);
+      await waitForActivation(registration);
+
+      status.textContent='v82.1 установлена. Открываем календарь…';
+      setTimeout(()=>location.replace(`./?v=82-1&installed=${Date.now()}`),900);
+    }catch(error){
+      status.className='status error';
+      status.textContent=`Установка остановилась: ${error.message}`;
+      retry.hidden=false;
+      recovery.hidden=false;
+    }
+  }
+
+  async function launchDirect(){
+    retry.hidden=true;
+    recovery.hidden=true;
+    status.className='status';
+    try{
+      const stamp=Date.now();
+      const testUrls=['./test-v82-ui-swipe-v1.js','./test-v82-ui-swipe-v1.css'];
+      if(noteTest)testUrls.push('./floating-note-mobile-v82-1.js','./floating-note-mobile-v82-1.css');
       if(testMode){
         status.textContent='Проверяем отдельную тестовую версию…';
-        await preflightTest(stamp);
+        await preflight(testUrls,stamp);
       }else{
         status.textContent='Отключаем повреждённый кэш…';
-        await cleanSafeMode();
+        await removeWorkersAndCaches();
       }
 
-      status.textContent=testMode?'Загружаем рабочую v82 с тестовыми исправлениями…':'Загружаем приложение напрямую…';
+      status.textContent=testMode?'Загружаем v82 с тестовыми исправлениями…':'Загружаем приложение напрямую…';
       const response=await fetch(`./index.html?safe-source=${stamp}`,{cache:'no-store'});
       if(!response.ok)throw new Error(`index.html: ${response.status}`);
       let html=await response.text();
-
       const closeScript='</scr'+'ipt>';
       const guard=`<script>
         window.PMK_SAFE_MODE=true;
@@ -77,11 +138,10 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
       ${closeScript}`;
 
       html=html.replace(/<link rel="manifest"[^>]*>/i,'');
-
       if(testMode){
-        html=html.replace(/<link rel="stylesheet"[^>]*>/i,match=>`${match}<link rel="stylesheet" href="test-v82-ui-swipe-v1.css?test=${stamp}">`);
-        html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}<script src="app.js?test-base=${stamp}" defer>${closeScript}<script src="test-v82-ui-swipe-v1.js?test=${stamp}" defer>${closeScript}`);
-        html=html.replace('<title>ПМК Календарь</title>','<title>ПМК Календарь · тест v82</title>');
+        html=html.replace(/<link rel="stylesheet"[^>]*>/i,match=>`${match}<link rel="stylesheet" href="test-v82-ui-swipe-v1.css?test=${stamp}">${noteTest?`<link rel="stylesheet" href="floating-note-mobile-v82-1.css?test=${stamp}">`:''}`);
+        html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}<script src="app.js?test-base=${stamp}" defer>${closeScript}<script src="test-v82-ui-swipe-v1.js?test=${stamp}" defer>${closeScript}${noteTest?`<script src="floating-note-mobile-v82-1.js?test=${stamp}" defer>${closeScript}`:''}`);
+        html=html.replace('<title>ПМК Календарь</title>',noteTest?'<title>ПМК Календарь · тест v82.1</title>':'<title>ПМК Календарь · тест v82</title>');
       }else{
         html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}<script src="app.js?safe=${stamp}" defer>${closeScript}`);
       }
@@ -93,11 +153,12 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
       status.className='status error';
       status.textContent=`Запуск не выполнен: ${error.message}`;
       retry.hidden=false;
+      recovery.hidden=false;
     }
   }
 
-  retry.addEventListener('click',launch);
-  launch();
+  retry.addEventListener('click',()=>installMode?installV821():launchDirect());
+  installMode?installV821():launchDirect();
 })();
 </script>
 </body>
