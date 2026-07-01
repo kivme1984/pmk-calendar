@@ -1,5 +1,6 @@
 'use strict';
 
+// Regression trigger after workflow installation.
 const fs = require('fs');
 const assert = require('assert');
 
