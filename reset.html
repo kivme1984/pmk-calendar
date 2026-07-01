@@ -1,1 +1,88 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Обновление ПМК до v87</title><style>body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(580px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}</style></head><body><main><h1>Устанавливаем версию v87</h1><p>Настоящий горизонтальный свайп в «3 дня/Неделя», статусы 2×2 в левом поле и заметка высотой две строки.</p><p id="status" class="status">Проверяем файлы…</p><div class="actions"><button id="retry" hidden>Повторить</button><a id="safe" href="./safe.html?v=87" hidden>Безопасный режим</a><a id="open" href="./?v=87" hidden>Открыть приложение</a></div></main><script>(()=>{const V='87',s=document.querySelector('#status'),r=document.querySelector('#retry'),o=document.querySelector('#open'),safe=document.querySelector('#safe');const wait=reg=>{const w=reg.installing||reg.waiting||reg.active;if(!w||w.state==='activated')return Promise.resolve();return new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error('Сборка не активировалась')),30000);w.addEventListener('statechange',()=>{if(w.state==='activated'){clearTimeout(t);res()}if(w.state==='redundant'){clearTimeout(t);rej(new Error('Установка отклонена'))}})})};async function verify(){const stamp=Date.now(),urls=['./sw.js','./sw-special-router-v87.js','./sw-core-v87.js','./workday-period-note-v86.js','./workday-period-note-v86.css','./compact-floating-note-v73.js','./version-guard-v87.js'];const rs=await Promise.all(urls.map(u=>fetch(`${u}?v=${V}-${stamp}`,{cache:'no-store'})));if(rs.some(x=>!x.ok))throw new Error('Файлы v87 ещё не опубликованы');const [sw,router,core,js,css,note,guard]=await Promise.all(rs.map(x=>x.text()));if(!sw.includes('sw-special-router-v87.js')||!sw.includes('sw-core-v87.js'))throw new Error('Пока отдаётся старый service worker');if(!router.includes('stopImmediatePropagation'))throw new Error('Нет маршрутизатора обновлений');if(!core.includes('workday-period-note-v86.js')||!core.includes('workday-period-note-v86.css'))throw new Error('Финальный модуль v87 не включён');if(!js.includes('event-time-status-grid-v86')||!js.includes("board.style.width = '100%'"))throw new Error('Нет сетки статусов или исправления ширины доски');if(!css.includes('grid-template-columns:repeat(2,minmax(0,1fr))')||!css.includes('width:100%!important')||!css.includes('touch-action:pan-x pan-y'))throw new Error('Стили свайпа или статусов неполные');if(!note.includes('rows="2"')||!note.includes("textarea.style.height = '56px'"))throw new Error('Заметка не двухстрочная');if(!guard.includes("const VERSION = '87'"))throw new Error('Нет контроля v87');new Function(js);new Function(note)}async function run(){r.hidden=true;o.hidden=true;safe.hidden=true;s.className='status';s.textContent='Проверяем свайп, статусы и заметку…';try{await verify();if(!('serviceWorker'in navigator))throw new Error('Service Worker не поддерживается');const reg=await navigator.serviceWorker.register(`./sw.js?v=${V}-${Date.now()}`,{updateViaCache:'none'});await reg.update().catch(()=>null);await wait(reg);s.textContent='v87 установлена. Открываем приложение…';o.hidden=false;setTimeout(()=>location.replace(`./?v=${V}&verified=${Date.now()}`),500)}catch(e){s.className='status error';s.textContent=`Обновление не завершено: ${e.message}`;r.hidden=false;o.hidden=false;safe.hidden=false}}r.addEventListener('click',run);run()})();</script></body></html>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Обновление ПМК до v88</title>
+<style>
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
+main{width:min(580px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a}
+h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}
+.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}
+</style>
+</head>
+<body>
+<main>
+<h1>Устанавливаем версию v88</h1>
+<p>Четыре кнопки статуса размещаются вертикально 4×1 и равномерно заполняют левое поле карточки.</p>
+<p id="status" class="status">Проверяем файлы…</p>
+<div class="actions">
+<button id="retry" hidden>Повторить</button>
+<a id="safe" href="./safe.html?v=88" hidden>Безопасный режим</a>
+<a id="open" href="./?v=88" hidden>Открыть приложение</a>
+</div>
+</main>
+<script>
+(() => {
+  const VERSION = '88';
+  const status = document.querySelector('#status');
+  const retry = document.querySelector('#retry');
+  const open = document.querySelector('#open');
+  const safe = document.querySelector('#safe');
+
+  function waitForActivation(registration) {
+    const worker = registration.installing || registration.waiting || registration.active;
+    if (!worker || worker.state === 'activated') return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Сборка не активировалась')), 30000);
+      worker.addEventListener('statechange', () => {
+        if (worker.state === 'activated') { clearTimeout(timeout); resolve(); }
+        if (worker.state === 'redundant') { clearTimeout(timeout); reject(new Error('Установка отклонена')); }
+      });
+    });
+  }
+
+  async function verify() {
+    const stamp = Date.now();
+    const urls = ['./sw.js','./sw-special-router-v88.js','./sw-core-v88.js','./status-column-v88.css','./version-guard-v88.js'];
+    const responses = await Promise.all(urls.map(url => fetch(`${url}?v=${VERSION}-${stamp}`, { cache:'no-store' })));
+    if (responses.some(response => !response.ok)) throw new Error('Файлы v88 ещё не опубликованы');
+    const [swText, routerText, coreText, cssText, guardText] = await Promise.all(responses.map(response => response.text()));
+    if (!swText.includes('sw-special-router-v88.js') || !swText.includes('sw-core-v88.js')) throw new Error('Пока отдаётся старая версия');
+    if (!routerText.includes('stopImmediatePropagation')) throw new Error('Маршрутизатор обновления не готов');
+    if (!coreText.includes('status-column-v88.css') || !coreText.includes('version-guard-v88.js')) throw new Error('Пакет v88 неполный');
+    if (!cssText.includes('grid-template-columns:1fr!important')) throw new Error('Вертикальная колонка ещё не опубликована');
+    if (!cssText.includes('grid-template-rows:repeat(4,minmax(0,1fr))!important')) throw new Error('Четыре вертикальные строки ещё не опубликованы');
+    if (!guardText.includes("const VERSION = '88'")) throw new Error('Контроль версии v88 не готов');
+  }
+
+  async function run() {
+    retry.hidden = true;
+    open.hidden = true;
+    safe.hidden = true;
+    status.className = 'status';
+    status.textContent = 'Проверяем вертикальную сетку статусов…';
+    try {
+      await verify();
+      if (!('serviceWorker' in navigator)) throw new Error('Service Worker не поддерживается');
+      const registration = await navigator.serviceWorker.register(`./sw.js?v=${VERSION}-${Date.now()}`, { updateViaCache:'none' });
+      await registration.update().catch(() => null);
+      await waitForActivation(registration);
+      status.textContent = 'v88 установлена. Открываем приложение…';
+      open.hidden = false;
+      setTimeout(() => location.replace(`./?v=${VERSION}&verified=${Date.now()}`), 500);
+    } catch (error) {
+      status.className = 'status error';
+      status.textContent = `Обновление не завершено: ${error.message}`;
+      retry.hidden = false;
+      open.hidden = false;
+      safe.hidden = false;
+    }
+  }
+
+  retry.addEventListener('click', run);
+  run();
+})();
+</script>
+</body>
+</html>
