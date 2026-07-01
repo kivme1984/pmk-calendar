@@ -1,0 +1,27 @@
+/* Instant exclusive status routing for isolated v82.6 test. */
+
+.event-card.pmk-status-transitioning{
+  pointer-events:none!important;
+}
+
+.pmk-status-moving-out{
+  opacity:0!important;
+  transform:translateX(-12px) scale(.985)!important;
+  transition:opacity .07s linear,transform .07s ease!important;
+}
+
+.nav-item[data-view="day"] b,
+.nav-item[data-view="in-work"] b,
+.nav-item[data-view="delivery-waiting"] b,
+.nav-item[data-view="completed"] b,
+.nav-item[data-view="archive"] b{
+  min-width:24px!important;
+  text-align:center!important;
+}
+
+html[data-pmk-exclusive-workflow="82.6"] #todayEvents,
+html[data-pmk-exclusive-workflow="82.6"] #inWorkGroups,
+html[data-pmk-exclusive-workflow="82.6"] #completedGroups,
+html[data-pmk-exclusive-workflow="82.6"] #archiveGroups{
+  contain:layout style;
+}
