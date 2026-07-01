@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ПМК Календарь — стабильный запуск</title>
+<style>
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
+main{width:min(620px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-sizing:border-box}
+h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}
+.progress{height:9px;margin-top:14px;border-radius:999px;background:#303030;overflow:hidden}.progress>span{display:block;width:2%;height:100%;border-radius:inherit;background:#f7b500;transition:width .18s ease}
+.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
+</style>
+</head>
+<body>
+<main>
+<h1>Запускаем проверенную полную версию</h1>
+<p>Это точная сборка последней рабочей v87, но без установки и без service worker. Все модули сначала объединяются в один пакет, затем приложение запускается целиком.</p>
+<p id="status" class="status">Подготовка…</p>
+<div class="progress"><span id="bar"></span></div>
+<div class="actions">
+<button id="retry" hidden>Повторить запуск</button>
+<a id="reserve" href="./safe.html?v=87" hidden>Открыть базовую резервную версию</a>
+</div>
+</main>
+<script>
+(() => {
+  const VERSION='95';
+  const status=document.querySelector('#status');
+  const bar=document.querySelector('#bar');
+  const retry=document.querySelector('#retry');
+  const reserve=document.querySelector('#reserve');
+
+  const JS=`
+./app.js?source=87
+./manager-planner-core.js
+./manager-planner-hooks.js
+./address-autocomplete.js?v=41
+./address-mobile-v46.js
+./stability-route.js?v=34
+./stability-cache.js?v=34
+./stability-copy.js?v=34
+./stability-draft.js?v=34
+./google-freeform-import.js?v=36
+./runtime-stability-v37.js
+./fast-calendar-sync-v68.js?v=68
+./returning-client-search.js?v=57
+./client-search-fast-v68.js?v=68
+./smart-paste-v38.js
+./smart-paste-lifecycle-v38.js
+./smart-parser-v45.js
+./voice-parser-fast-v68.js?v=68
+./empty-rug-dimensions-v42.js
+./unified-rug-services-v43.js?v=68
+./pricing-v48.js?v=68
+./pricing-settings-v67.js?v=70
+./manager-ui-v50-preview.js?v=68
+./manager-ui-v50-refinements.js?v=68
+./manager-ui-v51.js?v=70
+./manager-ui-v51-tools-stable.js?v=68
+./android-autofill-off-v53.js?v=55
+./preview-description-v53.js?v=54
+./edit-save-hotfix-v54.js?v=55
+./address-placeholders-off-v56.js?v=56
+./workshop-measurement-v58.js?v=58
+./settings-version-header-v59.js?v=87
+./navigation-layer-swipe-fix-v60.js?v=60
+./planning-refresh-remove-v62.js?v=62
+./header-sync-status-v65.js?v=65
+./reminder-save-confirm-v66.js?v=66
+./manager-workspace-fast-v68.js?v=68
+./yandex-calendar-sync-v69.js?v=69
+./provider-status-manager-v70.js?v=70
+./unlimited-overlaps-v69.js?v=71
+./provider-crud-any-calendar-v72.js?v=72
+./yandex-primary-refresh-v72.js?v=72
+./compact-floating-note-v73.js?v=87
+./status-ledger-v80.js?v=87
+./in-work-workflow-v73.js?v=73
+./status-pipeline-v81.js?v=87
+./archive-policy-v82.js?v=87
+./completed-archive-workflow-v82.js?v=87
+./period-model-v83.js?v=87
+./mobile-period-workday-v83.js?v=87
+./period-class-fix-v83.js?v=87
+./period-header-provider-v85.js?v=87
+./mobile-workflow-fixes-v86.js?v=87
+./workday-period-note-v86.js?v=87
+./version-guard-v87.js?v=87
+`.trim().split(/\s+/);
+
+  const CSS=`
+./styles.css?source=87
+./manager-planner.css?v=32
+./address-autocomplete.css?v=39
+./mobile-rug-layout.css?v=36
+./manager-form-v40.css
+./unified-rug-services-v43.css?v=46
+./manager-ui-v50-preview.css?v=68
+./manager-ui-v50-refinements.css?v=68
+./manager-ui-v51.css?v=68
+./v51-tools-stable.css?v=68
+./pricing-settings-v67.css?v=69
+./preview-readability-v56.css?v=56
+./workshop-measurement-v58.css?v=58
+./settings-version-header-v59.css?v=59
+./navigation-layer-swipe-fix-v60.css?v=60
+./header-sync-status-v65.css?v=65
+./reminder-save-confirm-v66.css?v=66
+./client-search-workflow-v66.css?v=67
+./manager-workspace-v66.css?v=67
+./performance-fixes-v68.css?v=68
+./provider-status-manager-v70.css?v=70
+./compact-floating-note-v73.css?v=87
+./in-work-workflow-v73.css?v=73
+./light-interface-v74.css?v=74
+./contract-required-v75.css?v=75
+./instant-status-feedback-v77.css?v=87
+./completed-archive-workflow-v82.css?v=87
+./mobile-period-workday-v83.css?v=87
+./period-class-fix-v83.css?v=87
+./period-header-provider-v85.css?v=87
+./mobile-workflow-fixes-v86.css?v=87
+./workday-period-note-v86.css?v=87
+`.trim().split(/\s+/);
+
+  const total=1+JS.length+CSS.length;
+  let loaded=0;
+  const setProgress=(text)=>{
+    status.textContent=text;
+    bar.style.width=`${Math.max(2,Math.round(loaded/total*100))}%`;
+  };
+
+  async function disableBrokenInstall(){
+    if('serviceWorker' in navigator){
+      const registrations=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
+    }
+    if('caches' in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.filter(key=>key!=='pmk-calendar-data-v68'&&key.startsWith('pmk-calendar-')).map(key=>caches.delete(key).catch(()=>false)));
+    }
+  }
+
+  async function fetchText(url,stamp){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),25000);
+    try{
+      const separator=url.includes('?')?'&':'?';
+      const response=await fetch(`${url}${separator}direct=${VERSION}-${stamp}`,{cache:'no-store',signal:controller.signal});
+      if(!response.ok)throw new Error(`${url}: HTTP ${response.status}`);
+      const text=await response.text();
+      loaded+=1;
+      setProgress(`Загружено ${loaded} из ${total}`);
+      return text;
+    }catch(error){
+      if(error.name==='AbortError')throw new Error(`${url}: превышено время загрузки`);
+      throw error;
+    }finally{clearTimeout(timer);}
+  }
+
+  async function launch(){
+    retry.hidden=true;
+    reserve.hidden=true;
+    status.className='status';
+    loaded=0;
+    try{
+      setProgress('Отключаем зависшие сборки…');
+      await disableBrokenInstall();
+      const stamp=Date.now();
+
+      const indexPromise=fetchText('./index.html',stamp);
+      const jsPromise=Promise.all(JS.map(url=>fetchText(url,stamp)));
+      const cssPromise=Promise.all(CSS.map(url=>fetchText(url,stamp)));
+      let [html,jsParts,cssParts]=await Promise.all([indexPromise,jsPromise,cssPromise]);
+
+      setProgress('Собираем один проверенный пакет…');
+      jsParts[0]=jsParts[0].replace(/function\s+registerServiceWorker\s*\(\)\s*\{[\s\S]*?\n\}/,'function registerServiceWorker() {}');
+      const guard=`window.PMK_DIRECT_STABLE_VERSION='95';try{if(navigator.serviceWorker){Object.defineProperty(navigator.serviceWorker,'register',{configurable:true,value:()=>Promise.resolve({})});}}catch(e){}`;
+      let js=`${guard}\n\n${jsParts.join('\n\n')}`;
+      const css=cssParts.join('\n\n');
+      js=js.replace(/<\/script/gi,'<\\/script');
+
+      html=html.replace(/<link rel="manifest"[^>]*>/i,'');
+      html=html.replace(/<link rel="stylesheet"[^>]*>/i,`<style>${css}</style>`);
+      html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`<script>${js}<\/script>`);
+
+      if(!html.includes('PMK_DIRECT_STABLE_VERSION'))throw new Error('Не удалось встроить рабочий пакет в страницу');
+      setProgress('Открываем полную рабочую версию…');
+      bar.style.width='100%';
+      document.open();
+      document.write(html);
+      document.close();
+    }catch(error){
+      status.className='status error';
+      status.textContent=`Запуск остановлен: ${error.message}`;
+      bar.style.width='100%';
+      retry.hidden=false;
+      reserve.hidden=false;
+    }
+  }
+
+  retry.addEventListener('click',launch);
+  launch();
+})();
+</script>
+</body>
+</html>
