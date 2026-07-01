@@ -1,0 +1,54 @@
+html[data-pmk-test-version="v82-ui-swipe-v1"] .pmk-test-note-clipboard{
+  display:grid;
+  grid-template-columns:34px 34px;
+  gap:5px;
+}
+
+html[data-pmk-test-version="v82-ui-swipe-v1"] .pmk-test-note-clipboard button{
+  min-width:34px;
+  width:34px;
+  min-height:34px;
+  height:34px;
+  padding:0!important;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(28,123,74,.22)!important;
+  border-radius:9px!important;
+  color:#155f3a!important;
+  background:#fff!important;
+  box-shadow:none!important;
+  font-size:19px!important;
+  line-height:1!important;
+}
+
+html[data-pmk-test-version="v82-ui-swipe-v1"] .pmk-test-note-clipboard button:active{
+  transform:scale(.94);
+  background:#dff4e5!important;
+}
+
+html[data-pmk-test-version="v82-ui-swipe-v1"] .pmk-compact-note-actions{
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  align-items:center;
+}
+
+@media(max-width:520px){
+  html[data-pmk-test-version="v82-ui-swipe-v1"] .pmk-compact-note-widget.is-open .pmk-compact-note-panel{
+    transform:translateY(-18px);
+  }
+
+  html[data-pmk-test-version="v82-ui-swipe-v1"] .pmk-compact-note-actions{
+    grid-template-columns:auto minmax(0,1fr) auto!important;
+    gap:5px!important;
+  }
+
+  html[data-pmk-test-version="v82-ui-swipe-v1"] .pmk-compact-note-actions>#pmkCompactNoteRecognize{
+    min-width:0;
+    padding-left:7px;
+    padding-right:7px;
+  }
+
+  html[data-pmk-test-version="v82-ui-swipe-v1"] .pmk-compact-note-actions>#pmkCompactNoteClear{
+    padding-left:7px;
+    padding-right:7px;
+  }
+}
