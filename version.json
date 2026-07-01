@@ -1,14 +1,11 @@
 {
-  "version": "88",
-  "release": "vertical-status-column-four-by-one",
+  "version": "89",
+  "release": "mobile-fixes-and-google-resync",
   "date": "2026-07-01",
   "features": [
-    "all-v87-functions-preserved",
-    "four-status-buttons-in-one-vertical-column",
-    "status-buttons-evenly-fill-left-field",
-    "larger-separated-touch-targets",
-    "three-day-and-week-scroll-preserved",
-    "google-and-yandex-marks-preserved",
-    "two-line-floating-note-preserved"
+    "vertical-status-buttons-4x1",
+    "mobile-period-scroll-two-axis",
+    "full-google-calendar-resync",
+    "self-contained-service-worker-install"
   ]
 }
