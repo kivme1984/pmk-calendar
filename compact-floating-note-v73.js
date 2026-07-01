@@ -54,8 +54,8 @@
   function autoSize() {
     const textarea = $('#pmkCompactNoteText');
     if (!textarea) return;
-    textarea.style.height = '36px';
-    textarea.style.height = `${Math.min(Math.max(36, textarea.scrollHeight), Math.max(120, window.innerHeight * 0.48))}px`;
+    textarea.style.height = '56px';
+    textarea.style.height = `${Math.min(Math.max(56, textarea.scrollHeight), Math.max(120, window.innerHeight * 0.48))}px`;
   }
 
   function saveText() {
@@ -179,7 +179,7 @@
       <button type="button" id="pmkCompactNoteButton" class="pmk-compact-note-button" aria-label="Открыть или переместить заметку" aria-expanded="false">✎</button>
       <section id="pmkCompactNotePanel" class="pmk-compact-note-panel" aria-hidden="true">
         <header id="pmkCompactNoteDrag"><strong>Заметка менеджера</strong><button type="button" id="pmkCompactNoteClose" aria-label="Закрыть">×</button></header>
-        <textarea id="pmkCompactNoteText" rows="1" placeholder="Текст…"></textarea>
+        <textarea id="pmkCompactNoteText" rows="2" placeholder="Текст…"></textarea>
         <div class="pmk-compact-note-actions">
           <button type="button" id="pmkCompactNoteRecognize">Распознать</button>
           <button type="button" id="pmkCompactNoteClear">Очистить</button>
