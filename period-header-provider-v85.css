@@ -50,13 +50,13 @@
   .app-header .brand-mark{width:43px;height:43px}
   .app-header .header-actions{min-width:0;width:100%;justify-content:flex-end}
   .pmk-provider-status-panel{display:grid;grid-template-columns:minmax(76px,1fr) minmax(76px,1fr) 58px;gap:5px;width:100%;max-width:250px}
-  .pmk-provider-card{display:grid;grid-template-columns:25px minmax(0,1fr) 7px;gap:5px;width:auto!important;min-width:0!important;min-height:52px;padding:6px 7px!important;border-radius:12px!important;color:#171717!important}
-  .pmk-provider-logo{width:25px!important;height:25px!important;border-radius:8px!important;font-size:11px!important}
-  .pmk-provider-copy{display:flex!important;min-width:0;color:#171717!important}
+  .pmk-provider-card{display:grid;grid-template-columns:25px minmax(0,1fr) 7px;grid-template-rows:auto auto;gap:3px 5px;width:auto!important;min-width:0!important;min-height:52px;padding:6px 7px!important;border-radius:12px!important;color:#171717!important}
+  .pmk-provider-logo{grid-column:1;grid-row:1/3;width:25px!important;height:25px!important;border-radius:8px!important;font-size:11px!important;align-self:center}
+  .pmk-provider-copy{grid-column:2;grid-row:1;display:flex!important;min-width:0;color:#171717!important}
   .pmk-provider-copy strong{display:block!important;color:#171717!important;font-size:9px!important;line-height:1.05}
   .pmk-provider-copy small,.pmk-provider-copy em{display:none!important}
-  .pmk-provider-mobile-status{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#56605a;font-size:8px;font-weight:900;line-height:1.05}
-  .pmk-provider-dot{width:7px!important;height:7px!important}
+  .pmk-provider-mobile-status{grid-column:2;grid-row:2;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#56605a;font-size:8px;font-weight:900;line-height:1.05}
+  .pmk-provider-dot{grid-column:3;grid-row:1/3;align-self:center;width:7px!important;height:7px!important}
   .pmk-provider-sync-button{display:grid;place-items:center;align-content:center;gap:3px;width:58px!important;min-width:58px!important;min-height:52px;border-radius:12px!important;color:#171717!important;background:#fff!important}
   .pmk-provider-sync-button small{font-size:8px}
 
