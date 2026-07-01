@@ -1,5 +1,6 @@
 'use strict';
 
+// Regression trigger after workflow installation.
 const assert = require('assert');
 require('../period-model-v83.js');
 
