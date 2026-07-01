@@ -25,7 +25,8 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   const statusTest=testName==='ui-swipe-note-status-v3';
   const noteTest=testName==='ui-swipe-note-v2'||statusTest;
   const testMode=testName==='ui-swipe-v1'||noteTest;
-  const installMode=params.get('install')==='82-1';
+  const installVersion=params.get('install')||'';
+  const installMode=installVersion==='82-1'||installVersion==='82-2';
   const title=document.querySelector('#title');
   const description=document.querySelector('#description');
   const status=document.querySelector('#status');
@@ -33,7 +34,10 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   const recovery=document.querySelector('#recovery');
   const DATA_CACHE='pmk-calendar-data-v68';
 
-  if(installMode){
+  if(installVersion==='82-2'){
+    title.textContent='Устанавливаем тестовую v82.2';
+    description.textContent='Рабочая v82.1 с проверенной шапкой, свайпами и заметкой, плюс четыре кнопки статуса в левой колонке сверху вниз.';
+  }else if(installVersion==='82-1'){
     title.textContent='Устанавливаем v82.1';
     description.textContent='Стабильная v82 с проверенной шапкой, рабочей кнопкой обновления, свайпами во все стороны и улучшенной плавающей заметкой.';
   }else if(statusTest){
@@ -64,44 +68,62 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     return Promise.all(responses.map(response=>response.text()));
   }
 
-  function waitForActivation(registration){
+  function waitForActivation(registration,version){
     const worker=registration.installing||registration.waiting||registration.active;
     if(!worker||worker.state==='activated')return Promise.resolve();
     return new Promise((resolve,reject)=>{
-      const timer=setTimeout(()=>reject(new Error('v82.1 не активировалась за 90 секунд')),90000);
+      const timer=setTimeout(()=>reject(new Error(`v${version} не активировалась за 90 секунд`)),90000);
       worker.addEventListener('statechange',()=>{
         if(worker.state==='activated'){clearTimeout(timer);resolve();}
-        if(worker.state==='redundant'){clearTimeout(timer);reject(new Error('Установка v82.1 была отклонена браузером'));}
+        if(worker.state==='redundant'){clearTimeout(timer);reject(new Error(`Установка v${version} была отклонена браузером`));}
       });
     });
   }
 
-  async function installV821(){
+  function packageFor(version){
+    if(version==='82-2')return {
+      worker:'./sw-v82-2.js',
+      workerMarker:'sw-core-v82-2.js',
+      coreMarker:"const VERSION='82.2'",
+      guardMarker:"const VERSION = '82.2'",
+      files:['./sw-v82-2.js','./sw-core-v82-2.js','./version-guard-v82-2.js','./keep-worker-v82-2.js','./test-v82-ui-swipe-v1.js','./test-v82-ui-swipe-v1.css','./floating-note-mobile-v82-1.js','./floating-note-mobile-v82-1.css','./status-left-column-v82-2.js','./status-left-column-v82-2.css'],
+    };
+    return {
+      worker:'./sw-v82-1.js',
+      workerMarker:'sw-core-v82-1.js',
+      coreMarker:"const VERSION='82.1'",
+      guardMarker:"const VERSION = '82.1'",
+      files:['./sw-v82-1.js','./sw-core-v82-1.js','./version-guard-v82-1.js','./keep-worker-v82-1.js','./test-v82-ui-swipe-v1.js','./test-v82-ui-swipe-v1.css','./floating-note-mobile-v82-1.js','./floating-note-mobile-v82-1.css'],
+    };
+  }
+
+  async function installCandidate(version){
     retry.hidden=true;
     recovery.hidden=true;
     status.className='status';
     try{
       const stamp=Date.now();
-      status.textContent='Проверяем пакет v82.1…';
-      const urls=['./sw-v82-1.js','./sw-core-v82-1.js','./version-guard-v82-1.js','./keep-worker-v82-1.js','./test-v82-ui-swipe-v1.js','./test-v82-ui-swipe-v1.css','./floating-note-mobile-v82-1.js','./floating-note-mobile-v82-1.css'];
-      const texts=await preflight(urls,stamp);
-      if(!texts[0].includes('sw-core-v82-1.js'))throw new Error('Неверная точка запуска v82.1');
-      if(!texts[1].includes("const VERSION='82.1'"))throw new Error('Неверный основной пакет v82.1');
-      if(!texts[2].includes("const VERSION = '82.1'"))throw new Error('Неверный контроль версии v82.1');
+      const pack=packageFor(version);
+      status.textContent=`Проверяем пакет v${version}…`;
+      const texts=await preflight(pack.files,stamp);
+      if(!texts[0].includes(pack.workerMarker))throw new Error(`Неверная точка запуска v${version}`);
+      if(!texts[1].includes(pack.coreMarker))throw new Error(`Неверный основной пакет v${version}`);
+      if(!texts[2].includes(pack.guardMarker))throw new Error(`Неверный контроль версии v${version}`);
       if(!texts[4].includes('PMK_V82_UI_SWIPE_TEST_V1'))throw new Error('Не найдено исправление шапки и свайпов');
       if(!texts[6].includes('PMK_FLOATING_NOTE_MOBILE_V82_1'))throw new Error('Не найдено исправление заметки');
+      if(version==='82-2'&&!texts[8].includes('PMK_STATUS_LEFT_COLUMN_V82_2'))throw new Error('Не найдено исправление вертикальных статусов');
 
       status.textContent='Отключаем прежнюю сборку…';
       await removeWorkersAndCaches();
       if(!('serviceWorker' in navigator))throw new Error('Chrome не поддерживает установку приложения');
 
-      status.textContent='Собираем проверенную v82.1…';
-      const registration=await navigator.serviceWorker.register(`./sw-v82-1.js?v=82-1-${stamp}`,{scope:'./',updateViaCache:'none'});
+      status.textContent=`Собираем v${version}…`;
+      const registration=await navigator.serviceWorker.register(`${pack.worker}?v=${version}-${stamp}`,{scope:'./',updateViaCache:'none'});
       await registration.update().catch(()=>null);
-      await waitForActivation(registration);
+      await waitForActivation(registration,version);
 
-      status.textContent='v82.1 установлена. Открываем календарь…';
-      setTimeout(()=>location.replace(`./?v=82-1&installed=${Date.now()}`),900);
+      status.textContent=`v${version} установлена. Открываем календарь…`;
+      setTimeout(()=>location.replace(`./?v=${version}&installed=${Date.now()}`),900);
     }catch(error){
       status.className='status error';
       status.textContent=`Установка остановилась: ${error.message}`;
@@ -164,8 +186,8 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     }
   }
 
-  retry.addEventListener('click',()=>installMode?installV821():launchDirect());
-  installMode?installV821():launchDirect();
+  retry.addEventListener('click',()=>installMode?installCandidate(installVersion):launchDirect());
+  installMode?installCandidate(installVersion):launchDirect();
 })();
 </script>
 </body>
