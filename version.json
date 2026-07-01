@@ -1,16 +1,17 @@
 {
-  "version": "86",
-  "release": "mobile-workflow-and-dual-provider-fixes",
+  "version": "87",
+  "release": "real-period-scroll-status-grid-and-two-line-note",
   "date": "2026-07-01",
   "features": [
-    "mobile-status-controls-under-date-and-time",
-    "equal-two-by-two-mobile-status-layout",
-    "native-horizontal-and-vertical-touch-scrolling-in-three-day-and-week-views",
-    "touch-scrolling-works-when-gesture-starts-on-an-event",
-    "google-and-yandex-state-visible-near-contract-number",
-    "workflow-navigation-order-in-work-delivery-completed-archive",
-    "yandex-settings-collapsed-by-default",
-    "manager-device-settings-collapsed-by-default",
-    "all-events-summary-filter-active-by-default"
+    "all-v86-business-functions-preserved",
+    "three-day-board-constrained-to-screen-width",
+    "week-board-constrained-to-screen-width",
+    "native-horizontal-swipe-now-has-real-scroll-range",
+    "visible-period-scrollbar-now-has-real-scroll-range",
+    "vertical-page-scroll-preserved",
+    "four-status-buttons-fill-left-column-in-two-by-two-grid",
+    "status-buttons-have-large-separated-touch-targets",
+    "google-and-yandex-marks-preserved-near-contract",
+    "floating-note-empty-field-is-two-lines"
   ]
 }
