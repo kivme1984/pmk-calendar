@@ -1,0 +1,167 @@
+name: Build static PMK v97
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-static-v97.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build real static bundle
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          js_files = [
+            'app.js',
+            'manager-planner-core.js',
+            'manager-planner-hooks.js',
+            'address-autocomplete.js',
+            'address-mobile-v46.js',
+            'stability-route.js',
+            'stability-cache.js',
+            'stability-copy.js',
+            'stability-draft.js',
+            'google-freeform-import.js',
+            'runtime-stability-v37.js',
+            'fast-calendar-sync-v68.js',
+            'returning-client-search.js',
+            'client-search-fast-v68.js',
+            'smart-paste-v38.js',
+            'smart-paste-lifecycle-v38.js',
+            'smart-parser-v45.js',
+            'voice-parser-fast-v68.js',
+            'empty-rug-dimensions-v42.js',
+            'unified-rug-services-v43.js',
+            'pricing-v48.js',
+            'pricing-settings-v67.js',
+            'manager-ui-v50-preview.js',
+            'manager-ui-v50-refinements.js',
+            'manager-ui-v51.js',
+            'manager-ui-v51-tools-stable.js',
+            'android-autofill-off-v53.js',
+            'preview-description-v53.js',
+            'edit-save-hotfix-v54.js',
+            'address-placeholders-off-v56.js',
+            'workshop-measurement-v58.js',
+            'settings-version-header-v59.js',
+            'navigation-layer-swipe-fix-v60.js',
+            'planning-refresh-remove-v62.js',
+            'header-sync-status-v65.js',
+            'reminder-save-confirm-v66.js',
+            'manager-workspace-fast-v68.js',
+            'yandex-calendar-sync-v69.js',
+            'provider-status-manager-v70.js',
+            'unlimited-overlaps-v69.js',
+            'provider-crud-any-calendar-v72.js',
+            'yandex-primary-refresh-v72.js',
+            'compact-floating-note-v73.js',
+            'status-ledger-v80.js',
+            'in-work-workflow-v73.js',
+            'status-pipeline-v81.js',
+            'archive-policy-v82.js',
+            'completed-archive-workflow-v82.js',
+            'period-model-v83.js',
+            'mobile-period-workday-v83.js',
+            'period-class-fix-v83.js',
+            'period-header-provider-v85.js',
+            'mobile-workflow-fixes-v86.js',
+            'workday-period-note-v86.js',
+            'version-guard-v87.js',
+          ]
+
+          css_files = [
+            'styles.css',
+            'manager-planner.css',
+            'address-autocomplete.css',
+            'mobile-rug-layout.css',
+            'manager-form-v40.css',
+            'unified-rug-services-v43.css',
+            'manager-ui-v50-preview.css',
+            'manager-ui-v50-refinements.css',
+            'manager-ui-v51.css',
+            'v51-tools-stable.css',
+            'pricing-settings-v67.css',
+            'preview-readability-v56.css',
+            'workshop-measurement-v58.css',
+            'settings-version-header-v59.css',
+            'navigation-layer-swipe-fix-v60.css',
+            'header-sync-status-v65.css',
+            'reminder-save-confirm-v66.css',
+            'client-search-workflow-v66.css',
+            'manager-workspace-v66.css',
+            'performance-fixes-v68.css',
+            'provider-status-manager-v70.css',
+            'compact-floating-note-v73.css',
+            'in-work-workflow-v73.css',
+            'light-interface-v74.css',
+            'contract-required-v75.css',
+            'instant-status-feedback-v77.css',
+            'completed-archive-workflow-v82.css',
+            'mobile-period-workday-v83.css',
+            'period-class-fix-v83.css',
+            'period-header-provider-v85.css',
+            'mobile-workflow-fixes-v86.css',
+            'workday-period-note-v86.css',
+          ]
+
+          missing = [name for name in js_files + css_files if not Path(name).is_file()]
+          if missing:
+              raise SystemExit('Missing source files: ' + ', '.join(missing))
+
+          app = Path('app.js').read_text(encoding='utf-8')
+          old = "function registerServiceWorker() {\n  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('./sw.js').catch(() => {});\n}"
+          if old not in app:
+              raise SystemExit('registerServiceWorker block changed; refusing unsafe build')
+          app = app.replace(old, "function registerServiceWorker() {}", 1)
+
+          js_parts = [
+              "'use strict';\nwindow.PMK_STATIC_BUNDLE_VERSION = '97';\ndocument.documentElement.dataset.pmkStaticBundle = '97';"
+          ]
+          for name in js_files:
+              text = app if name == 'app.js' else Path(name).read_text(encoding='utf-8')
+              js_parts.append(f"\n/* ===== {name} ===== */\n{text}\n//# sourceURL={name}")
+          Path('pmk-static-v97.js').write_text('\n'.join(js_parts), encoding='utf-8')
+
+          css_parts = []
+          for name in css_files:
+              css_parts.append(f"\n/* ===== {name} ===== */\n" + Path(name).read_text(encoding='utf-8'))
+          Path('pmk-static-v97.css').write_text('\n'.join(css_parts), encoding='utf-8')
+
+          html = Path('index.html').read_text(encoding='utf-8')
+          html = re.sub(r'<link rel="manifest"[^>]*>\s*', '', html, count=1)
+          html = re.sub(r'<link rel="stylesheet"[^>]*>', '<link rel="stylesheet" href="pmk-static-v97.css?v=97">', html, count=1)
+          html = re.sub(r'<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer></script>', '<script src="pmk-static-v97.js?v=97" defer></script>', html, count=1)
+          html = html.replace('href="reset.html"', 'href="static-v97.html?refresh=1"')
+          html = html.replace('<title>ПМК Календарь</title>', '<title>ПМК Календарь v97</title>')
+          if 'pmk-static-v97.js' not in html or 'pmk-static-v97.css' not in html:
+              raise SystemExit('Failed to wire generated bundles into HTML')
+          Path('static-v97.html').write_text(html, encoding='utf-8')
+          PY
+
+          node --check pmk-static-v97.js
+          test -s pmk-static-v97.css
+          test -s static-v97.html
+          grep -q 'pmk-static-v97.js' static-v97.html
+          grep -q 'PMK_STATIC_BUNDLE_VERSION' pmk-static-v97.js
+
+      - name: Commit generated bundle
+        shell: bash
+        run: |
+          git config user.name "pmk-calendar-builder"
+          git config user.email "actions@users.noreply.github.com"
+          git add pmk-static-v97.js pmk-static-v97.css static-v97.html
+          git commit -m "Build verified static PMK v97 bundle" || exit 0
+          git push
