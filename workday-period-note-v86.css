@@ -1,0 +1,46 @@
+/* PMK v86: 2x2 statuses in the left field, real internal period scroll and two-line note */
+
+.event-card-v86{grid-template-columns:132px minmax(0,1fr)!important;grid-template-areas:"time main" "footer footer"!important;overflow:visible}
+.event-card-v86 .event-time{grid-area:time;display:flex;flex-direction:column;align-self:stretch;min-width:0;height:100%;padding:16px 11px;border-right:1px solid var(--line);box-sizing:border-box}
+.event-card-v86 .event-main{grid-area:main;min-width:0;padding:16px 15px 13px}
+.event-card-header-v86{margin-top:8px}
+.event-card-header-v86 h3{margin:0}
+.event-time-status-grid-v86{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(68px,1fr));align-content:stretch;gap:8px;flex:1;min-height:160px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.event-time-status-grid-v86 .status-action{display:grid;place-items:center;width:100%;min-width:0;min-height:0;height:100%;margin:0!important;padding:7px 4px;border-radius:11px;font-size:9px;line-height:1.12;text-align:center;white-space:normal;overflow-wrap:anywhere;box-sizing:border-box}
+.event-time-status-grid-v86 .status-action.active{box-shadow:inset 0 0 0 2px rgba(255,255,255,.34),0 5px 13px rgba(25,98,58,.16)}
+
+.event-card-footer-v86{grid-area:footer;display:grid;grid-template-columns:minmax(126px,1.2fr) minmax(88px,.75fr) 44px;gap:7px;align-items:center;padding:10px 12px 12px;border-top:1px solid var(--line);background:#fafbfa;border-radius:0 0 17px 17px}
+.event-card-footer-v86 .call-button-v86{display:flex!important;align-items:center;justify-content:center;min-height:44px;color:#fff!important;border-color:#18864b!important;background:#1fa35d!important;border-radius:12px;font-size:12px;font-weight:900;text-decoration:none;box-shadow:0 8px 20px rgba(31,163,93,.22);visibility:visible!important;opacity:1!important}
+.event-card-footer-v86 .call-button-v86.phone-missing{color:#737a76!important;border-color:#d8dfda!important;background:#eef1ef!important;box-shadow:none}
+.event-card-footer-v86 .secondary-card-action,.event-card-footer-v86 .menu-button{min-height:44px}
+.event-card-footer-v86 .secondary-card-action{display:grid;place-items:center}
+.event-card-footer-v86 .menu-button{width:44px}
+
+.week-board.pmk-three-days-period,.week-board.pmk-week-period,.week-board.pmk-scrollable-period-v86{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain!important;scroll-snap-type:x proximity;touch-action:pan-x pan-y pinch-zoom!important}
+.week-board.pmk-three-days-period{grid-template-columns:repeat(3,minmax(250px,84vw))!important}
+.week-board.pmk-week-period{grid-template-columns:repeat(7,minmax(235px,78vw))!important}
+.week-board.pmk-three-days-period .day-column,.week-board.pmk-week-period .day-column{scroll-snap-align:start;touch-action:pan-x pan-y pinch-zoom!important}
+.week-board.pmk-three-days-period *,.week-board.pmk-week-period *{touch-action:pan-x pan-y pinch-zoom!important}
+
+.pmk-compact-note-panel textarea,#pmkCompactNoteText{height:56px!important;min-height:56px!important}
+
+@media(max-width:760px){
+  .event-card-v86{grid-template-columns:118px minmax(0,1fr)!important;border-radius:18px}
+  .event-card-v86 .event-time{padding:13px 8px;border-radius:14px 0 0 0}
+  .event-card-v86 .event-time strong{margin-top:11px;font-size:15px;line-height:1.15}
+  .event-card-v86 .event-time span{font-size:10px}
+  .event-card-v86 .event-main{padding:13px 10px 10px}
+  .event-time-status-grid-v86{grid-template-rows:repeat(2,minmax(74px,1fr));gap:7px;min-height:176px;margin-top:12px;padding-top:10px}
+  .event-time-status-grid-v86 .status-action{padding:6px 3px;font-size:8.2px;line-height:1.08}
+  .event-card-footer-v86{grid-template-columns:minmax(118px,1.15fr) minmax(76px,.7fr) 40px;gap:5px;padding:9px}
+  .event-card-footer-v86 .call-button-v86,.event-card-footer-v86 .secondary-card-action,.event-card-footer-v86 .menu-button{min-height:40px;font-size:10px}
+  .event-card-footer-v86 .menu-button{width:40px;font-size:21px}
+}
+
+@media(max-width:380px){
+  .event-card-v86{grid-template-columns:112px minmax(0,1fr)!important}
+  .event-time-status-grid-v86{gap:5px;grid-template-rows:repeat(2,minmax(70px,1fr));min-height:166px}
+  .event-time-status-grid-v86 .status-action{font-size:7.6px;padding:5px 2px}
+  .event-card-footer-v86{grid-template-columns:minmax(108px,1.1fr) minmax(68px,.68fr) 38px}
+  .event-card-footer-v86 .call-button-v86,.event-card-footer-v86 .secondary-card-action{font-size:9px}
+}
