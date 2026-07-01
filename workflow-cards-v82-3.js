@@ -6,8 +6,10 @@
 
   const QUEUE_KEY = 'pmk-calendar-provider-queue-v1';
   const YANDEX_CONFIG_KEY = 'pmk-yandex-calendar-config-v1';
+  const HIDDEN_DAY_STATUSES = new Set(['picked-up', 'in-progress', 'completed', 'archived']);
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const ledger = globalThis.PMK_STATUS_LEDGER_V80_API;
   let scheduled = false;
   let observer = null;
   let rerenderTimer = 0;
@@ -28,6 +30,42 @@
 
   function pmkId(event, data = {}) {
     return String(data.pmkId || event?._pmkId || event?.pmkData?.pmkId || '').trim();
+  }
+
+  function eventUpdatedAt(event = {}) {
+    const value = new Date(event.updated || event.created || event.start?.dateTime || event.start?.date || 0).getTime();
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  function isOperationalEvent(event) {
+    if (!event || typeof eventMeta !== 'function') return false;
+    const data = eventMeta(event);
+    if (pmkId(event, data)) return true;
+    if (event?._provider || event?._providers?.length || event?._yandexMirror) return true;
+    if (typeof isPmkEvent === 'function' && isPmkEvent(event)) return true;
+    if (ledger?.resolve?.(event, data)) return true;
+    return /(?:Статус|Договор)\s*ПМК\s*:/i.test(String(event.description || ''));
+  }
+
+  function eventLogicalKey(event) {
+    const data = eventMeta(event);
+    const explicit = pmkId(event, data);
+    if (explicit) return `pmk:${explicit}`;
+    if (ledger?.key) return `logical:${ledger.key(event, data)}`;
+    return `id:${String(event.id || '')}`;
+  }
+
+  function uniqueOperationalEvents(source = null) {
+    const events = Array.isArray(source)
+      ? source
+      : (typeof getAllEvents === 'function' ? getAllEvents() : []);
+    const unique = new Map();
+    events.filter(isOperationalEvent).forEach(event => {
+      const key = eventLogicalKey(event);
+      const current = unique.get(key);
+      if (!current || eventUpdatedAt(event) >= eventUpdatedAt(current)) unique.set(key, event);
+    });
+    return [...unique.values()];
   }
 
   function configuredProviders() {
@@ -102,13 +140,12 @@
   }
 
   function workflowCounts() {
-    if (typeof getAllEvents !== 'function' || typeof eventMeta !== 'function') return { work: 0, delivery: 0, completed: 0 };
-    const all = getAllEvents();
+    const all = uniqueOperationalEvents();
+    const completedSource = globalThis.PMK_COMPLETED_ARCHIVE_WORKFLOW_V82_API?.completedEvents?.() || [];
     return {
       work: all.filter(event => ['picked-up', 'in-progress'].includes(eventMeta(event).requestStatus)).length,
       delivery: all.filter(event => eventMeta(event).requestStatus === 'pending-delivery').length,
-      completed: globalThis.PMK_COMPLETED_ARCHIVE_WORKFLOW_V82_API?.completedEvents?.().length
-        ?? all.filter(event => eventMeta(event).requestStatus === 'completed').length,
+      completed: uniqueOperationalEvents(completedSource).length,
     };
   }
 
@@ -144,12 +181,52 @@
     const current = typeof state !== 'undefined' ? state.currentView : '';
     $$('[data-workflow-view]', strip).forEach(button => {
       const active = button.dataset.workflowView === current;
-      if (button.classList.contains('active') !== active) button.classList.toggle('active', active);
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
     });
+  }
+
+  function removeWrongCategoryCards() {
+    const container = $('#todayEvents');
+    if (!container || typeof state === 'undefined' || typeof getAllEvents !== 'function') return;
+    const currentView = state.currentView;
+    if (currentView !== 'day' && currentView !== 'delivery-waiting') return;
+
+    let removed = false;
+    $$('[data-event-card]', container).forEach(card => {
+      const event = getAllEvents().find(item => String(item.id) === String(card.dataset.eventCard));
+      if (!event) return;
+      const status = eventMeta(event).requestStatus;
+      const keep = currentView === 'delivery-waiting'
+        ? status === 'pending-delivery'
+        : !HIDDEN_DAY_STATUSES.has(status);
+      if (!keep) {
+        card.remove();
+        removed = true;
+      }
+    });
+
+    if (removed && !container.querySelector('[data-event-card]')) {
+      container.innerHTML = currentView === 'delivery-waiting'
+        ? '<div class="empty-state"><strong>Заявок, ожидающих доставки, нет.</strong></div>'
+        : '<div class="empty-state"><strong>Активных заявок на этот день нет.</strong><br>Забранные и выполненные заявки находятся в отдельных разделах.</div>';
+    }
+  }
+
+  function updateVisibleSummaryFromDom() {
+    if (typeof state === 'undefined' || state.currentView !== 'day') return;
+    const cards = $$('#todayEvents [data-event-card]');
+    setText($('#summaryTotal'), cards.length);
+    const events = cards.map(card => getAllEvents().find(item => String(item.id) === String(card.dataset.eventCard))).filter(Boolean);
+    setText($('#summaryPickup'), events.filter(event => eventMeta(event).visitType === 'pickup').length);
+    setText($('#summaryDelivery'), events.filter(event => eventMeta(event).visitType === 'delivery').length);
+    setText($('#summaryAttention'), events.filter(event => !eventMeta(event).phone || !displayAddress(eventMeta(event), event)).length);
   }
 
   function applyAll() {
     scheduled = false;
+    removeWrongCategoryCards();
+    updateVisibleSummaryFromDom();
     renderWorkflowStrip();
     $$('.event-card[data-event-card]').forEach(decorateCard);
   }
@@ -166,13 +243,28 @@
       try { globalThis.PMK_IN_WORK_WORKFLOW_V73_API?.render?.(); } catch {}
       try { globalThis.PMK_COMPLETED_ARCHIVE_WORKFLOW_V82_API?.render?.(); } catch {}
       try { if (typeof renderAll === 'function') renderAll(); } catch {}
-      schedule();
-    }, 35);
+      requestAnimationFrame(() => {
+        removeWrongCategoryCards();
+        updateVisibleSummaryFromDom();
+        renderWorkflowStrip();
+        schedule();
+      });
+    }, 90);
   }
 
   function bind() {
     document.addEventListener('click', event => {
-      if (event.target.closest('[data-status-event][data-status]')) setTimeout(rerenderWorkflowViews, 0);
+      const statusButton = event.target.closest('[data-status-event][data-status]');
+      if (statusButton) {
+        const nextStatus = statusButton.dataset.status;
+        if (HIDDEN_DAY_STATUSES.has(nextStatus)) {
+          const card = statusButton.closest('[data-event-card]');
+          if (card && typeof state !== 'undefined' && state.currentView === 'day') {
+            requestAnimationFrame(() => card.remove());
+          }
+        }
+        setTimeout(rerenderWorkflowViews, 0);
+      }
       if (event.target.closest('.nav-item,[data-open-day],#prevDayBtn,#nextDayBtn')) setTimeout(schedule, 0);
     }, true);
 
