@@ -10,7 +10,7 @@
   let raf = 0;
 
   function providerSet(event = {}) {
-    const providers = new Set(Array.isArray(event._providers) ? event._providers : []);
+    const providers = new Set(Array.isArray(event._providers) ? event._providers.map(value => String(value).toLowerCase()) : []);
     if (event._provider) providers.add(String(event._provider).toLowerCase());
     const id = String(event.id || '');
     const link = String(event.htmlLink || '').toLowerCase();
@@ -105,6 +105,9 @@
       prev.disabled = board.scrollLeft <= 1;
       next.disabled = board.scrollLeft >= max - 1;
       bar.dataset.progress = String(Math.round(ratio * 100));
+      track.setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
+      track.setAttribute('aria-valuemin', '0');
+      track.setAttribute('aria-valuemax', '100');
     });
   }
 
@@ -184,9 +187,12 @@
       }
       const provider = card.dataset.provider === 'google' ? 'Google' : 'Яндекс';
       const full = $('[data-provider-text]', card)?.textContent || 'Проверяем';
-      mobile.textContent = shortStatus(card.dataset.status);
-      card.title = `${provider}: ${full}`;
-      card.setAttribute('aria-label', `${provider}. Статус: ${full}`);
+      const compact = shortStatus(card.dataset.status);
+      if (mobile.textContent !== compact) mobile.textContent = compact;
+      const title = `${provider}: ${full}`;
+      if (card.title !== title) card.title = title;
+      const aria = `${provider}. Статус: ${full}`;
+      if (card.getAttribute('aria-label') !== aria) card.setAttribute('aria-label', aria);
     });
     const sync = $('#pmkProvidersSyncBtn');
     if (sync && sync.dataset.v85 !== '1') {
