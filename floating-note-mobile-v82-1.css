@@ -40,7 +40,7 @@
     font-size:19px!important;
   }
 
-  .pmk-compact-note-panel{
-    transform:translateY(-4px);
+  .pmk-compact-note-widget.is-open .pmk-compact-note-panel{
+    transform:translateY(-18px);
   }
 }
