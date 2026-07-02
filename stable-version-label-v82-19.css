@@ -1,0 +1,27 @@
+.pmk-version-indicator-v82-10.pmk-stable-version-v82-19{
+  border-color:rgba(31,126,76,.34)!important;
+  color:#155d38!important;
+  background:rgba(159,224,184,.24)!important;
+}
+.pmk-version-indicator-v82-10.pmk-stable-version-v82-19 i{
+  background:#1f7e4c!important;
+  box-shadow:0 0 0 4px rgba(31,126,76,.12)!important;
+}
+.pmk-stable-build-badge-v82-19{
+  position:fixed;
+  right:max(10px,env(safe-area-inset-right));
+  bottom:max(10px,env(safe-area-inset-bottom));
+  z-index:9999;
+  padding:6px 9px;
+  border:1px solid rgba(31,126,76,.3);
+  border-radius:999px;
+  color:#155d38;
+  background:rgba(232,249,239,.94);
+  box-shadow:0 8px 24px rgba(0,0,0,.13);
+  font:800 10px/1.1 Arial,sans-serif;
+  letter-spacing:.04em;
+  pointer-events:none;
+}
+@media(max-width:760px){
+  .pmk-stable-build-badge-v82-19{font-size:9px;padding:5px 8px}
+}
