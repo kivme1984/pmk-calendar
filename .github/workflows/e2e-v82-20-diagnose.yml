@@ -1,31 +1,22 @@
-name: E2E PMK v82.20 Compact
+name: Diagnose PMK v82.20
 
 on:
   pull_request:
     branches: [main]
     paths:
-      - 'period-direct-v82-19.js'
-      - 'period-direct-v82-19.css'
-      - 'event-provider-badges-v82-20.js'
-      - 'event-provider-badges-v82-20.css'
-      - 'week-touch-scroll-v82-20.js'
-      - 'week-touch-scroll-v82-20.css'
-      - 'test-version-label-v82-20.js'
-      - 'test-version-label-v82-20.css'
-      - 'test-v82-20.html'
-      - 'ci-check-v82-20.mjs'
-      - 'ci-assemble-v82-20.py'
-      - '.github/workflows/e2e-v82-20-compact.yml'
+      - '.github/workflows/e2e-v82-20-diagnose.yml'
+      - 'ci-diagnose-v82-20.mjs'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  verify:
+  diagnose:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Prepare exact test
+      - name: Prepare exact build
         run: |
           git clone -q --branch "$GITHUB_HEAD_REF" --depth 1 "https://github.com/$GITHUB_REPOSITORY.git" /tmp/src
           cd /tmp/src
@@ -33,15 +24,15 @@ jobs:
           python3 ci-assemble-v82-20.py
           cp test-version-label-v82-20.js /tmp/pmk-v82-20/
           cp test-version-label-v82-20.css /tmp/pmk-v82-20/
-      - name: Install Chromium
+      - name: Install browser
         run: |
           cd /tmp/src
           npm install --silent playwright@1.52.0
           npx playwright install --with-deps chromium >/dev/null 2>&1
-      - name: Verify mobile scroll and provider badges
+      - name: Capture startup state
         run: |
           cd /tmp/pmk-v82-20
           python3 -m http.server 8000 >/tmp/pmk-v82-20-http.log 2>&1 &
           cd /tmp/src
           sleep 2
-          node ci-check-v82-20.mjs
+          node ci-diagnose-v82-20.mjs

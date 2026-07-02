@@ -1,21 +1,13 @@
-name: E2E PMK v82.20 Compact
+name: User validation PMK v82.20
 
 on:
   pull_request:
     branches: [main]
     paths:
-      - 'period-direct-v82-19.js'
-      - 'period-direct-v82-19.css'
-      - 'event-provider-badges-v82-20.js'
-      - 'event-provider-badges-v82-20.css'
-      - 'week-touch-scroll-v82-20.js'
-      - 'week-touch-scroll-v82-20.css'
-      - 'test-version-label-v82-20.js'
-      - 'test-version-label-v82-20.css'
-      - 'test-v82-20.html'
-      - 'ci-check-v82-20.mjs'
-      - 'ci-assemble-v82-20.py'
+      - '.github/workflows/e2e-v82-20-user-validation.yml'
       - '.github/workflows/e2e-v82-20-compact.yml'
+      - 'test-v82-20.html'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Prepare exact test
+      - name: Prepare exact v82.20 build
         run: |
           git clone -q --branch "$GITHUB_HEAD_REF" --depth 1 "https://github.com/$GITHUB_REPOSITORY.git" /tmp/src
           cd /tmp/src
@@ -38,7 +30,7 @@ jobs:
           cd /tmp/src
           npm install --silent playwright@1.52.0
           npx playwright install --with-deps chromium >/dev/null 2>&1
-      - name: Verify mobile scroll and provider badges
+      - name: Verify navigation, touch scrolling and provider states
         run: |
           cd /tmp/pmk-v82-20
           python3 -m http.server 8000 >/tmp/pmk-v82-20-http.log 2>&1 &
