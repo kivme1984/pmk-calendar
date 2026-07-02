@@ -18,7 +18,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 </main>
 <script>
 (() => {
-  const COMMIT='a76a496ea33820c9d364599c393339b6cca1fd71';
+  const COMMIT='4e6f393da7d6978f26ae705d23cbbd32366c9f70';
   const BASE=`https://cdn.jsdelivr.net/gh/kivme1984/pmk-calendar@${COMMIT}/`;
   const status=document.querySelector('#status');
   const bar=document.querySelector('#bar');
@@ -40,7 +40,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     'compact-floating-note-v73.js','status-ledger-v80.js','in-work-workflow-v73.js','status-pipeline-v81.js',
     'archive-policy-v82.js','completed-archive-workflow-v82.js','floating-note-mobile-v82-1.js','status-left-column-v82-2.js',
     'workflow-fast-v82-7.js','workflow-transition-fast-v82-7.js','final-ui-v82-10.js',
-    'final-layout-lock-v82-12.js','final-period-lock-v82-13.js'
+    'final-layout-lock-v82-12.js','final-period-lock-v82-13.js','version-indicator-v82-13.js'
   ];
 
   const CSS=[
@@ -56,7 +56,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   ];
 
   async function verify(){
-    const keys=['index.html','app.js','final-layout-lock-v82-12.js','final-period-lock-v82-13.js','final-period-lock-v82-13.css'];
+    const keys=['index.html','app.js','final-layout-lock-v82-12.js','final-period-lock-v82-13.js','final-period-lock-v82-13.css','version-indicator-v82-13.js'];
     const responses=await Promise.all(keys.map(path=>fetch(`${BASE}${path}`,{cache:'no-store'})));
     const failed=responses.find(response=>!response.ok);
     if(failed)throw new Error(`Не загрузился ${failed.url.split('/').pop()} (${failed.status})`);
