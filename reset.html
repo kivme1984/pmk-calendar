@@ -22,6 +22,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 <script>
 (() => {
   const params=new URLSearchParams(location.search);
+  const smartParserMode=params.get('smart-parser')==='1';
   const requestedTest=params.get('test');
   if(requestedTest){
     const allowed=new Set(['82-9','82-10','82-11','82-12','82-16','82-17','82-19','82-20']);
@@ -38,12 +39,23 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   const retry=document.querySelector('#retry');
   const safe=document.querySelector('#safe');
   const open=document.querySelector('#open');
+  const title=document.querySelector('#title');
+  const description=document.querySelector('#description');
+
+  if(smartParserMode){
+    title.textContent='Подготавливаем умный ввод для v82.19.1';
+    description.textContent='Тестовый режим запускается отдельно и не изменяет обычную работу календаря.';
+    open.href='./?v=82.19.1&smart-parser=1';
+    open.textContent='Открыть умный ввод';
+  }
 
   async function verify(){
     const stamp=Date.now();
     const checks=[
       ['./sw.js','sw-core-v82.js'],
       ['./sw-core-v82.js',"const VERSION='82.19.1'"],
+      ['./sw-core-v82.js','smart-parser-feature-gate.js'],
+      ['./smart-parser-feature-gate.js','PMK_SMART_PARSER_FEATURE_GATE'],
       ['./version-guard-v82.js',"const RELEASE = '82.19.1'"],
       ['./event-cloud-indicators-v82-19.js','PMK_EVENT_CLOUD_INDICATORS_V82_19'],
       ['./period-direct-v82-19.js','PMK_PERIOD_DIRECT_V82_19'],
@@ -75,17 +87,18 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   async function update(){
     retry.hidden=true;safe.hidden=true;open.hidden=true;
     status.className='status';
-    status.textContent='Проверяем облачные статусы, меню и свайпы…';
+    status.textContent=smartParserMode?'Проверяем умный ввод и актуальную сборку v82.19.1…':'Проверяем облачные статусы, меню и свайпы…';
     try{
       await verify();
       if(!('serviceWorker' in navigator))throw new Error('Этот браузер не поддерживает обновление приложения');
-      status.textContent='Устанавливаем проверенный пакет v82.19.1…';
+      status.textContent=smartParserMode?'Устанавливаем тестовый режим поверх v82.19.1…':'Устанавливаем проверенный пакет v82.19.1…';
       const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}-${Date.now()}`,{updateViaCache:'none'});
       await registration.update();
       await waitForActivation(registration);
-      status.textContent='Основная версия v82.19.1 установлена. Открываем приложение…';
+      status.textContent=smartParserMode?'Умный ввод проверен. Открываем тестовый режим…':'Основная версия v82.19.1 установлена. Открываем приложение…';
       open.hidden=false;
-      setTimeout(()=>location.replace(`./?v=${VERSION}&verified=${Date.now()}`),700);
+      const target=`./?v=${VERSION}&verified=${Date.now()}${smartParserMode?'&smart-parser=1':''}`;
+      setTimeout(()=>location.replace(target),700);
     }catch(error){
       status.className='status error';
       status.textContent=`Обновление не завершено: ${error.message}`;
