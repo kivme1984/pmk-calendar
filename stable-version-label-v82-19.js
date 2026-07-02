@@ -7,6 +7,8 @@
   const VERSION = '82.19.1';
   const LABEL = `Резервная v${VERSION}`;
   let scheduled = false;
+  let indicatorObserver = null;
+  let observedIndicator = null;
 
   function installSearchNormalization() {
     if (globalThis.PMK_SEARCH_NORMALIZATION_V82_19 || typeof eventSearchText !== 'function') return;
@@ -56,6 +58,19 @@
     button.addEventListener('click', () => setTimeout(persistPricing, 0));
   }
 
+  function watchIndicator(indicator) {
+    if (!indicator || indicator === observedIndicator) return;
+    indicatorObserver?.disconnect();
+    observedIndicator = indicator;
+    indicatorObserver = new MutationObserver(scheduleApply);
+    indicatorObserver.observe(indicator, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'href', 'title'],
+    });
+  }
+
   function apply() {
     scheduled = false;
     installSearchNormalization();
@@ -66,6 +81,7 @@
 
     const indicator = document.querySelector('#pmkVersionIndicator');
     if (indicator) {
+      watchIndicator(indicator);
       if (indicator.className !== 'pmk-version-indicator-v82-10 is-current pmk-stable-version-v82-19') {
         indicator.className = 'pmk-version-indicator-v82-10 is-current pmk-stable-version-v82-19';
       }
