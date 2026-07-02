@@ -52,6 +52,10 @@
     };
   }
 
+  function stateSignature(status) {
+    return [status.google ? 1 : 0, status.yandex ? 1 : 0, status.pendingGoogle ? 1 : 0, status.pendingYandex ? 1 : 0].join('');
+  }
+
   function badge(provider, letter, synced, pending) {
     const title = synced
       ? `${provider}: событие синхронизировано`
@@ -62,12 +66,15 @@
     return `<span class="pmk-event-provider-badge pmk-event-provider-${slug} ${synced ? 'is-synced' : 'is-offline'}${pending ? ' is-pending' : ''}" title="${title}" aria-label="${title}">${letter}</span>`;
   }
 
-  function statusHtml(event) {
+  function badgeNode(event) {
     const status = providerState(event);
-    return `<span class="pmk-event-provider-badges" data-pmk-event-providers>
+    const signature = stateSignature(status);
+    const template = document.createElement('template');
+    template.innerHTML = `<span class="pmk-event-provider-badges" data-pmk-event-providers data-pmk-provider-signature="${signature}">
       ${badge('Google', 'G', status.google, status.pendingGoogle)}
       ${badge('Яндекс', 'Я', status.yandex, status.pendingYandex)}
     </span>`;
+    return { node: template.content.firstElementChild, signature };
   }
 
   function eventById(id) {
@@ -81,42 +88,34 @@
     return eventById(id);
   }
 
-  function replaceStatus(host, event, placement = 'append') {
+  function placeStatus(host, event, placement = 'append', anchor = null) {
     if (!host || !event) return;
-    $('[data-pmk-event-providers]', host)?.remove();
-    const template = document.createElement('template');
-    template.innerHTML = statusHtml(event).trim();
-    const badges = template.content.firstElementChild;
-    if (!badges) return;
-    if (placement === 'prepend') host.prepend(badges);
-    else host.append(badges);
+    const next = badgeNode(event);
+    if (!next.node) return;
+    const existing = $('[data-pmk-event-providers]', host);
+    if (existing?.dataset?.pmkProviderSignature === next.signature) return;
+    existing?.remove();
+    if (anchor) anchor.insertAdjacentElement('afterend', next.node);
+    else if (placement === 'prepend') host.prepend(next.node);
+    else host.append(next.node);
   }
 
   function decorateFullCard(card) {
     const event = eventForNode(card);
     const header = $('.event-card-header', card);
     if (!event || !header) return;
-    $('[data-pmk-event-providers]', header)?.remove();
-    const contract = $('.contract-control', header);
-    const template = document.createElement('template');
-    template.innerHTML = statusHtml(event).trim();
-    const badges = template.content.firstElementChild;
-    if (!badges) return;
-    if (contract) contract.insertAdjacentElement('afterend', badges);
-    else header.prepend(badges);
+    placeStatus(header, event, 'prepend', $('.contract-control', header));
   }
 
   function decoratePeriodCard(card) {
     const event = eventForNode(card);
-    if (!event) return;
-    replaceStatus(card, event, 'append');
+    if (event) placeStatus(card, event);
   }
 
   function decorateHistoryCard(card) {
     const event = eventForNode(card);
     const row = $('.history-compact-title-row', card);
-    if (!event || !row) return;
-    replaceStatus(row, event, 'append');
+    if (event && row) placeStatus(row, event);
   }
 
   function decorateAll() {
@@ -135,7 +134,11 @@
     if (observer) return;
     const root = $('.main-content') || document.body;
     observer = new MutationObserver((mutations) => {
-      if (mutations.some((mutation) => mutation.type === 'childList' && (mutation.addedNodes.length || mutation.removedNodes.length))) schedule();
+      const relevant = mutations.some((mutation) => mutation.type === 'childList' && [...mutation.addedNodes].some((node) => node.nodeType === 1 && (
+        node.matches?.('[data-event-card],[data-open-event].day-event,[data-history-event]')
+        || node.querySelector?.('[data-event-card],[data-open-event].day-event,[data-history-event]')
+      )));
+      if (relevant) schedule();
     });
     observer.observe(root, { childList: true, subtree: true });
   }
