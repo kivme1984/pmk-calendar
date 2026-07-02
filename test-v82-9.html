@@ -11,7 +11,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 <body>
 <main>
 <h1>Полный тест v82.9</h1>
-<p>Это браузерная проверка без установки. Загружается полный функционал v82 и новые изменения интерфейса.</p>
+<p>Это браузерная проверка без установки. Установленная рабочая версия и её кэш не изменяются.</p>
 <p id="status" class="status">Подготовка…</p>
 <div class="progress"><span id="bar"></span></div>
 <div class="actions">
@@ -25,7 +25,6 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   const bar=document.querySelector('#bar');
   const retry=document.querySelector('#retry');
   const recovery=document.querySelector('#recovery');
-  const DATA_CACHE='pmk-calendar-data-v68';
 
   const JS=[
     './app.js','./manager-planner-core.js','./manager-planner-hooks.js','./address-autocomplete.js','./address-mobile-v46.js',
@@ -56,17 +55,6 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 
   function set(text,percent){status.textContent=text;bar.style.width=`${percent}%`;}
 
-  async function clean(){
-    if('serviceWorker' in navigator){
-      const registrations=await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
-    }
-    if('caches' in window){
-      const keys=await caches.keys();
-      await Promise.all(keys.filter(key=>key!==DATA_CACHE&&key.startsWith('pmk-calendar-')).map(key=>caches.delete(key).catch(()=>false)));
-    }
-  }
-
   async function checkKeyFiles(stamp){
     const files=['./index.html','./workflow-fast-v82-7.js','./final-ui-v82-9.js','./final-ui-v82-9.css','./pmk-release.json'];
     const responses=await Promise.all(files.map(url=>fetch(`${url}?check=${stamp}`,{cache:'no-store'})));
@@ -80,8 +68,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     retry.hidden=true;recovery.hidden=true;status.className='status';
     try{
       const stamp=Date.now();
-      set('Отключаем установленную сборку только для этой проверки…',12);
-      await clean();
+      set('Оставляем установленную версию без изменений…',12);
       set('Проверяем файлы теста…',28);
       await checkKeyFiles(stamp);
       set('Подключаем полный функционал…',48);
