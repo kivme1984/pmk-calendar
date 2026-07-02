@@ -176,7 +176,7 @@
     }
 
     let settlement = '';
-    const settlement = text.match(/(?:город|г\.|деревня|пос(?:е[̈ё]лок)?\.?|село|снт|тиз|микрорайон|мкр\.?)\s*([а-яёa-z.'’-]+(?:\s+[а-яёa-z.'’-]+){0,2})/i);
+    const settlementMatch = text.match(/(?:город|г\.|деревня|пос(?:е[̈ё]лок)?\.?|село|снт|тиз|микрорайон|мкр\.?)\s*([а-яёa-z.'’-]+(?:\s+[а-яёa-z.'’-]+){0,2})/i);
     if (settlementMatch) settlement = titleCase(settlementMatch[1]);
     if (/нижний\s+новгород|(?:^|\s)нн(?:\s|$)/i.test(text)) settlement = 'Нижний Новгород';
 
