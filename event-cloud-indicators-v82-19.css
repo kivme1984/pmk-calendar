@@ -24,7 +24,7 @@
   line-height:1;
   letter-spacing:-.04em;
   text-shadow:none;
-  transition:color .16s ease,opacity .16s ease;
+  transition:none;
 }
 
 .pmk-event-cloud-provider-v82-19.is-google.is-synced{
