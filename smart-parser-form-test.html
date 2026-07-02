@@ -18,13 +18,14 @@
       if (!response.ok) throw new Error(`Не удалось загрузить форму: ${response.status}`);
       let html = await response.text();
       html = html.replace('<title>ПМК Календарь</title>', '<title>ПМК · Тест умного ввода</title>');
-      html = html.replace('</head>', '<link rel="stylesheet" href="./smart-parser-form-adapter.css?v=1"></head>');
+      html = html.replace('</head>', '<link rel="stylesheet" href="./smart-parser-form-adapter.css?v=2"></head>');
       const scripts = [
-        '<script src="./smart-parser-next-core.js?v=3" defer></' + 'script>',
-        '<script src="./smart-parser-next.js?v=3" defer></' + 'script>',
-        '<script src="./smart-parser-next-refinements.js?v=3" defer></' + 'script>',
-        '<script src="./smart-parser-next-real-rules.js?v=3" defer></' + 'script>',
-        '<script src="./smart-parser-next-scope-rules.js?v=1" defer></' + 'script>',
+        '<script src="./smart-parser-next-core.js?v=4" defer></' + 'script>',
+        '<script src="./smart-parser-next.js?v=4" defer></' + 'script>',
+        '<script src="./smart-parser-next-refinements.js?v=4" defer></' + 'script>',
+        '<script src="./smart-parser-next-real-rules.js?v=4" defer></' + 'script>',
+        '<script src="./smart-parser-next-scope-rules.js?v=2" defer></' + 'script>',
+        '<script src="./smart-parser-next-final-rules.js?v=1" defer></' + 'script>',
         '<script src="./smart-parser-form-adapter.js?v=2" defer></' + 'script>',
       ].join('');
       html = html.replace('</body>', `${scripts}</body>`);
