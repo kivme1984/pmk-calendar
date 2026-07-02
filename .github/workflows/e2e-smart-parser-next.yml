@@ -8,6 +8,7 @@ on:
       - 'smart-parser-next.js'
       - 'smart-parser-next-refinements.js'
       - 'ci-check-smart-parser-next.mjs'
+      - 'ci-check-smart-parser-real-patterns.mjs'
       - '.github/workflows/e2e-smart-parser-next.yml'
   workflow_dispatch:
 
@@ -28,6 +29,7 @@ jobs:
         run: |
           set -o pipefail
           node --require ./smart-parser-next-refinements.js ci-check-smart-parser-next.mjs 2>&1 | tee smart-parser-test.log
+          node --require ./smart-parser-next-refinements.js ci-check-smart-parser-real-patterns.mjs 2>&1 | tee -a smart-parser-test.log
       - if: always()
         uses: actions/upload-artifact@v4
         with:
