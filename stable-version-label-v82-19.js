@@ -18,8 +18,19 @@
     };
   }
 
+  function ensureCompatibilityNodes() {
+    if (!document.querySelector('#threeDaysCount')) {
+      const counter = document.createElement('span');
+      counter.id = 'threeDaysCount';
+      counter.hidden = true;
+      counter.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(counter);
+    }
+  }
+
   function apply() {
     installSearchNormalization();
+    ensureCompatibilityNodes();
     document.documentElement.dataset.pmkCandidate = VERSION;
     if (document.title !== `ПМК Календарь · ${LABEL}`) {
       document.title = `ПМК Календарь · ${LABEL}`;
