@@ -23,13 +23,14 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   const safe=document.querySelector('#safe');
   const open=document.querySelector('#open');
 
-  async function openV829Test(){
-    document.querySelector('#pageTitle').textContent='Открываем полный тест v82.9';
+  async function openBrowserTest(version){
+    const file=`test-v${version.replace('.','-')}.html`;
+    document.querySelector('#pageTitle').textContent=`Открываем полный тест v${version}`;
     document.querySelector('#pageDescription').textContent='Тест запускается в браузере без установки и без изменения рабочей версии.';
     status.textContent='Проверяем тестовую страницу…';
     try{
-      const response=await fetch(`./test-v82-9.html?gateway=${Date.now()}`,{cache:'no-store'});
-      if(!response.ok)throw new Error(`test-v82-9.html: ${response.status}`);
+      const response=await fetch(`./${file}?gateway=${Date.now()}`,{cache:'no-store'});
+      if(!response.ok)throw new Error(`${file}: ${response.status}`);
       const html=await response.text();
       document.open();
       document.write(html);
@@ -38,12 +39,13 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
       status.className='status error';
       status.textContent=`Тест не открылся: ${error.message}`;
       retry.hidden=false;
-      retry.onclick=openV829Test;
+      retry.onclick=()=>openBrowserTest(version);
     }
   }
 
-  if(params.get('test')==='82-9'){
-    openV829Test();
+  const requestedTest=params.get('test');
+  if(requestedTest==='82-9'||requestedTest==='82-10'){
+    openBrowserTest(requestedTest.replace('-', '.'));
     return;
   }
 
