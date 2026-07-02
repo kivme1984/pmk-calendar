@@ -51,7 +51,7 @@ try{
   await page.evaluate(({id,old})=>{const e=state.localEvents.find(x=>x.id===id),d={...eventMeta(e),eventId:id,requestStatus:'completed',completedAt:old};Object.assign(e,toGoogleEvent(d),{updated:old});persistLocalEvents();renderAll();},{id,old:new Date(Date.now()-8*86400000).toISOString()});
   await nav('archive'); await wait(id=>!!document.querySelector(`[data-history-event="${id}"]`),id);
 
-  await nav('reminder'); await page.fill('#reminderDate',monday);await page.fill('#reminderTime','12:00');await page.fill('#reminderText','Проверить резервную версию');await page.click('#reminderForm button[type="submit"]');await page.waitForSelector('#pmkReminderConfirmDialog[open]');await page.click('#pmkReminderConfirmSave');await wait(()=>state.localEvents.some(e=>String(e.id).startsWith('local-reminder-')));
+  await nav('reminder'); await page.fill('#reminderDate',monday);await page.fill('#reminderTime','12:00');await page.fill('#reminderText','Проверить резервную версию');await page.click('#reminderForm button[type="submit"]');await page.waitForSelector('#pmkReminderConfirmDialog[open]');await page.click('#pmkReminderConfirmSave');await wait(()=>state.localEvents.some(e=>String(e.id).startsWith('local-reminder-')));await page.waitForSelector('#pmkReminderConfirmDialog',{state:'hidden'});await page.waitForTimeout(300);
 
   await nav('settings'); await page.click('#pricingSettingsCard > summary');await page.fill('#pricingSetting-minimum','1950');await page.fill('#durationSetting','45');await page.click('#saveSettingsBtn');
   await wait(()=>state.settings.minimumOrder===1950&&state.settings.pricing?.minimum===1950&&state.settings.duration===45);
