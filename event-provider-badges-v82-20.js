@@ -58,7 +58,8 @@
       : pending
         ? `${provider}: изменение ожидает синхронизации`
         : `${provider}: событие не синхронизировано`;
-    return `<span class="pmk-event-provider-badge pmk-event-provider-${provider.toLowerCase()} ${synced ? 'is-synced' : 'is-offline'}${pending ? ' is-pending' : ''}" title="${title}" aria-label="${title}">${letter}</span>`;
+    const slug = provider === 'Яндекс' ? 'yandex' : 'google';
+    return `<span class="pmk-event-provider-badge pmk-event-provider-${slug} ${synced ? 'is-synced' : 'is-offline'}${pending ? ' is-pending' : ''}" title="${title}" aria-label="${title}">${letter}</span>`;
   }
 
   function statusHtml(event) {
