@@ -23,6 +23,15 @@ const snapshot = async (label) => page.evaluate((name) => ({
   hasThreeDays: Boolean(document.querySelector('.nav-item[data-view="three-days"]')),
 }), label);
 
+const openNav = async (view) => {
+  await page.click('#menuToggle');
+  await page.evaluate((target) => {
+    const item = document.querySelector(`.nav-item[data-view="${target}"]`);
+    if (!item) throw new Error(`Navigation item not found: ${target}`);
+    item.click();
+  }, view);
+};
+
 try {
   await page.goto('http://127.0.0.1:8000/test-v82-19.html?ci=1', {
     waitUntil: 'domcontentloaded',
@@ -41,8 +50,7 @@ try {
     throw new Error(`Old interface detected: ${JSON.stringify(day)}`);
   }
 
-  await page.click('#menuToggle');
-  await page.click('.nav-item[data-view="week"]');
+  await openNav('week');
   await page.waitForFunction(() => {
     const board = document.querySelector('#weekEvents');
     return document.querySelector('#periodTitle')?.textContent?.trim() === 'Неделя'
@@ -52,10 +60,10 @@ try {
   }, null, { timeout: 30000 });
 
   const week = await snapshot('week');
+  console.log(`WEEK ${JSON.stringify(week)}`);
   if (week.stateView !== 'week') throw new Error(`Week state mismatch: ${JSON.stringify(week)}`);
 
-  await page.click('#menuToggle');
-  await page.click('.nav-item[data-view="month"]');
+  await openNav('month');
   await page.waitForFunction(() => {
     const board = document.querySelector('#weekEvents');
     const columns = board?.querySelectorAll('.day-column').length || 0;
@@ -66,13 +74,13 @@ try {
   }, null, { timeout: 30000 });
 
   const month = await snapshot('month');
+  console.log(`MONTH ${JSON.stringify(month)}`);
   if (month.stateView !== 'month') throw new Error(`Month state mismatch: ${JSON.stringify(month)}`);
 
-  await page.click('#menuToggle');
-  await page.click('.nav-item[data-view="day"]');
+  await openNav('day');
   await page.waitForFunction(() => document.querySelector('#view-today')?.classList.contains('active'), null, { timeout: 30000 });
 
-  console.log(JSON.stringify({ day, week, month }));
+  console.log(`DAY ${JSON.stringify(day)}`);
 } finally {
   await browser.close();
 }
