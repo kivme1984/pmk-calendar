@@ -131,14 +131,14 @@ try {
       && board.querySelectorAll('.day-column').length === 7
       && board.querySelectorAll('.day-event [data-pmk-event-providers]').length === 3;
   }, null, { timeout: 30000 });
+  await page.waitForTimeout(1900);
 
   const gesture = await page.evaluate(async () => {
     document.body.style.minHeight = '2400px';
     const board = document.querySelector('#weekEvents');
-    const target = board?.querySelector('.day-column');
-    if (!board || !target) throw new Error('Week board not found');
+    if (!board) throw new Error('Week board not found');
 
-    const fire = (type, x, y) => {
+    const fire = (target, type, x, y) => {
       const event = new Event(type, { bubbles: true, cancelable: true });
       const point = { clientX: x, clientY: y };
       Object.defineProperty(event, 'touches', { value: type === 'touchend' ? [] : [point] });
@@ -146,19 +146,22 @@ try {
       target.dispatchEvent(event);
     };
 
+    let target = board.querySelector('.day-column');
+    if (!target) throw new Error('Week day card not found');
     window.scrollTo(0, 0);
-    fire('touchstart', 210, 700);
-    fire('touchmove', 208, 500);
-    fire('touchmove', 207, 290);
-    fire('touchend', 207, 290);
+    fire(target, 'touchstart', 210, 700);
+    fire(target, 'touchmove', 208, 500);
+    fire(target, 'touchmove', 207, 290);
+    fire(target, 'touchend', 207, 290);
     await new Promise((resolve) => setTimeout(resolve, 80));
     const vertical = window.scrollY;
 
+    target = board.querySelector('.day-column');
     board.scrollLeft = 0;
-    fire('touchstart', 350, 410);
-    fire('touchmove', 210, 408);
-    fire('touchmove', 80, 407);
-    fire('touchend', 80, 407);
+    fire(target, 'touchstart', 350, 410);
+    fire(target, 'touchmove', 210, 408);
+    fire(target, 'touchmove', 80, 407);
+    fire(target, 'touchend', 80, 407);
     await new Promise((resolve) => setTimeout(resolve, 80));
     const horizontal = board.scrollLeft;
     return { vertical, horizontal };
