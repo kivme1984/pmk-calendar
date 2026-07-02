@@ -30,6 +30,7 @@
   }
 
   async function lockVersionState(force = false) {
+    if (globalThis.PMK_STABLE_BACKUP) return;
     const indicator = $('#pmkVersionIndicator');
     if (!indicator) return;
     if (!force && Date.now() - versionCheckedAt < 60000) return;
