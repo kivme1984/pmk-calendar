@@ -4,6 +4,12 @@
   if (globalThis.PMK_MENU_PERFORMANCE_V82_19) return;
   globalThis.PMK_MENU_PERFORMANCE_V82_19 = true;
 
+  const metrics = globalThis.PMK_MENU_PERFORMANCE_V82_19_STATE = {
+    installed: false,
+    open: false,
+    deferredRenders: 0,
+    flushedRenders: 0,
+  };
   let queuedRender = false;
   let flushing = false;
   let installed = false;
@@ -17,12 +23,14 @@
     const previous = globalThis.renderAll;
     if (previous.__pmkMenuPerformanceV8219) {
       installed = true;
+      metrics.installed = true;
       return true;
     }
 
     function guardedRenderAll(...args) {
       if (sidebarOpen() && !flushing) {
         queuedRender = true;
+        metrics.deferredRenders += 1;
         return;
       }
       return previous(...args);
@@ -32,6 +40,7 @@
     guardedRenderAll.__pmkPrevious = previous;
     globalThis.renderAll = guardedRenderAll;
     installed = true;
+    metrics.installed = true;
     return true;
   }
 
@@ -40,8 +49,12 @@
     queuedRender = false;
     flushing = true;
     requestAnimationFrame(() => {
-      try { globalThis.renderAll?.(); }
-      finally { flushing = false; }
+      try {
+        metrics.flushedRenders += 1;
+        globalThis.renderAll?.();
+      } finally {
+        flushing = false;
+      }
     });
   }
 
@@ -51,6 +64,7 @@
     if (!sidebar || !menu) return false;
 
     const open = sidebar.classList.contains('open');
+    metrics.open = open;
     document.body.classList.toggle('pmk-sidebar-open', open);
     document.documentElement.classList.toggle('pmk-menu-active-v82-19', open);
     menu.setAttribute('aria-expanded', String(open));
