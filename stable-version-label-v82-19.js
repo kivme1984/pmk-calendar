@@ -6,6 +6,7 @@
 
   const VERSION = '82.19.1';
   const LABEL = `Резервная v${VERSION}`;
+  let scheduled = false;
 
   function installSearchNormalization() {
     if (globalThis.PMK_SEARCH_NORMALIZATION_V82_19 || typeof eventSearchText !== 'function') return;
@@ -56,22 +57,23 @@
   }
 
   function apply() {
+    scheduled = false;
     installSearchNormalization();
     ensureCompatibilityNodes();
     installPricingPersistence();
     document.documentElement.dataset.pmkCandidate = VERSION;
-    if (document.title !== `ПМК Календарь · ${LABEL}`) {
-      document.title = `ПМК Календарь · ${LABEL}`;
-    }
+    if (document.title !== `ПМК Календарь · ${LABEL}`) document.title = `ПМК Календарь · ${LABEL}`;
 
     const indicator = document.querySelector('#pmkVersionIndicator');
     if (indicator) {
-      indicator.className = 'pmk-version-indicator-v82-10 is-current pmk-stable-version-v82-19';
-      indicator.href = '#';
-      indicator.title = 'Открыта проверенная резервная версия ПМК Календаря';
-      if (indicator.textContent?.trim() !== LABEL) {
-        indicator.innerHTML = `<i></i><span>${LABEL}</span>`;
+      if (indicator.className !== 'pmk-version-indicator-v82-10 is-current pmk-stable-version-v82-19') {
+        indicator.className = 'pmk-version-indicator-v82-10 is-current pmk-stable-version-v82-19';
       }
+      if (indicator.getAttribute('href') !== '#') indicator.href = '#';
+      if (indicator.title !== 'Открыта проверенная резервная версия ПМК Календаря') {
+        indicator.title = 'Открыта проверенная резервная версия ПМК Календаря';
+      }
+      if (indicator.textContent?.trim() !== LABEL) indicator.innerHTML = `<i></i><span>${LABEL}</span>`;
     }
 
     let badge = document.querySelector('#pmkStableBuildBadgeV8219');
@@ -84,15 +86,25 @@
     }
   }
 
+  function scheduleApply() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(apply);
+  }
+
   function boot() {
     apply();
-    const observer = new MutationObserver(() => apply());
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    const brand = document.querySelector('.app-header .brand');
+    if (brand) new MutationObserver(scheduleApply).observe(brand, { childList: true });
+
     let attempts = 0;
     const timer = setInterval(() => {
       attempts += 1;
-      apply();
-      if (attempts >= 80) clearInterval(timer);
+      scheduleApply();
+      const ready = document.querySelector('#pmkVersionIndicator')
+        && document.querySelector('#pmkStableBuildBadgeV8219')
+        && document.querySelector('#saveSettingsBtn')?.dataset.pmkStablePricingV8219 === '1';
+      if (ready || attempts >= 12) clearInterval(timer);
     }, 250);
   }
 
