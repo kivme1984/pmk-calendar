@@ -24,10 +24,13 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   const open=document.querySelector('#open');
 
   async function openBrowserTest(version){
-    const file=`test-v${version.replace('.','-')}.html`;
-    document.querySelector('#pageTitle').textContent=`Открываем полный тест v${version}`;
-    document.querySelector('#pageDescription').textContent='Тест запускается в браузере без установки и без изменения рабочей версии.';
-    status.textContent='Проверяем тестовую страницу…';
+    const stable=version==='82.19';
+    const file=stable?'stable-v82-19-1.html':`test-v${version.replace('.','-')}.html`;
+    document.querySelector('#pageTitle').textContent=stable?'Открываем стабильную v82.19.1':`Открываем полный тест v${version}`;
+    document.querySelector('#pageDescription').textContent=stable
+      ?'Исправленная рабочая версия: навигация недели, вертикальный свайп и правильная маркировка сборки.'
+      :'Тест запускается в браузере без установки и без изменения рабочей версии.';
+    status.textContent=stable?'Проверяем стабильную сборку…':'Проверяем тестовую страницу…';
     try{
       const response=await fetch(`./${file}?gateway=${Date.now()}`,{cache:'no-store'});
       if(!response.ok)throw new Error(`${file}: ${response.status}`);
@@ -37,7 +40,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
       document.close();
     }catch(error){
       status.className='status error';
-      status.textContent=`Тест не открылся: ${error.message}`;
+      status.textContent=`Версия не открылась: ${error.message}`;
       retry.hidden=false;
       retry.onclick=()=>openBrowserTest(version);
     }
