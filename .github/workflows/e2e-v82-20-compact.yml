@@ -10,6 +10,8 @@ on:
       - 'event-provider-badges-v82-20.css'
       - 'week-touch-scroll-v82-20.js'
       - 'week-touch-scroll-v82-20.css'
+      - 'test-version-label-v82-20.js'
+      - 'test-version-label-v82-20.css'
       - 'test-v82-20.html'
       - 'ci-check-v82-20.mjs'
       - 'ci-assemble-v82-20.py'
@@ -29,6 +31,8 @@ jobs:
           cd /tmp/src
           git fetch -q --depth 1 origin 58f8368d6d35a007e661f28b0b46a4e3aa9824e7
           python3 ci-assemble-v82-20.py
+          cp test-version-label-v82-20.js /tmp/pmk-v82-20/
+          cp test-version-label-v82-20.css /tmp/pmk-v82-20/
       - name: Install Chromium
         run: |
           cd /tmp/src
