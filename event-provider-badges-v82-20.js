@@ -35,11 +35,10 @@
 
   function providerState(event) {
     const pmkId = pmkIdOf(event);
-    const pending = new Set(
-      readQueue()
-        .filter((item) => !pmkId || String(item?.pmkId || '') === pmkId)
-        .map((item) => String(item?.provider || '')),
-    );
+    const queued = pmkId
+      ? readQueue().filter((item) => String(item?.pmkId || '') === pmkId)
+      : [];
+    const pending = new Set(queued.map((item) => String(item?.provider || '')));
     const providers = new Set(Array.isArray(event?._providers) ? event._providers : []);
     const id = String(event?.id || '');
     const yandexNative = event?._provider === 'yandex' || id.startsWith('local-yandex-');
