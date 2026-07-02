@@ -29,15 +29,24 @@
 
 .pmk-event-cloud-provider-v82-19.is-google.is-synced{
   color:#1a73e8;
+  opacity:1;
 }
 
 .pmk-event-cloud-provider-v82-19.is-yandex.is-synced{
   color:#fc3f1d;
+  opacity:1;
 }
 
-.pmk-event-cloud-provider-v82-19.is-pending{
-  color:#9a9a9a;
+.pmk-event-cloud-provider-v82-19.is-google.is-pending,
+.pmk-event-cloud-provider-v82-19.is-yandex.is-pending{
+  color:#9a9a9a!important;
   opacity:.72;
+}
+
+.pmk-event-cloud-provider-v82-19.is-google.is-offline,
+.pmk-event-cloud-provider-v82-19.is-yandex.is-offline{
+  color:#a5a5a5!important;
+  opacity:1;
 }
 
 .event-card-header .pmk-event-cloud-status-v82-19{
@@ -61,8 +70,9 @@
   font-size:18px;
 }
 
-:root[data-theme="dark"] .pmk-event-cloud-provider-v82-19{
-  color:#747474;
+:root[data-theme="dark"] .pmk-event-cloud-provider-v82-19.is-google.is-offline,
+:root[data-theme="dark"] .pmk-event-cloud-provider-v82-19.is-yandex.is-offline{
+  color:#747474!important;
 }
 
 @media(max-width:700px){
