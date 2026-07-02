@@ -16,7 +16,13 @@ try {
   await page.click('#smartFormSampleBtn');
   await page.waitForFunction(() => Boolean(globalThis.PMK_LAST_FORM_MAPPING));
 
-  const mapping = await page.evaluate(() => globalThis.PMK_LAST_FORM_MAPPING);
+  const diagnostic = await page.evaluate(() => ({
+    parsed: globalThis.PMK_LAST_FORM_PARSE,
+    mapping: globalThis.PMK_LAST_FORM_MAPPING,
+  }));
+  const mapping = diagnostic.mapping;
+  console.log('PARSE_DIAGNOSTIC', JSON.stringify(diagnostic, null, 2));
+
   assert.equal(mapping.data.customerName, 'Марина');
   assert.equal(mapping.data.phone, '+79000000000');
   assert.equal(mapping.data.orderSource, 'Avito 2');
@@ -30,6 +36,16 @@ try {
 
   await page.click('#smartFormApplyBtn');
   await page.waitForFunction(() => document.querySelectorAll('#rugsContainer .rug-card').length === 2);
+
+  const formDiagnostic = await page.evaluate(() => [...document.querySelectorAll('#rugsContainer .rug-card')].map(card => ({
+    length: card.querySelector('.rug-length')?.value,
+    width: card.querySelector('.rug-width')?.value,
+    material: card.querySelector('.rug-material')?.value,
+    pile: card.querySelector('.rug-pile')?.value,
+    issues: [...card.querySelectorAll('.rug-issues input:checked')].map(input => input.value),
+    services: [...card.querySelectorAll('.rug-services input:checked')].map(input => input.value),
+  })));
+  console.log('FORM_DIAGNOSTIC', JSON.stringify(formDiagnostic, null, 2));
 
   assert.equal(await page.inputValue('#customerName'), 'Марина');
   assert.equal(await page.inputValue('#phone'), '+79000000000');
