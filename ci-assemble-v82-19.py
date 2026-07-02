@@ -20,8 +20,8 @@ if archive.returncode:
 for name in (
     'period-direct-v82-19.js',
     'period-direct-v82-19.css',
-    'week-touch-scroll-v82-20.js',
-    'week-touch-scroll-v82-20.css',
+    'week-touch-scroll-v82-19-stable.js',
+    'week-touch-scroll-v82-19-stable.css',
     'stable-version-label-v82-19.js',
     'stable-version-label-v82-19.css',
     'test-v82-19.html',

@@ -11,7 +11,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 <body>
 <main>
 <h1>Резервная версия v82.19.1</h1>
-<p>Основа — точная рабочая v82.12. Исправлены переключение недели и месяца, возврат прокрутки к началу и вертикальный свайп по карточкам на Android.</p>
+<p>Та же рабочая версия. Исправлено только движение страницы вверх и вниз, когда палец находится на карточке дня в режиме «Неделя».</p>
 <p id="status" class="status">Подготовка проверенной сборки…</p>
 <div class="progress"><span id="bar"></span></div>
 <div class="actions"><button id="retry" type="button" hidden>Повторить запуск</button><a id="openStable" href="./reset.html?test=82-12&release=20260702-4" hidden>Открыть исходную v82.12</a></div>
@@ -21,6 +21,8 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   const BASE_COMMIT='58f8368d6d35a007e661f28b0b46a4e3aa9824e7';
   const BASE=`https://cdn.jsdelivr.net/gh/kivme1984/pmk-calendar@${BASE_COMMIT}/`;
   const FIX='./';
+  const BUILD='20260702-v8219-vertical-1';
+  const asset=(path)=>`${FIX}${path}?v=${BUILD}`;
   const status=document.querySelector('#status');
   const bar=document.querySelector('#bar');
   const retry=document.querySelector('#retry');
@@ -61,12 +63,12 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     const checks=[
       [BASE+'index.html','базовая страница'],
       [BASE+'final-layout-lock-v82-12.js','рабочая карточка'],
-      [FIX+'period-direct-v82-19.js','переключение периода'],
-      [FIX+'period-direct-v82-19.css','стили периода'],
-      [FIX+'week-touch-scroll-v82-20.js','сенсорная прокрутка'],
-      [FIX+'week-touch-scroll-v82-20.css','стили сенсорной прокрутки'],
-      [FIX+'stable-version-label-v82-19.js','маркировка версии'],
-      [FIX+'stable-version-label-v82-19.css','стили маркировки']
+      [asset('period-direct-v82-19.js'),'переключение периода'],
+      [asset('period-direct-v82-19.css'),'стили периода'],
+      [asset('week-touch-scroll-v82-19-stable.js'),'сенсорная прокрутка'],
+      [asset('week-touch-scroll-v82-19-stable.css'),'стили сенсорной прокрутки'],
+      [asset('stable-version-label-v82-19.js'),'маркировка версии'],
+      [asset('stable-version-label-v82-19.css'),'стили маркировки']
     ];
     const responses=await Promise.all(checks.map(([url])=>fetch(`${url}${url.includes('?')?'&':'?'}check=${Date.now()}`,{cache:'no-store'})));
     const failedIndex=responses.findIndex(response=>!response.ok);
@@ -74,7 +76,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     const [html,card,period,,touch,,label]=await Promise.all(responses.map(response=>response.text()));
     if(!card.includes('PMK_FINAL_LAYOUT_LOCK_V82_12'))throw new Error('Не получена подтверждённая рабочая v82.12');
     if(!period.includes('PMK_PERIOD_DIRECT_V82_19')||!period.includes('previousLeft'))throw new Error('Не получено исправление возврата недели к началу');
-    if(!touch.includes('PMK_WEEK_TOUCH_SCROLL_V82_20'))throw new Error('Не получено исправление вертикального свайпа');
+    if(!touch.includes('PMK_WEEK_TOUCH_SCROLL_V82_19_STABLE')||!touch.includes("session.axis === 'y'"))throw new Error('Не получено исправление вертикального свайпа');
     if(!label.includes('PMK_STABLE_VERSION_LABEL_V82_19'))throw new Error('Не получена маркировка резервной версии');
     return html;
   }
@@ -84,17 +86,17 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     try{
       set('Загружаем точную рабочую основу…',20);
       let html=await verify();
-      set('Подключаем исправленную навигацию и свайпы…',68);
+      set('Подключаем исправленную вертикальную прокрутку…',68);
       const closeScript='</scr'+'ipt>';
       const guard=`<script>window.PMK_V82_ISOLATED_TEST=true;window.PMK_TEST_VERSION='82.19.1';window.PMK_STABLE_BACKUP=true;try{if(navigator.serviceWorker){Object.defineProperty(navigator.serviceWorker,'register',{configurable:true,value:()=>Promise.resolve({active:null})});}}catch(e){}${closeScript}`;
       const css=CSS.map(path=>`<link rel="stylesheet" href="${BASE}${path}">`).join('')
-        +`<link rel="stylesheet" href="${FIX}period-direct-v82-19.css">`
-        +`<link rel="stylesheet" href="${FIX}week-touch-scroll-v82-20.css">`
-        +`<link rel="stylesheet" href="${FIX}stable-version-label-v82-19.css">`;
+        +`<link rel="stylesheet" href="${asset('period-direct-v82-19.css')}">`
+        +`<link rel="stylesheet" href="${asset('week-touch-scroll-v82-19-stable.css')}">`
+        +`<link rel="stylesheet" href="${asset('stable-version-label-v82-19.css')}">`;
       const before=JS_BEFORE_DIRECT.map(path=>`<script src="${BASE}${path}" defer>${closeScript}`).join('');
-      const direct=`<script src="${FIX}period-direct-v82-19.js" defer>${closeScript}`;
+      const direct=`<script src="${asset('period-direct-v82-19.js')}" defer>${closeScript}`;
       const after=JS_AFTER_DIRECT.map(path=>`<script src="${BASE}${path}" defer>${closeScript}`).join('');
-      const additions=`<script src="${FIX}week-touch-scroll-v82-20.js" defer>${closeScript}<script src="${FIX}stable-version-label-v82-19.js" defer>${closeScript}`;
+      const additions=`<script src="${asset('week-touch-scroll-v82-19-stable.js')}" defer>${closeScript}<script src="${asset('stable-version-label-v82-19.js')}" defer>${closeScript}`;
       html=html.replace(/<link rel="manifest"[^>]*>/i,'');
       html=html.replace(/<link rel="stylesheet"[^>]*>/i,css);
       html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}${before}${direct}${after}${additions}`);
