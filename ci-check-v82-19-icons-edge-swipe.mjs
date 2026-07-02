@@ -48,13 +48,20 @@ try {
     && document.querySelector('#pmkManagerLaunchpad.pmk-icon-actions-v82-19')
   ), null, { timeout: 120000 });
 
-  const actions = await page.evaluate(() => [...document.querySelectorAll('#pmkManagerLaunchpad [data-workspace-action]')].map(button => ({
-    action: button.dataset.workspaceAction,
-    text: button.textContent.trim(),
-    label: button.getAttribute('aria-label'),
-    title: button.getAttribute('title'),
-    svg: Boolean(button.querySelector('svg')),
-  })));
+  const actions = await page.evaluate(() => [...document.querySelectorAll('#pmkManagerLaunchpad [data-workspace-action]')].map(button => {
+    const box = button.getBoundingClientRect();
+    return {
+      action: button.dataset.workspaceAction,
+      text: button.textContent.trim(),
+      label: button.getAttribute('aria-label'),
+      title: button.getAttribute('title'),
+      svg: Boolean(button.querySelector('svg')),
+      x: Math.round(box.x),
+      y: Math.round(box.y),
+      width: Math.round(box.width),
+      height: Math.round(box.height),
+    };
+  }));
 
   const expected = ['paste', 'client', 'slots', 'calculate'];
   if (actions.length !== 4 || expected.some(action => !actions.find(item => item.action === action))) {
@@ -62,6 +69,12 @@ try {
   }
   if (actions.some(item => item.text || !item.label || !item.title || !item.svg)) {
     throw new Error(`Quick actions are not icon-only and accessible: ${JSON.stringify(actions)}`);
+  }
+  if (Math.max(...actions.map(item => item.y)) - Math.min(...actions.map(item => item.y)) > 3) {
+    throw new Error(`Quick actions are not on one row: ${JSON.stringify(actions)}`);
+  }
+  if (actions.some(item => item.width < 55 || item.height < 46)) {
+    throw new Error(`Quick action touch targets are too small: ${JSON.stringify(actions)}`);
   }
 
   await page.click('#pmkManagerLaunchpad [data-workspace-action="calculate"]');
