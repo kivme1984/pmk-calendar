@@ -105,21 +105,68 @@
     };
   }
 
+  function contactRoleFromSegment(segment = '') {
+    const value = clean(segment);
+    if (/заказчик[^.\n]*$/i.test(value)) return 'Заказчик';
+    if (/встретит[^.\n]*$|будет\s+отдавать[^.\n]*$/i.test(value)) return 'Встречает курьера';
+    if (/если\s+не\s+дозвонитесь[^.\n]*$|запасн[^.\n]*$|второй\s+номер[^.\n]*$/i.test(value)) return 'Дополнительный номер';
+    if (/для\s+доставк[^.\n]*$|возврат[^.\n]*$/i.test(value)) return 'Контакт для возврата';
+    if (/супруг|муж/i.test(value)) return 'Супруг';
+    if (/супруга|жена/i.test(value)) return 'Супруга';
+    return '';
+  }
+
+  function contactNameFromSegment(segment = '', role = '') {
+    const value = clean(segment);
+    const rolePatterns = {
+      'Заказчик': /заказчик\s+([А-ЯЁа-яё]{2,25}(?:\s+[А-ЯЁа-яё]{2,25}){0,2})[^А-ЯЁа-яё]*$/i,
+      'Встречает курьера': /(?:встретит|будет\s+отдавать)\s+([А-ЯЁа-яё]{2,25}(?:\s+[А-ЯЁа-яё]{2,25}){0,2})[^А-ЯЁа-яё]*$/i,
+    };
+    const explicit = rolePatterns[role]?.exec(value)?.[1] || '';
+    if (explicit) return titleCase(explicit);
+    const candidates = [...value.matchAll(/(?:^|[\s,.;(])([А-ЯЁ][а-яё]{2,24})(?:\s+([А-ЯЁ][а-яё]{2,24}))?(?=[\s,.;)]|$)/g)]
+      .map(match => clean([match[1], match[2]].filter(Boolean).join(' ')))
+      .filter(name => !/^(?:Авито|Сайт|Фск|Нфс|Забор|Доставка|Район|Ковер|Цена|Дом|Улица|Подъезд|Этаж)$/i.test(name));
+    return titleCase(candidates.at(-1) || '');
+  }
+
+  function bindContacts(text = '', phones = []) {
+    const source = clean(text);
+    return phones.map((phone, index) => {
+      const start = index === 0 ? 0 : phones[index - 1].index + phones[index - 1].raw.length;
+      const segmentStart = Math.max(start, source.lastIndexOf('.', phone.index - 1) + 1, source.lastIndexOf('\n', phone.index - 1) + 1);
+      const segment = source.slice(segmentStart, phone.index);
+      const role = contactRoleFromSegment(segment) || phone.role || 'Клиент';
+      return {
+        phone: phone.phone,
+        role,
+        name: contactNameFromSegment(segment, role),
+        index: phone.index,
+        raw: phone.raw,
+      };
+    });
+  }
+
   function parse(rawText = '') {
     const parsed = core.parse(rawText);
     const addresses = priorityAddresses(parsed.text, parsed.district);
     if (addresses.primaryAddress?.street && addresses.primaryAddress?.house) parsed.addresses.primaryAddress = addresses.primaryAddress;
     if (addresses.returnAddress?.street && addresses.returnAddress?.house) parsed.addresses.returnAddress = addresses.returnAddress;
 
-    const warnings = parsed.confidence.warnings.filter(warning => warning !== 'Адрес требует проверки');
+    const boundContacts = bindContacts(parsed.text, parsed.phones);
+    parsed.phones = boundContacts.map(({ phone, role, index, raw }) => ({ phone, role, index, raw }));
+    parsed.contacts = boundContacts.map(({ name, phone, role }) => ({ name, phone, role }));
+
+    const warnings = parsed.confidence.warnings.filter(warning => warning !== 'Адрес требует проверки' && warning !== 'Имя клиента не распознано');
     if (!parsed.addresses.primaryAddress?.street || !parsed.addresses.primaryAddress?.house) warnings.push('Адрес требует проверки');
+    if (!parsed.contacts.some(contact => contact.name)) warnings.push('Имя клиента не распознано');
     parsed.confidence.warnings = [...new Set(warnings)];
     parsed.confidence.score = Math.max(0, 100 - parsed.confidence.warnings.length * 12);
     parsed.confidence.level = parsed.confidence.score >= 85 ? 'high' : parsed.confidence.score >= 60 ? 'medium' : 'low';
     return parsed;
   }
 
-  const api = { ...core, parse, priorityAddresses, parseAddressSegment };
+  const api = { ...core, parse, priorityAddresses, parseAddressSegment, bindContacts };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   globalScope.PMK_SMART_PARSER_NEXT = api;
 })(typeof window !== 'undefined' ? window : globalThis);
