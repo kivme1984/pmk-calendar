@@ -3,7 +3,7 @@
 (() => {
   if (globalThis.PMK_VERSION_INDICATOR_V82_13) return;
   globalThis.PMK_VERSION_INDICATOR_V82_13 = true;
-  const CURRENT = '82.13';
+  const CURRENT = String(globalThis.PMK_TEST_VERSION || '82.13');
   let applying = false;
 
   function compare(a, b) {
@@ -22,7 +22,7 @@
     if (!node) return;
     applying = true;
     try {
-      const response = await fetch(`./pmk-release.json?v82-13=${Date.now()}`, { cache: 'no-store' });
+      const response = await fetch(`./pmk-release.json?version-check=${encodeURIComponent(CURRENT)}-${Date.now()}`, { cache: 'no-store' });
       const release = response.ok ? await response.json() : { version: CURRENT };
       const hasUpdate = compare(release.version, CURRENT) > 0;
       node.className = `pmk-version-indicator-v82-10 ${hasUpdate ? 'has-update' : 'is-current'}`;
