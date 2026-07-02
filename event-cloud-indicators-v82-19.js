@@ -6,6 +6,12 @@
 
   const QUEUE_KEY = 'pmk-calendar-provider-queue-v1';
   const YANDEX_PREFIX = 'local-yandex-';
+  const COLORS = {
+    google: '#1a73e8',
+    yandex: '#fc3f1d',
+    offline: '#a5a5a5',
+    pending: '#9a9a9a',
+  };
   let scheduled = false;
   let queueSignature = '';
 
@@ -104,11 +110,13 @@
     return indicator;
   }
 
-  function applyProviderState(node, synced, pending) {
+  function applyProviderState(node, provider, synced, pending) {
     if (!node) return;
     node.classList.toggle('is-synced', synced);
     node.classList.toggle('is-pending', pending);
     node.classList.toggle('is-offline', !synced && !pending);
+    node.style.setProperty('color', pending ? COLORS.pending : (synced ? COLORS[provider] : COLORS.offline), 'important');
+    node.style.opacity = pending ? '.72' : '1';
   }
 
   function paint(indicator, event) {
@@ -116,8 +124,8 @@
     const google = $('[data-event-cloud-provider="google"]', indicator);
     const yandex = $('[data-event-cloud-provider="yandex"]', indicator);
 
-    applyProviderState(google, state.google, state.googlePending);
-    applyProviderState(yandex, state.yandex, state.yandexPending);
+    applyProviderState(google, 'google', state.google, state.googlePending);
+    applyProviderState(yandex, 'yandex', state.yandex, state.yandexPending);
 
     if (google) {
       const title = providerTitle('google', state.google, state.googlePending);
