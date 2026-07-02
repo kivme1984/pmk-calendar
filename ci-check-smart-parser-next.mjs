@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import parser from './smart-parser-next-core.js';
+import parser from './smart-parser-next.js';
 
 const cases = [
   {
