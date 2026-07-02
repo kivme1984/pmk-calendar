@@ -7,14 +7,46 @@
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const CURRENT_VERSION = '82.12';
   let frame = 0;
   let observer = null;
+  let versionCheckedAt = 0;
 
   function normalizePhone(value = '') {
     let digits = String(value).replace(/\D/g, '');
     if (digits.length === 11 && digits.startsWith('8')) digits = `7${digits.slice(1)}`;
     if (digits.length === 10) digits = `7${digits}`;
     return digits.length === 11 && digits.startsWith('7') ? `+${digits}` : '';
+  }
+
+  function compareVersions(a, b) {
+    const left = String(a || '').split('.').map(Number);
+    const right = String(b || '').split('.').map(Number);
+    for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+      const diff = (left[index] || 0) - (right[index] || 0);
+      if (diff) return diff;
+    }
+    return 0;
+  }
+
+  async function lockVersionState(force = false) {
+    const indicator = $('#pmkVersionIndicator');
+    if (!indicator) return;
+    if (!force && Date.now() - versionCheckedAt < 30000) return;
+    versionCheckedAt = Date.now();
+    try {
+      const response = await fetch(`./pmk-release.json?v82-12=${Date.now()}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error('release');
+      const release = await response.json();
+      const hasUpdate = compareVersions(release.version, CURRENT_VERSION) > 0;
+      indicator.className = `pmk-version-indicator-v82-10 ${hasUpdate ? 'has-update' : 'is-current'}`;
+      indicator.innerHTML = `<i></i><span>${hasUpdate ? `Обновление v${release.version}` : `Актуальная v${CURRENT_VERSION}`}</span>`;
+      indicator.href = hasUpdate ? (release.testUrl || release.updateUrl || '#') : '#';
+      indicator.title = hasUpdate ? `Доступна версия ${release.version}` : `Установлена актуальная версия ${CURRENT_VERSION}`;
+    } catch {
+      indicator.className = 'pmk-version-indicator-v82-10 is-unknown';
+      indicator.innerHTML = '<i></i><span>Версия не проверена</span>';
+    }
   }
 
   function eventForCard(card) {
@@ -114,6 +146,7 @@
   function lockAllCards() {
     frame = 0;
     $$('.event-card').forEach(lockCard);
+    lockVersionState();
   }
 
   function scheduleLock() {
@@ -171,6 +204,7 @@
     installRenderHooks();
     watchCards();
     lockAllCards();
+    lockVersionState(true);
 
     document.addEventListener('click', event => {
       if (event.target.closest('[data-status-event],.nav-item,[data-open-day],[data-open-event],#prevDayBtn,#nextDayBtn')) {
