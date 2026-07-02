@@ -28,9 +28,37 @@
     }
   }
 
+  function readPricing() {
+    const pricing = {};
+    document.querySelectorAll('[id^="pricingSetting-"]').forEach(input => {
+      const key = input.id.replace('pricingSetting-', '');
+      const value = Number(input.value);
+      if (key && Number.isFinite(value) && value >= 0) pricing[key] = value;
+    });
+    return pricing;
+  }
+
+  function persistPricing() {
+    if (typeof state === 'undefined' || typeof saveSettings !== 'function') return;
+    const pricing = readPricing();
+    if (!Object.keys(pricing).length) return;
+    state.settings.pricing = { ...(state.settings.pricing || {}), ...pricing };
+    if (Number.isFinite(pricing.minimum)) state.settings.minimumOrder = pricing.minimum;
+    saveSettings();
+    globalThis.dispatchEvent(new CustomEvent('pmk-pricing-updated', { detail: state.settings.pricing }));
+  }
+
+  function installPricingPersistence() {
+    const button = document.querySelector('#saveSettingsBtn');
+    if (!button || button.dataset.pmkStablePricingV8219 === '1') return;
+    button.dataset.pmkStablePricingV8219 = '1';
+    button.addEventListener('click', () => setTimeout(persistPricing, 0));
+  }
+
   function apply() {
     installSearchNormalization();
     ensureCompatibilityNodes();
+    installPricingPersistence();
     document.documentElement.dataset.pmkCandidate = VERSION;
     if (document.title !== `ПМК Календарь · ${LABEL}`) {
       document.title = `ПМК Календарь · ${LABEL}`;
