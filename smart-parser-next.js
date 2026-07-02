@@ -14,6 +14,10 @@
     return core.clean(value);
   }
 
+  function canonical(value = '') {
+    return clean(value).toLowerCase().replace(/ё/g, 'е');
+  }
+
   function titleCase(value = '') {
     return clean(value).toLowerCase().replace(/(^|[\s-])[а-яёa-z]/g, letter => letter.toUpperCase());
   }
@@ -58,7 +62,9 @@
       let candidate;
       while ((candidate = regex.exec(addressZone))) {
         const possibleStreet = trimStreet(candidate[1]);
-        if (!possibleStreet || /^(?:ковер|цена|размер|после|до|с|на)$/i.test(possibleStreet)) continue;
+        const numericHouse = Number(String(candidate[2]).match(/^\d+/)?.[0] || 0);
+        if (!possibleStreet || /^(?:ковер|цена|размер|после|до|с|на|либо|если|возможно|ориентировочно)$/i.test(possibleStreet)) continue;
+        if (numericHouse > 999) continue;
         street = possibleStreet;
         house = candidate[2];
         compactApartment = candidate[3] || '';
@@ -147,15 +153,37 @@
     });
   }
 
+  function refineSemanticScope(parsed) {
+    const source = canonical(parsed.text);
+    parsed.rugs.forEach(rug => {
+      if (rug.services.urineOdorRemoval === 'review') {
+        const match = source.match(/запах\s+мочи|моч[аи]|описал|описала/);
+        if (match) {
+          const before = source.slice(Math.max(0, match.index - 18), match.index);
+          if (!/возможно|вроде|под\s+вопросом|не\s+понятно/.test(before)) rug.services.urineOdorRemoval = 'confirmed';
+        }
+      }
+      if (rug.raw) {
+        const index = source.indexOf(canonical(rug.raw));
+        const before = index >= 0 ? source.slice(Math.max(0, index - 28), index) : '';
+        const approximate = /пример|ориентир|около|\+\-|точно\s+не\s+зна/.test(before);
+        rug.approximate = approximate;
+        rug.measurementStatus = approximate ? 'approximate' : 'known';
+      }
+    });
+  }
+
   function parse(rawText = '') {
     const parsed = core.parse(rawText);
     const addresses = priorityAddresses(parsed.text, parsed.district);
     if (addresses.primaryAddress?.street && addresses.primaryAddress?.house) parsed.addresses.primaryAddress = addresses.primaryAddress;
+    else parsed.addresses.primaryAddress = null;
     if (addresses.returnAddress?.street && addresses.returnAddress?.house) parsed.addresses.returnAddress = addresses.returnAddress;
 
     const boundContacts = bindContacts(parsed.text, parsed.phones);
     parsed.phones = boundContacts.map(({ phone, role, index, raw }) => ({ phone, role, index, raw }));
     parsed.contacts = boundContacts.map(({ name, phone, role }) => ({ name, phone, role }));
+    refineSemanticScope(parsed);
 
     const warnings = parsed.confidence.warnings.filter(warning => warning !== 'Адрес требует проверки' && warning !== 'Имя клиента не распознано');
     if (!parsed.addresses.primaryAddress?.street || !parsed.addresses.primaryAddress?.house) warnings.push('Адрес требует проверки');
