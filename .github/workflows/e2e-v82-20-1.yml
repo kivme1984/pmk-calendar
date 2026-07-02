@@ -1,0 +1,27 @@
+name: E2E PMK v82.20.1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'test-v82-20-1.html'
+      - 'ci-check-v82-20-1.mjs'
+      - '.github/workflows/e2e-v82-20-1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --silent playwright@1.52.0
+      - run: npx playwright install --with-deps chromium >/dev/null 2>&1
+      - run: python3 -m http.server 8000 >/tmp/pmk-v82-20-1-http.log 2>&1 &
+      - run: sleep 2 && node ci-check-v82-20-1.mjs
