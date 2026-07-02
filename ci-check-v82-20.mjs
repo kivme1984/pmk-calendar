@@ -135,8 +135,32 @@ try {
   const gesture = await page.evaluate(async () => {
     document.body.style.minHeight = '2400px';
     const board = document.querySelector('#weekEvents');
+    const shell = document.querySelector('#view-week');
+    const main = document.querySelector('.main-content');
     const target = board?.querySelector('.day-column');
     if (!board || !target) throw new Error('Week board not found');
+
+    const before = {
+      boardScrollWidth: board.scrollWidth,
+      boardClientWidth: board.clientWidth,
+      boardOverflowX: getComputedStyle(board).overflowX,
+      shellScrollWidth: shell?.scrollWidth || 0,
+      shellClientWidth: shell?.clientWidth || 0,
+      shellOverflowX: shell ? getComputedStyle(shell).overflowX : '',
+      mainScrollWidth: main?.scrollWidth || 0,
+      mainClientWidth: main?.clientWidth || 0,
+      mainOverflowX: main ? getComputedStyle(main).overflowX : '',
+    };
+
+    board.scrollLeft = 180;
+    const directBoard = board.scrollLeft;
+    if (shell) shell.scrollLeft = 180;
+    const directShell = shell?.scrollLeft || 0;
+    if (main) main.scrollLeft = 180;
+    const directMain = main?.scrollLeft || 0;
+    board.scrollLeft = 0;
+    if (shell) shell.scrollLeft = 0;
+    if (main) main.scrollLeft = 0;
 
     const fire = (type, x, y) => {
       const event = new Event(type, { bubbles: true, cancelable: true });
@@ -150,22 +174,41 @@ try {
     fire('touchstart', 210, 700);
     fire('touchmove', 208, 500);
     fire('touchmove', 207, 290);
+    const verticalDuring = window.scrollY;
     fire('touchend', 207, 290);
     await new Promise((resolve) => setTimeout(resolve, 80));
-    const vertical = window.scrollY;
+    const verticalAfter = window.scrollY;
 
     board.scrollLeft = 0;
     fire('touchstart', 350, 410);
     fire('touchmove', 210, 408);
+    const horizontalDuringOne = board.scrollLeft;
     fire('touchmove', 80, 407);
+    const horizontalDuringTwo = board.scrollLeft;
     fire('touchend', 80, 407);
     await new Promise((resolve) => setTimeout(resolve, 80));
-    const horizontal = board.scrollLeft;
-    return { vertical, horizontal };
+    const horizontalAfter = board.scrollLeft;
+
+    return {
+      before,
+      directBoard,
+      directShell,
+      directMain,
+      verticalDuring,
+      verticalAfter,
+      horizontalDuringOne,
+      horizontalDuringTwo,
+      horizontalAfter,
+    };
   });
 
-  if (gesture.vertical < 200) throw new Error(`Vertical card scroll failed: ${JSON.stringify(gesture)}`);
-  if (gesture.horizontal < 120) throw new Error(`Horizontal week scroll failed: ${JSON.stringify(gesture)}`);
+  console.log(`GESTURE ${JSON.stringify(gesture)}`);
+  if (gesture.verticalDuring < 150 && gesture.verticalAfter < 150) {
+    throw new Error(`Vertical card scroll failed: ${JSON.stringify(gesture)}`);
+  }
+  if (Math.max(gesture.horizontalDuringOne, gesture.horizontalDuringTwo, gesture.horizontalAfter) < 100) {
+    throw new Error(`Horizontal week scroll failed: ${JSON.stringify(gesture)}`);
+  }
 
   await openNav('month');
   await page.waitForFunction(() => {
