@@ -1,0 +1,44 @@
+@media (max-width: 760px) {
+  #view-form,
+  #requestForm,
+  #requestForm .form-layout,
+  #requestForm .form-column,
+  #requestForm .form-card,
+  #requestForm .preview-card,
+  #requestForm .form-actions {
+    box-sizing: border-box;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #requestForm {
+    overflow-x: clip;
+  }
+
+  #requestForm .form-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    overflow: visible !important;
+  }
+
+  #requestForm .form-column,
+  #requestForm .form-card,
+  #requestForm .preview-card {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  #requestForm .form-actions {
+    left: auto !important;
+    right: auto !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  #requestForm .form-actions .button {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
