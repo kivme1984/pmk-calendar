@@ -1,0 +1,24 @@
+name: Smart Parser Next Corpus Tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'smart-parser-next-core.js'
+      - 'ci-check-smart-parser-next.mjs'
+      - '.github/workflows/e2e-smart-parser-next.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parser-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node ci-check-smart-parser-next.mjs
