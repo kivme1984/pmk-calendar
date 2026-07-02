@@ -7,7 +7,12 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const MODES = new Set(['week', 'month']);
-  let renderTimer = 0;
+  let renderFrame = 0;
+  let directRendering = false;
+
+  function activeMode() {
+    return typeof state !== 'undefined' ? state.currentView : '';
+  }
 
   function ensureAnchor() {
     if (!state.periodAnchorKey) {
@@ -91,31 +96,46 @@
   }
 
   function renderMode(mode) {
+    if (!MODES.has(mode) || directRendering) return;
+    directRendering = true;
+    try {
+      ensureAnchor();
+      state.currentView = mode;
+      showPlanning(mode);
+
+      const keys = periodKeys(mode);
+      const events = getAllEvents().filter((event) => keys.includes(eventDateKey(event)));
+      const labels = PERIOD_LABELS[mode] || PERIOD_LABELS.week;
+      $('#periodTitle').textContent = labels[0];
+      $('#periodSubtitle').textContent = labels[1];
+      renderPeriod(events, keys, mode);
+      syncDateControls();
+
+      const board = $('#weekEvents');
+      clearDecorations(board);
+      if (mode === 'week') board.classList.add('pmk-week-v82-19');
+      else decorateMonth(board);
+    } finally {
+      directRendering = false;
+    }
+  }
+
+  function scheduleRender(mode = activeMode()) {
     if (!MODES.has(mode)) return;
-    ensureAnchor();
-    state.currentView = mode;
-    showPlanning(mode);
-
-    const keys = periodKeys(mode);
-    const events = getAllEvents().filter((event) => keys.includes(eventDateKey(event)));
-    const labels = PERIOD_LABELS[mode] || PERIOD_LABELS.week;
-    $('#periodTitle').textContent = labels[0];
-    $('#periodSubtitle').textContent = labels[1];
-    renderPeriod(events, keys, mode);
-    syncDateControls();
-
-    const board = $('#weekEvents');
-    clearDecorations(board);
-    if (mode === 'week') board.classList.add('pmk-week-v82-19');
-    else decorateMonth(board);
+    if (renderFrame) cancelAnimationFrame(renderFrame);
+    renderFrame = requestAnimationFrame(() => {
+      renderFrame = requestAnimationFrame(() => {
+        renderFrame = 0;
+        if (activeMode() === mode) renderMode(mode);
+      });
+    });
   }
 
   function stabilize(mode) {
-    clearTimeout(renderTimer);
     renderMode(mode);
-    [120, 500, 1200, 2600].forEach((delay) => {
+    [80, 240, 700, 1600].forEach((delay) => {
       setTimeout(() => {
-        if (state.currentView === mode) renderMode(mode);
+        if (activeMode() === mode) renderMode(mode);
       }, delay);
     });
   }
@@ -126,7 +146,7 @@
   }
 
   function shiftMode(direction) {
-    const mode = state.currentView;
+    const mode = activeMode();
     if (!MODES.has(mode)) return;
     ensureAnchor();
     if (mode === 'week') {
@@ -140,6 +160,22 @@
     if (typeof pushAppHistory === 'function') pushAppHistory(mode);
   }
 
+  function installRenderHook() {
+    if (typeof renderAll !== 'function' || renderAll.__pmkPeriodDirectV8219) return;
+    const previous = renderAll;
+    const wrapped = function renderAllV8219(...args) {
+      const result = previous(...args);
+      if (MODES.has(activeMode())) scheduleRender(activeMode());
+      return result;
+    };
+    wrapped.__pmkPeriodDirectV8219 = true;
+    wrapped.__pmkFinalV8210 = true;
+    wrapped.__pmkFinalV829 = true;
+    wrapped.__pmkFastV827 = true;
+    globalThis.renderAll = wrapped;
+  }
+
+  // Loaded before final-hotfix-v82-11, so this is the single Week/Month click controller.
   document.addEventListener('click', (event) => {
     const item = event.target.closest('.nav-item[data-view="week"],.nav-item[data-view="month"]');
     if (!item) return;
@@ -150,7 +186,7 @@
   }, true);
 
   document.addEventListener('click', (event) => {
-    if (!MODES.has(state.currentView)) return;
+    if (!MODES.has(activeMode())) return;
     if (event.target.closest('#prevPeriodBtn')) {
       event.preventDefault();
       event.stopPropagation();
@@ -165,15 +201,30 @@
   }, true);
 
   document.addEventListener('change', (event) => {
-    if (event.target.id !== 'jumpPeriodDate' || !MODES.has(state.currentView)) return;
+    if (event.target.id !== 'jumpPeriodDate' || !MODES.has(activeMode())) return;
+    event.preventDefault();
+    event.stopPropagation();
     event.stopImmediatePropagation();
     state.periodAnchorKey = event.target.value || businessTodayKey();
-    stabilize(state.currentView);
+    stabilize(activeMode());
   }, true);
 
-  ['pmk-calendar-sync-done', 'pmk-yandex-sync-done', 'pmk-yandex-sync-error'].forEach((name) => {
-    globalThis.addEventListener(name, () => {
-      if (MODES.has(state.currentView)) stabilize(state.currentView);
-    });
+  ['pmk-calendar-sync-done', 'pmk-yandex-sync-done', 'pmk-yandex-sync-error', 'popstate'].forEach((name) => {
+    globalThis.addEventListener(name, () => scheduleRender(activeMode()));
   });
+
+  function boot() {
+    installRenderHook();
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      installRenderHook();
+      if (MODES.has(activeMode())) scheduleRender(activeMode());
+      if (attempts >= 40) clearInterval(timer);
+    }, 100);
+  }
+
+  document.readyState === 'loading'
+    ? document.addEventListener('DOMContentLoaded', boot, { once: true })
+    : boot();
 })();
