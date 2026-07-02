@@ -67,6 +67,7 @@ const JS=`
 ./edge-menu-swipe-v82-19.js
 ./event-cloud-indicators-v82-19.js
 ./version-guard-v82.js
+./smart-parser-feature-gate.js
 `.trim().split(/\s+/);
 
 const CSS=`

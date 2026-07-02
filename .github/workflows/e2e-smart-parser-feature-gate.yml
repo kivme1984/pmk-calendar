@@ -1,0 +1,55 @@
+name: Smart Parser Feature Gate Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'smart-parser-feature-gate.js'
+      - 'smart-parser-feature-gate.css'
+      - 'smart-parser-feature-gate-test.html'
+      - 'smart-parser-form-adapter.js'
+      - 'smart-parser-form-adapter.css'
+      - 'smart-parser-form-mobile-fix.css'
+      - 'smart-parser-next-core.js'
+      - 'smart-parser-next.js'
+      - 'smart-parser-next-refinements.js'
+      - 'smart-parser-next-real-rules.js'
+      - 'smart-parser-next-scope-rules.js'
+      - 'smart-parser-next-final-rules.js'
+      - 'smart-parser-next-identical-rugs.js'
+      - 'sw-core-v82.js'
+      - 'reset.html'
+      - 'ci-check-smart-parser-feature-gate.mjs'
+      - '.github/workflows/e2e-smart-parser-feature-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  feature-gate-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --silent playwright@1.52.0
+      - run: npx playwright install --with-deps chromium >/dev/null 2>&1
+      - name: Start local server
+        shell: bash
+        run: |
+          python3 -m http.server 8000 >/tmp/smart-parser-feature-gate-http.log 2>&1 &
+      - name: Run feature gate checks
+        shell: bash
+        run: |
+          set -o pipefail
+          sleep 2
+          node ci-check-smart-parser-feature-gate.mjs 2>&1 | tee smart-parser-feature-gate-test.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-parser-feature-gate-test-log
+          path: smart-parser-feature-gate-test.log
+          if-no-files-found: error
