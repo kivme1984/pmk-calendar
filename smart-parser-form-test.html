@@ -18,7 +18,7 @@
       if (!response.ok) throw new Error(`Не удалось загрузить форму: ${response.status}`);
       let html = await response.text();
       html = html.replace('<title>ПМК Календарь</title>', '<title>ПМК · Тест умного ввода</title>');
-      html = html.replace('</head>', '<link rel="stylesheet" href="./smart-parser-form-adapter.css?v=2"></head>');
+      html = html.replace('</head>', '<link rel="stylesheet" href="./smart-parser-form-adapter.css?v=2"><link rel="stylesheet" href="./smart-parser-form-mobile-fix.css?v=1"></head>');
       const scripts = [
         '<script src="./smart-parser-next-core.js?v=5" defer></' + 'script>',
         '<script src="./smart-parser-next.js?v=5" defer></' + 'script>',
