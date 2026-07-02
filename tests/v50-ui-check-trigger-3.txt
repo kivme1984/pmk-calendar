@@ -1,0 +1,1 @@
+Retrigger browser verification after PR workflow activation.
