@@ -30,4 +30,14 @@ jobs:
       - run: npm install --silent playwright@1.52.0
       - run: npx playwright install --with-deps chromium >/dev/null 2>&1
       - run: cd /tmp/pmk-v82-19 && python3 -m http.server 8000 >/tmp/pmk-v82-19-cloud-http.log 2>&1 &
-      - run: sleep 2 && node ci-check-v82-19-event-cloud-indicators.mjs
+      - id: cloud_test
+        continue-on-error: true
+        run: sleep 2 && node ci-check-v82-19-event-cloud-indicators.mjs > cloud-indicators-test.log 2>&1
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: event-cloud-indicators-test-log
+          path: cloud-indicators-test.log
+          if-no-files-found: error
+      - if: steps.cloud_test.outcome == 'failure'
+        run: cat cloud-indicators-test.log && exit 1
