@@ -3,115 +3,92 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Безопасное обновление ПМК Календаря до v82</title>
+<title>Обновление ПМК Календаря до v82.19.1</title>
 <style>
 body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-shadow:0 24px 70px rgba(0,0,0,.38)}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}
 </style>
 </head>
 <body>
 <main>
-<h1 id="pageTitle">Устанавливаем версию v82</h1>
-<p id="pageDescription">Компактная вкладка «Выполнено» и автоматический переход завершённых заявок в архив через 7 дней.</p>
-<p id="status" class="status">Проверяем все файлы новой сборки…</p>
-<div class="actions"><button id="retry" type="button" hidden>Повторить обновление</button><a id="safe" href="./safe.html?v=82" hidden>Открыть безопасный режим</a><a id="open" href="./?v=82" hidden>Открыть приложение</a></div>
+<h1 id="title">Устанавливаем основную версию v82.19.1</h1>
+<p id="description">Облачные индикаторы Google и Яндекс, быстрые периоды, исправленные свайпы и компактный архив.</p>
+<p id="status" class="status">Проверяем файлы обновления…</p>
+<div class="actions">
+<button id="retry" type="button" hidden>Повторить обновление</button>
+<a id="safe" href="./safe.html?v=82.19.1" hidden>Открыть безопасный режим</a>
+<a id="open" href="./?v=82.19.1" hidden>Открыть приложение</a>
+</div>
 </main>
 <script>
 (() => {
   const params=new URLSearchParams(location.search);
+  const requestedTest=params.get('test');
+  if(requestedTest){
+    const allowed=new Set(['82-9','82-10','82-11','82-12','82-16','82-17','82-19','82-20']);
+    if(allowed.has(requestedTest)){
+      params.delete('test');
+      const suffix=params.toString();
+      location.replace(`./test-v${requestedTest}.html${suffix?`?${suffix}`:''}`);
+      return;
+    }
+  }
+
+  const VERSION='82.19.1';
   const status=document.querySelector('#status');
   const retry=document.querySelector('#retry');
   const safe=document.querySelector('#safe');
   const open=document.querySelector('#open');
 
-  async function openBrowserTest(version){
-    const file=`test-v${version.replace('.','-')}.html`;
-    document.querySelector('#pageTitle').textContent=`Открываем полный тест v${version}`;
-    document.querySelector('#pageDescription').textContent='Тест запускается в браузере без установки и без изменения рабочей версии.';
-    status.textContent='Проверяем тестовую страницу…';
-    try{
-      const response=await fetch(`./${file}?gateway=${Date.now()}`,{cache:'no-store'});
-      if(!response.ok)throw new Error(`${file}: ${response.status}`);
-      const html=await response.text();
-      document.open();
-      document.write(html);
-      document.close();
-    }catch(error){
-      status.className='status error';
-      status.textContent=`Тест не открылся: ${error.message}`;
-      retry.hidden=false;
-      retry.onclick=()=>openBrowserTest(version);
+  async function verify(){
+    const stamp=Date.now();
+    const checks=[
+      ['./sw.js','sw-core-v82.js'],
+      ['./sw-core-v82.js',"const VERSION='82.19.1'"],
+      ['./version-guard-v82.js',"const RELEASE = '82.19.1'"],
+      ['./event-cloud-indicators-v82-19.js','PMK_EVENT_CLOUD_INDICATORS_V82_19'],
+      ['./period-direct-v82-19.js','PMK_PERIOD_DIRECT_V82_19'],
+      ['./week-touch-scroll-v82-19-stable.js','PMK_WEEK_TOUCH_SCROLL_V82_19_STABLE'],
+      ['./final-layout-lock-v82-19-stable.js','PMK_FINAL_LAYOUT_LOCK_V82_19_STABLE'],
+      ['./stable-version-label-v82-19.js',"const VERSION = '82.19.1'"]
+    ];
+    for(const [path,marker] of checks){
+      const response=await fetch(`${path}?verify=${stamp}`,{cache:'no-store'});
+      if(!response.ok)throw new Error(`${path}: HTTP ${response.status}`);
+      const text=await response.text();
+      if(!text.includes(marker))throw new Error(`${path}: получена старая версия файла`);
     }
   }
 
-  const requestedTest=params.get('test');
-  if(requestedTest==='82-9'||requestedTest==='82-10'||requestedTest==='82-11'||requestedTest==='82-12'||requestedTest==='82-16'||requestedTest==='82-17'||requestedTest==='82-19'||requestedTest==='82-20'){
-    openBrowserTest(requestedTest.replace('-', '.'));
-    return;
-  }
-
-  const VERSION='82';
-  const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-
   function waitForActivation(registration){
-    const worker=registration.installing||registration.waiting||registration.active;
-    if(!worker||worker.state==='activated')return Promise.resolve();
+    const worker=registration.installing||registration.waiting;
+    if(!worker)return Promise.resolve();
+    if(worker.state==='activated')return Promise.resolve();
     return new Promise((resolve,reject)=>{
-      const timeout=setTimeout(()=>reject(new Error('Новая сборка не активировалась.')),30000);
+      const timer=setTimeout(()=>reject(new Error('Новая сборка не активировалась')),45000);
       worker.addEventListener('statechange',()=>{
-        if(worker.state==='activated'){clearTimeout(timeout);resolve();}
-        if(worker.state==='redundant'){clearTimeout(timeout);reject(new Error('Установка новой сборки была отклонена.'));}
+        if(worker.state==='activated'){clearTimeout(timer);resolve();}
+        if(worker.state==='redundant'){clearTimeout(timer);reject(new Error('Установка сборки была отклонена'));}
       });
     });
   }
 
-  function testArchivePolicy(policyText){
-    delete globalThis.PMK_ARCHIVE_POLICY_V82;
-    delete globalThis.PMK_ARCHIVE_POLICY_V82_API;
-    new Function(policyText)();
-    const policy=globalThis.PMK_ARCHIVE_POLICY_V82_API;
-    if(!policy)throw new Error('Не удалось запустить правило архива v82.');
-    const now=Date.parse('2026-07-01T12:00:00Z');
-    const recent='2026-06-25T12:00:01Z';
-    const weekOld='2026-06-24T12:00:00Z';
-    if(policy.isArchived(recent,now))throw new Error('Тест архива: недавняя заявка ошибочно попала в архив.');
-    if(!policy.isArchived(weekOld,now))throw new Error('Тест архива: заявка старше недели не перешла в архив.');
-    const result=policy.split([{id:1,t:recent},{id:2,t:weekOld}],item=>item.t,now);
-    if(result.active.length!==1||result.archived.length!==1)throw new Error('Тест распределения Выполнено/Архив не пройден.');
-  }
-
-  async function verifyFiles(){
-    const stamp=Date.now();
-    const urls=['./sw.js','./sw-special-router-v82.js','./version-guard-v82.js','./archive-policy-v82.js','./completed-archive-workflow-v82.js','./completed-archive-workflow-v82.css'];
-    const responses=await Promise.all(urls.map(url=>fetch(`${url}?v=${VERSION}-verify-${stamp}`,{cache:'no-store'})));
-    if(responses.some(response=>!response.ok))throw new Error('Файлы v82 ещё не распространились на GitHub Pages.');
-    const [swText,routerText,guardText,policyText,workflowText,cssText]=await Promise.all(responses.map(response=>response.text()));
-    if(!swText.includes('sw-special-router-v82.js')||!swText.includes('sw-core-v82.js'))throw new Error('GitHub Pages пока отдаёт старый service worker. Повторите через минуту.');
-    if(!routerText.includes('reset.html')||!routerText.includes('stopImmediatePropagation'))throw new Error('Маршрутизатор обновлений v82 ещё не опубликован.');
-    if(!guardText.includes("const VERSION = '82'"))throw new Error('Контрольный файл v82 ещё не опубликован.');
-    if(!workflowText.includes('PMK_COMPLETED_ARCHIVE_WORKFLOW_V82'))throw new Error('Новый раздел Выполнено/Архив ещё не опубликован.');
-    if(!workflowText.includes('history-compact-card')||workflowText.includes('renderEventCard(event)'))throw new Error('Сервер отдаёт старую широкую карточку вместо компактной.');
-    if(!workflowText.includes('ARCHIVE_PAGE_SIZE = 50'))throw new Error('Постраничная загрузка архива не найдена.');
-    if(!cssText.includes('.history-compact-card')||!cssText.includes('overflow-wrap:anywhere'))throw new Error('Мобильные стили компактных карточек ещё не опубликованы.');
-    new Function(workflowText);
-    testArchivePolicy(policyText);
-  }
-
   async function update(){
     retry.hidden=true;safe.hidden=true;open.hidden=true;
-    status.className='status';status.textContent='Проверяем компактные карточки и правило 7 дней…';
+    status.className='status';
+    status.textContent='Проверяем облачные статусы, меню и свайпы…';
     try{
-      await verifyFiles();
-      if(!('serviceWorker' in navigator))throw new Error('Браузер не поддерживает обновление приложения.');
-      status.textContent='Собираем проверенный пакет v82…';
+      await verify();
+      if(!('serviceWorker' in navigator))throw new Error('Этот браузер не поддерживает обновление приложения');
+      status.textContent='Устанавливаем проверенный пакет v82.19.1…';
       const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}-${Date.now()}`,{updateViaCache:'none'});
-      await registration.update().catch(()=>null);
+      await registration.update();
       await waitForActivation(registration);
-      status.textContent='Версия v82 проверена и установлена. Открываем приложение…';
+      status.textContent='Основная версия v82.19.1 установлена. Открываем приложение…';
       open.hidden=false;
-      await delay(500);
-      location.replace(`./?v=${VERSION}&verified=${Date.now()}`);
+      setTimeout(()=>location.replace(`./?v=${VERSION}&verified=${Date.now()}`),700);
     }catch(error){
-      status.className='status error';status.textContent=`Обновление не завершено: ${error.message}`;
+      status.className='status error';
+      status.textContent=`Обновление не завершено: ${error.message}`;
       retry.hidden=false;safe.hidden=false;open.hidden=false;
     }
   }
