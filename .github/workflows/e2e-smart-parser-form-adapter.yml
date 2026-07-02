@@ -12,6 +12,7 @@ on:
       - 'smart-parser-next-refinements.js'
       - 'smart-parser-next-real-rules.js'
       - 'smart-parser-next-scope-rules.js'
+      - 'smart-parser-next-final-rules.js'
       - 'ci-check-smart-parser-form-adapter.mjs'
       - '.github/workflows/e2e-smart-parser-form-adapter.yml'
   workflow_dispatch:
