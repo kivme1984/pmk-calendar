@@ -36,4 +36,15 @@ jobs:
         shell: bash
         run: |
           python3 -m http.server 8000 >/tmp/smart-parser-lab-http.log 2>&1 &
-      - run: sleep 2 && node ci-check-smart-parser-lab.mjs
+      - name: Run lab mobile test
+        shell: bash
+        run: |
+          set -o pipefail
+          sleep 2
+          node ci-check-smart-parser-lab.mjs 2>&1 | tee smart-parser-lab-test.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-parser-lab-test-log
+          path: smart-parser-lab-test.log
+          if-no-files-found: error
