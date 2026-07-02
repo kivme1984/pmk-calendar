@@ -7,7 +7,19 @@
   const VERSION = '82.19.1';
   const LABEL = `Резервная v${VERSION}`;
 
+  function installSearchNormalization() {
+    if (globalThis.PMK_SEARCH_NORMALIZATION_V82_19 || typeof eventSearchText !== 'function') return;
+    globalThis.PMK_SEARCH_NORMALIZATION_V82_19 = true;
+    const previousEventSearchText = eventSearchText;
+    eventSearchText = function eventSearchTextNormalizedV8219(event) {
+      const text = String(previousEventSearchText(event) || '').toLowerCase();
+      const compactDigits = text.replace(/\D+/g, '');
+      return compactDigits ? `${text} ${compactDigits}` : text;
+    };
+  }
+
   function apply() {
+    installSearchNormalization();
     document.documentElement.dataset.pmkCandidate = VERSION;
     if (document.title !== `ПМК Календарь · ${LABEL}`) {
       document.title = `ПМК Календарь · ${LABEL}`;
