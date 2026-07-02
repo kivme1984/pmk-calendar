@@ -1,0 +1,35 @@
+name: User validation PMK v82.20
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/e2e-v82-20-user-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Prepare exact v82.20 build
+        run: |
+          git clone -q --branch "$GITHUB_HEAD_REF" --depth 1 "https://github.com/$GITHUB_REPOSITORY.git" /tmp/src
+          cd /tmp/src
+          git fetch -q --depth 1 origin 58f8368d6d35a007e661f28b0b46a4e3aa9824e7
+          python3 ci-assemble-v82-20.py
+      - name: Install Chromium
+        run: |
+          cd /tmp/src
+          npm install --silent playwright@1.52.0
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+      - name: Verify navigation, touch scrolling and provider states
+        run: |
+          cd /tmp/pmk-v82-20
+          python3 -m http.server 8000 >/tmp/pmk-v82-20-http.log 2>&1 &
+          cd /tmp/src
+          sleep 2
+          node ci-check-v82-20.mjs
