@@ -6,6 +6,7 @@ on:
     paths:
       - 'smart-parser-next-core.js'
       - 'smart-parser-next.js'
+      - 'smart-parser-next-refinements.js'
       - 'ci-check-smart-parser-next.mjs'
       - '.github/workflows/e2e-smart-parser-next.yml'
   workflow_dispatch:
@@ -26,7 +27,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          node ci-check-smart-parser-next.mjs 2>&1 | tee smart-parser-test.log
+          node --require ./smart-parser-next-refinements.js ci-check-smart-parser-next.mjs 2>&1 | tee smart-parser-test.log
       - if: always()
         uses: actions/upload-artifact@v4
         with:
