@@ -1,7 +1,7 @@
 {
-  "version": "82.13",
-  "label": "Тест v82.13",
-  "testUrl": "./test-v82-13.html",
+  "version": "82.14",
+  "label": "Тест v82.14",
+  "testUrl": "./test-v82-14.html",
   "updateUrl": "./install-v82-8.html",
-  "publishedAt": "2026-07-02T09:55:00Z"
+  "publishedAt": "2026-07-02T10:08:00Z"
 }
