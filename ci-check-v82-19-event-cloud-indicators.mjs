@@ -3,18 +3,6 @@ import { chromium } from 'playwright';
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
-const createEvent = (data, overrides = {}) => ({
-  id: overrides.id || `google-${data.pmkId}`,
-  summary: data.customerName,
-  location: 'Нижний Новгород, ул. Тестовая, д. 1',
-  start: { dateTime: `${data.visitDate}T${data.startTime}:00` },
-  end: { dateTime: `${data.visitDate}T${data.endTime}:00` },
-  extendedProperties: { private: {} },
-  _pmkId: data.pmkId,
-  _providers: overrides.providers || [],
-  _provider: overrides.provider,
-});
-
 try {
   await page.goto('http://127.0.0.1:8000/test-v82-19.html?ci=event-cloud', {
     waitUntil: 'domcontentloaded',
@@ -145,7 +133,7 @@ try {
     throw new Error(`Local event should show two gray letters: ${JSON.stringify(localOnly)}`);
   }
 
-  const period = await page.evaluate(() => {
+  await page.evaluate(() => {
     const dateKey = businessTodayKey();
     const data = {
       pmkId: 'ci-cloud-period', customerName: 'Недельная заявка', phone: '+79990000002', contractNumber: '8221',
@@ -156,12 +144,21 @@ try {
       start: { dateTime: `${dateKey}T12:00:00` }, end: { dateTime: `${dateKey}T12:30:00` },
       extendedProperties: { private: encodePmkData(data) }, _pmkId: data.pmkId, _providers: ['google'],
     };
+    localStorage.removeItem('pmk-calendar-provider-queue-v1');
     state.events = [event];
     state.localEvents = [];
+    state.selectedDayKey = dateKey;
+    state.periodAnchorKey = dateKey;
     invalidateEventCaches();
-    renderPeriod([event], [dateKey], 'week');
-    PMK_EVENT_CLOUD_INDICATORS_V82_19_API.renderNow();
-    const indicator = document.querySelector('.day-event .pmk-event-cloud-status-v82-19');
+    setView('week');
+  });
+
+  await page.waitForSelector('.day-event[data-open-event="google-ci-cloud-period"]', { state: 'visible', timeout: 10000 });
+  await page.evaluate(() => PMK_EVENT_CLOUD_INDICATORS_V82_19_API.renderNow());
+  await page.waitForSelector('.day-event[data-open-event="google-ci-cloud-period"] .pmk-event-cloud-status-v82-19', { state: 'attached', timeout: 10000 });
+
+  const period = await page.evaluate(() => {
+    const indicator = document.querySelector('.day-event[data-open-event="google-ci-cloud-period"] .pmk-event-cloud-status-v82-19');
     return {
       exists: Boolean(indicator),
       previous: indicator?.previousElementSibling?.textContent.trim() || '',
