@@ -83,10 +83,33 @@ try {
   const afterStorage = await page.evaluate(() => localStorage.getItem('pmk-local-events'));
   assert.equal(afterStorage, beforeStorage);
 
-  const overflow = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    clientWidth: document.documentElement.clientWidth,
-  }));
+  const overflow = await page.evaluate(() => {
+    const clientWidth = document.documentElement.clientWidth;
+    const offenders = [...document.querySelectorAll('body *')]
+      .map(element => {
+        const rect = element.getBoundingClientRect();
+        return {
+          tag: element.tagName,
+          id: element.id,
+          className: typeof element.className === 'string' ? element.className : '',
+          left: Math.round(rect.left),
+          right: Math.round(rect.right),
+          width: Math.round(rect.width),
+          scrollWidth: element.scrollWidth,
+          clientWidth: element.clientWidth,
+        };
+      })
+      .filter(item => item.right > clientWidth + 2 || item.left < -2 || item.scrollWidth > item.clientWidth + 2)
+      .sort((a, b) => Math.max(b.right - clientWidth, b.scrollWidth - b.clientWidth) - Math.max(a.right - clientWidth, a.scrollWidth - a.clientWidth))
+      .slice(0, 20);
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth,
+      bodyScrollWidth: document.body.scrollWidth,
+      offenders,
+    };
+  });
+  console.log('OVERFLOW_DIAGNOSTIC', JSON.stringify(overflow, null, 2));
   assert.ok(overflow.scrollWidth <= overflow.clientWidth + 2, JSON.stringify(overflow));
 
   console.log(JSON.stringify({
