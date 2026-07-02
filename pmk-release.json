@@ -1,7 +1,7 @@
 {
-  "version": "82.9",
-  "label": "Тест v82.9",
-  "testUrl": "./test-v82-9.html",
+  "version": "82.10",
+  "label": "Тест v82.10",
+  "testUrl": "./reset.html?test=82-10",
   "updateUrl": "./install-v82-8.html",
-  "publishedAt": "2026-07-02T08:30:00Z"
+  "publishedAt": "2026-07-02T08:55:00Z"
 }
