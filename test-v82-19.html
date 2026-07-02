@@ -11,7 +11,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 <body>
 <main>
 <h1>Резервная версия v82.19.1</h1>
-<p>Рабочая версия с компактными быстрыми действиями и открытием меню свайпом от левого края.</p>
+<p>Рабочая версия с облачными индикаторами Google и Яндекс возле номера договора.</p>
 <p id="status" class="status">Подготовка проверенной сборки…</p>
 <div class="progress"><span id="bar"></span></div>
 <div class="actions"><button id="retry" type="button" hidden>Повторить запуск</button><a id="openStable" href="./reset.html?test=82-12&release=20260702-4" hidden>Открыть исходную v82.12</a></div>
@@ -21,7 +21,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   const BASE_COMMIT='58f8368d6d35a007e661f28b0b46a4e3aa9824e7';
   const BASE=`https://cdn.jsdelivr.net/gh/kivme1984/pmk-calendar@${BASE_COMMIT}/`;
   const FIX='./';
-  const BUILD='20260702-v8219-icons-edge-1';
+  const BUILD='20260702-v8219-cloud-status-1';
   const asset=(path)=>`${FIX}${path}?v=${BUILD}`;
   const status=document.querySelector('#status');
   const bar=document.querySelector('#bar');
@@ -72,19 +72,22 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
       [asset('quick-actions-icons-v82-19.js'),'иконки быстрых действий'],
       [asset('quick-actions-icons-v82-19.css'),'стили быстрых действий'],
       [asset('edge-menu-swipe-v82-19.js'),'свайп открытия меню'],
+      [asset('event-cloud-indicators-v82-19.js'),'статусы заявок в облаке'],
+      [asset('event-cloud-indicators-v82-19.css'),'стили облачных статусов'],
       [asset('stable-version-label-v82-19.js'),'маркировка версии'],
       [asset('stable-version-label-v82-19.css'),'стили маркировки']
     ];
     const responses=await Promise.all(checks.map(([url])=>fetch(`${url}${url.includes('?')?'&':'?'}check=${Date.now()}`,{cache:'no-store'})));
     const failedIndex=responses.findIndex(response=>!response.ok);
     if(failedIndex>=0)throw new Error(`Не загрузилась ${checks[failedIndex][1]} (${responses[failedIndex].status})`);
-    const [html,layout,menu,,period,,touch,,icons,,edge,label]=await Promise.all(responses.map(response=>response.text()));
+    const [html,layout,menu,,period,,touch,,icons,,edge,cloud,,label]=await Promise.all(responses.map(response=>response.text()));
     if(!layout.includes('PMK_FINAL_LAYOUT_LOCK_V82_19_STABLE'))throw new Error('Не получена облегчённая обработка карточек');
     if(!menu.includes('PMK_MENU_PERFORMANCE_V82_19')||!menu.includes('queuedRender'))throw new Error('Не получена оптимизация меню');
     if(!period.includes('PMK_PERIOD_DIRECT_V82_19')||!period.includes('previousLeft'))throw new Error('Не получено исправление возврата недели к началу');
     if(!touch.includes('PMK_WEEK_TOUCH_SCROLL_V82_19_STABLE')||!touch.includes("session.axis === 'y'"))throw new Error('Не получено исправление вертикального свайпа');
     if(!icons.includes('PMK_QUICK_ACTIONS_ICONS_V82_19')||!icons.includes('Рассчитать стоимость'))throw new Error('Не получены иконки быстрых действий');
     if(!edge.includes('PMK_EDGE_MENU_SWIPE_V82_19')||!edge.includes('OPEN_DISTANCE'))throw new Error('Не получен свайп открытия меню');
+    if(!cloud.includes('PMK_EVENT_CLOUD_INDICATORS_V82_19')||!cloud.includes('googlePending'))throw new Error('Не получены облачные статусы событий');
     if(!label.includes('PMK_STABLE_VERSION_LABEL_V82_19'))throw new Error('Не получена маркировка резервной версии');
     return html;
   }
@@ -94,7 +97,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     try{
       set('Загружаем точную рабочую основу…',20);
       let html=await verify();
-      set('Подключаем иконки и свайп меню…',68);
+      set('Подключаем облачные статусы событий…',68);
       const closeScript='</scr'+'ipt>';
       const guard=`<script>window.PMK_V82_ISOLATED_TEST=true;window.PMK_TEST_VERSION='82.19.1';window.PMK_STABLE_BACKUP=true;try{if(navigator.serviceWorker){Object.defineProperty(navigator.serviceWorker,'register',{configurable:true,value:()=>Promise.resolve({active:null})});}}catch(e){}${closeScript}`;
       const css=CSS.map(path=>`<link rel="stylesheet" href="${BASE}${path}">`).join('')
@@ -102,11 +105,12 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
         +`<link rel="stylesheet" href="${asset('week-touch-scroll-v82-19-stable.css')}">`
         +`<link rel="stylesheet" href="${asset('stable-version-label-v82-19.css')}">`
         +`<link rel="stylesheet" href="${asset('menu-performance-v82-19.css')}">`
-        +`<link rel="stylesheet" href="${asset('quick-actions-icons-v82-19.css')}">`;
+        +`<link rel="stylesheet" href="${asset('quick-actions-icons-v82-19.css')}">`
+        +`<link rel="stylesheet" href="${asset('event-cloud-indicators-v82-19.css')}">`;
       const before=JS_BEFORE_DIRECT.map(path=>`<script src="${BASE}${path}" defer>${closeScript}`).join('');
       const direct=`<script src="${asset('period-direct-v82-19.js')}" defer>${closeScript}`;
       const after=JS_AFTER_DIRECT.map(path=>`<script src="${BASE}${path}" defer>${closeScript}`).join('');
-      const additions=`<script src="${asset('final-layout-lock-v82-19-stable.js')}" defer>${closeScript}<script src="${asset('week-touch-scroll-v82-19-stable.js')}" defer>${closeScript}<script src="${asset('stable-version-label-v82-19.js')}" defer>${closeScript}<script src="${asset('menu-performance-v82-19.js')}" defer>${closeScript}<script src="${asset('quick-actions-icons-v82-19.js')}" defer>${closeScript}<script src="${asset('edge-menu-swipe-v82-19.js')}" defer>${closeScript}`;
+      const additions=`<script src="${asset('final-layout-lock-v82-19-stable.js')}" defer>${closeScript}<script src="${asset('week-touch-scroll-v82-19-stable.js')}" defer>${closeScript}<script src="${asset('stable-version-label-v82-19.js')}" defer>${closeScript}<script src="${asset('menu-performance-v82-19.js')}" defer>${closeScript}<script src="${asset('quick-actions-icons-v82-19.js')}" defer>${closeScript}<script src="${asset('edge-menu-swipe-v82-19.js')}" defer>${closeScript}<script src="${asset('event-cloud-indicators-v82-19.js')}" defer>${closeScript}`;
       html=html.replace(/<link rel="manifest"[^>]*>/i,'');
       html=html.replace(/<link rel="stylesheet"[^>]*>/i,css);
       html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}${before}${direct}${after}${additions}`);

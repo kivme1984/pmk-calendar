@@ -30,6 +30,8 @@ for name in (
     'quick-actions-icons-v82-19.js',
     'quick-actions-icons-v82-19.css',
     'edge-menu-swipe-v82-19.js',
+    'event-cloud-indicators-v82-19.js',
+    'event-cloud-indicators-v82-19.css',
     'test-v82-19.html',
 ):
     shutil.copy2(root / name, out / name)
