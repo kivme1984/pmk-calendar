@@ -1,8 +1,9 @@
 'use strict';
 
 (() => {
-  const VERSION = '82';
+  const VERSION = '82.19.1';
   const RELEASE = '82.19.1';
+  const BRANCH = '82';
   window.PMK_APP_VERSION = RELEASE;
   document.documentElement.dataset.pmkVersion = RELEASE;
 
@@ -29,7 +30,7 @@
       if (!event.target.closest('[data-view="settings"], .nav-settings')) return;
       requestAnimationFrame(applyVersion);
     }, true);
-    window.dispatchEvent(new CustomEvent('pmk-version-ready', { detail: { version: RELEASE, branch: VERSION } }));
+    window.dispatchEvent(new CustomEvent('pmk-version-ready', { detail: { version: RELEASE, branch: BRANCH } }));
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
