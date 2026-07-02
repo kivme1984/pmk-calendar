@@ -5,7 +5,9 @@
   globalThis.PMK_STABLE_VERSION_LABEL_V82_19 = true;
 
   const VERSION = '82.19.1';
-  const LABEL = `Резервная v${VERSION}`;
+  const IS_BACKUP = globalThis.PMK_STABLE_BACKUP === true;
+  const CHANNEL = IS_BACKUP ? 'Резервная' : 'Основная';
+  const LABEL = `${CHANNEL} v${VERSION}`;
   let scheduled = false;
   let indicatorObserver = null;
   let observedIndicator = null;
@@ -86,9 +88,10 @@
         indicator.className = 'pmk-version-indicator-v82-10 is-current pmk-stable-version-v82-19';
       }
       if (indicator.getAttribute('href') !== '#') indicator.href = '#';
-      if (indicator.title !== 'Открыта проверенная резервная версия ПМК Календаря') {
-        indicator.title = 'Открыта проверенная резервная версия ПМК Календаря';
-      }
+      const title = IS_BACKUP
+        ? 'Открыта проверенная резервная версия ПМК Календаря'
+        : 'Открыта основная версия ПМК Календаря';
+      if (indicator.title !== title) indicator.title = title;
       if (indicator.textContent?.trim() !== LABEL) indicator.innerHTML = `<i></i><span>${LABEL}</span>`;
     }
 
@@ -97,9 +100,10 @@
       badge = document.createElement('div');
       badge.id = 'pmkStableBuildBadgeV8219';
       badge.className = 'pmk-stable-build-badge-v82-19';
-      badge.textContent = 'РЕЗЕРВНАЯ v82.19.1';
       document.body.appendChild(badge);
     }
+    const badgeText = `${CHANNEL.toUpperCase()} v${VERSION}`;
+    if (badge.textContent !== badgeText) badge.textContent = badgeText;
   }
 
   function scheduleApply() {
