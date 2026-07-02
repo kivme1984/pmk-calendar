@@ -13,6 +13,7 @@ try {
     window.PMK_FINAL_LAYOUT_LOCK_V82_12
     && window.PMK_FINAL_LAYOUT_LOCK_V82_19_STABLE
     && window.PMK_MENU_PERFORMANCE_V82_19
+    && window.PMK_MENU_PERFORMANCE_V82_19_STATE?.installed
     && window.PMK_STABLE_VERSION_LABEL_V82_19
   ), null, { timeout: 120000 });
   await page.waitForSelector('#menuToggle', { state: 'visible', timeout: 30000 });
@@ -33,22 +34,21 @@ try {
   }
 
   const deferred = await page.evaluate(async () => {
-    const board = document.querySelector('#weekEvents');
-    const before = board?.innerHTML || '';
+    const stateBefore = { ...window.PMK_MENU_PERFORMANCE_V82_19_STATE };
     for (let index = 0; index < 80; index += 1) renderAll();
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const during = board?.innerHTML || '';
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    const stateDuring = { ...window.PMK_MENU_PERFORMANCE_V82_19_STATE };
     document.querySelector('#menuToggle').click();
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const after = board?.innerHTML || '';
+    const stateAfter = { ...window.PMK_MENU_PERFORMANCE_V82_19_STATE };
     return {
-      sameWhileOpen: before === during,
+      deferred: stateDuring.deferredRenders - stateBefore.deferredRenders,
+      flushed: stateAfter.flushedRenders - stateBefore.flushedRenders,
       closed: !document.querySelector('#sidebar').classList.contains('open'),
       menuClassCleared: !document.documentElement.classList.contains('pmk-menu-active-v82-19'),
-      afterLength: after.length,
     };
   });
-  if (!deferred.sameWhileOpen || !deferred.closed || !deferred.menuClassCleared || deferred.afterLength < 1) {
+  if (deferred.deferred < 80 || deferred.flushed < 1 || !deferred.closed || !deferred.menuClassCleared) {
     throw new Error(`Render deferral failed: ${JSON.stringify(deferred)}`);
   }
 
