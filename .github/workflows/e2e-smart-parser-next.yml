@@ -21,4 +21,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node ci-check-smart-parser-next.mjs
+      - id: parser_test
+        continue-on-error: true
+        run: node ci-check-smart-parser-next.mjs > smart-parser-test.log 2>&1
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-parser-test-log
+          path: smart-parser-test.log
+          if-no-files-found: error
+      - if: ${{ steps.parser_test.outcome == 'failure' }}
+        run: cat smart-parser-test.log && exit 1
