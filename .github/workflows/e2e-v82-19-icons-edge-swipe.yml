@@ -1,0 +1,30 @@
+name: E2E Stable v82.19 Icons and Edge Swipe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'test-v82-19.html'
+      - 'quick-actions-icons-v82-19.js'
+      - 'quick-actions-icons-v82-19.css'
+      - 'edge-menu-swipe-v82-19.js'
+      - 'ci-check-v82-19-icons-edge-swipe.mjs'
+      - '.github/workflows/e2e-v82-19-icons-edge-swipe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --silent playwright@1.52.0
+      - run: npx playwright install --with-deps chromium >/dev/null 2>&1
+      - run: python3 -m http.server 8000 >/tmp/pmk-v82-19-icons-edge-http.log 2>&1 &
+      - run: sleep 2 && node ci-check-v82-19-icons-edge-swipe.mjs
