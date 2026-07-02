@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'smart-parser-next-core.js'
+      - 'smart-parser-next.js'
       - 'ci-check-smart-parser-next.mjs'
       - '.github/workflows/e2e-smart-parser-next.yml'
   workflow_dispatch:
@@ -21,14 +22,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - id: parser_test
-        continue-on-error: true
-        run: node ci-check-smart-parser-next.mjs > smart-parser-test.log 2>&1
+      - name: Run parser corpus tests
+        shell: bash
+        run: |
+          set -o pipefail
+          node ci-check-smart-parser-next.mjs 2>&1 | tee smart-parser-test.log
       - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: smart-parser-test-log
           path: smart-parser-test.log
           if-no-files-found: error
-      - if: ${{ steps.parser_test.outcome == 'failure' }}
-        run: cat smart-parser-test.log && exit 1
