@@ -1,0 +1,28 @@
+name: E2E Stable PMK v82.19.1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'stable-v82-19-1.html'
+      - 'reset.html'
+      - 'ci-check-stable-v82-19-1.mjs'
+      - '.github/workflows/e2e-stable-v82-19-1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --silent playwright@1.52.0
+      - run: npx playwright install --with-deps chromium >/dev/null 2>&1
+      - run: python3 -m http.server 8000 >/tmp/pmk-stable-http.log 2>&1 &
+      - run: sleep 2 && node ci-check-stable-v82-19-1.mjs
