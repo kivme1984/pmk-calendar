@@ -1,0 +1,137 @@
+/* Targeted v82.11 corrections. */
+
+/* Make the version state readable instead of showing only the dot. */
+.app-header .pmk-version-indicator-v82-10{
+  min-width:96px!important;
+  max-width:118px!important;
+  overflow:visible!important;
+  flex:0 0 auto!important;
+}
+.app-header .pmk-version-indicator-v82-10 span{
+  display:block!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.app-header .pmk-version-indicator-v82-10 i{display:block!important}
+
+/* Keep all four quick actions in one row, including Calculate. */
+.pmk-quick-actions-v82-10 .pmk-launchpad-actions{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  grid-auto-flow:column!important;
+  gap:6px!important;
+}
+.pmk-quick-actions-v82-10 .pmk-launchpad-actions>button,
+.pmk-quick-actions-v82-10 .pmk-launchpad-actions>button:last-child,
+.pmk-quick-actions-v82-10 .pmk-launchpad-actions>button:nth-child(4){
+  grid-column:auto!important;
+  grid-row:auto!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  margin:0!important;
+}
+
+/* Restore a visible, stable footer. */
+.event-card.pmk-card-footer-fixed-v82-11{
+  grid-template-columns:116px minmax(0,1fr)!important;
+  grid-template-areas:
+    "time main"
+    "footer footer"!important;
+  gap:0!important;
+}
+.event-card.pmk-card-footer-fixed-v82-11 .pmk-card-footer-v82-10{
+  grid-area:footer!important;
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  padding:10px!important;
+  border-top:1px solid var(--line)!important;
+}
+.event-card.pmk-card-footer-fixed-v82-11 .pmk-card-footer-row-v82-10{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.55fr) minmax(0,.95fr) 54px!important;
+  gap:8px!important;
+  width:100%!important;
+}
+.event-card.pmk-card-footer-fixed-v82-11 .pmk-card-footer-row-v82-10>.primary-card-action,
+.event-card.pmk-card-footer-fixed-v82-11 .pmk-card-footer-row-v82-10>.secondary-card-action,
+.event-card.pmk-card-footer-fixed-v82-11 .pmk-card-footer-row-v82-10>.card-menu>.menu-button{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:0!important;
+  min-height:54px!important;
+  height:54px!important;
+  padding:0 8px!important;
+  border-radius:14px!important;
+  font-size:12px!important;
+  font-weight:850!important;
+  line-height:1.1!important;
+  text-align:center!important;
+  white-space:normal!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+.event-card.pmk-card-footer-fixed-v82-11 .pmk-card-footer-row-v82-10>.call-button{
+  color:#fff!important;
+  border-color:#16884a!important;
+  background:linear-gradient(135deg,#178e4c,#22b768)!important;
+  box-shadow:0 7px 18px rgba(31,169,94,.25)!important;
+}
+.event-card.pmk-card-footer-fixed-v82-11 .pmk-phone-missing-v82-11{
+  color:#747977!important;
+  border-color:var(--line)!important;
+  background:#f2f3ef!important;
+  box-shadow:none!important;
+}
+.event-card.pmk-card-footer-fixed-v82-11 .pmk-card-footer-row-v82-10>.card-menu{min-width:0!important}
+.event-card.pmk-card-footer-fixed-v82-11 .pmk-card-footer-row-v82-10>.card-menu>.menu-button{
+  width:54px!important;
+  min-width:54px!important;
+  font-size:27px!important;
+}
+
+@media(max-width:760px){
+  .app-header .pmk-version-indicator-v82-10{
+    min-width:86px!important;
+    max-width:96px!important;
+    padding:5px 6px!important;
+  }
+  .app-header .pmk-version-indicator-v82-10 span{font-size:7px!important}
+
+  .pmk-quick-actions-v82-10 .pmk-launchpad-actions{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:5px!important;
+  }
+  .pmk-quick-actions-v82-10 .pmk-launchpad-actions>button{
+    min-height:62px!important;
+    padding:7px 5px!important;
+  }
+  .pmk-quick-actions-v82-10 .pmk-launchpad-actions b{
+    font-size:9px!important;
+    line-height:1.08!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  .event-card.pmk-card-footer-fixed-v82-11{
+    grid-template-columns:108px minmax(0,1fr)!important;
+  }
+}
+
+@media(max-width:390px){
+  .app-header .pmk-version-indicator-v82-10{
+    min-width:76px!important;
+    max-width:82px!important;
+  }
+  .event-card.pmk-card-footer-fixed-v82-11 .pmk-card-footer-row-v82-10{
+    grid-template-columns:minmax(0,1.5fr) minmax(0,.95fr) 50px!important;
+    gap:6px!important;
+  }
+  .event-card.pmk-card-footer-fixed-v82-11 .pmk-card-footer-row-v82-10>.card-menu>.menu-button{
+    width:50px!important;
+    min-width:50px!important;
+  }
+}

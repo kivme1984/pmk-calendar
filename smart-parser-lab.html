@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>ПМК · Лаборатория умного парсера</title>
+  <link rel="stylesheet" href="./smart-parser-lab.css?v=2">
+</head>
+<body>
+  <main class="lab-shell">
+    <header class="lab-header">
+      <div>
+        <p class="eyebrow">ПМК · тестовая среда</p>
+        <h1>Умный разбор заявки</h1>
+        <p class="subtitle">Вставьте свободный текст менеджера. Эта страница ничего не отправляет в календарь и не изменяет рабочие заявки.</p>
+      </div>
+      <span class="lab-badge">Изолировано</span>
+    </header>
+
+    <section class="input-card" aria-labelledby="inputTitle">
+      <div class="section-head">
+        <div>
+          <h2 id="inputTitle">Исходный текст</h2>
+          <p>Можно вставить имя, телефон, адрес, время, ковры, услуги и комментарии в любом порядке.</p>
+        </div>
+        <button class="secondary-button" id="clearBtn" type="button">Очистить</button>
+      </div>
+      <textarea id="sourceText" rows="10" spellcheck="false" placeholder="Например: Советский, ул. Новая 12к2-45, п3э7, Марина +79000000000. После 16:00. Два ковра: 2×3 шерсть, пятна; 1,5×2,3 шегги, запах мочи. Конд не нужен."></textarea>
+      <div class="input-actions">
+        <button class="primary-button" id="parseBtn" type="button">Разобрать по ячейкам</button>
+        <button class="secondary-button" id="sampleBtn" type="button">Вставить пример</button>
+      </div>
+    </section>
+
+    <section class="empty-state" id="emptyState">
+      <strong>Результат появится здесь</strong>
+      <span>Поля с сомнительным значением будут выделены и не должны заполняться молча.</span>
+    </section>
+
+    <section class="results" id="results" hidden aria-live="polite">
+      <div class="summary-card">
+        <div>
+          <p class="eyebrow">Качество разбора</p>
+          <div class="confidence-line">
+            <strong id="confidenceValue">0%</strong>
+            <span id="confidenceLabel">Не определено</span>
+          </div>
+        </div>
+        <div class="warning-list" id="warningList"></div>
+      </div>
+
+      <section class="apply-preview-card" aria-labelledby="applyPreviewTitle">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Безопасное заполнение</p>
+            <h2 id="applyPreviewTitle">Что попадёт в форму ПМК</h2>
+            <p>Это только предпросмотр. Кнопки сохранения и отправки намеренно нет.</p>
+          </div>
+          <div class="preview-counts" id="previewCounts"></div>
+        </div>
+        <div class="preview-notice" id="previewNotice"></div>
+        <div class="preview-table" id="formPreview"></div>
+      </section>
+
+      <div class="result-grid">
+        <section class="result-card">
+          <h2>Клиент и контакты</h2>
+          <div class="field-list" id="contactFields"></div>
+        </section>
+
+        <section class="result-card">
+          <h2>Адрес забора</h2>
+          <div class="field-list" id="addressFields"></div>
+        </section>
+
+        <section class="result-card" id="returnAddressCard" hidden>
+          <h2>Адрес возврата</h2>
+          <div class="field-list" id="returnAddressFields"></div>
+        </section>
+
+        <section class="result-card">
+          <h2>Время и условия</h2>
+          <div class="field-list" id="timeFields"></div>
+        </section>
+
+        <section class="result-card">
+          <h2>Заявка</h2>
+          <div class="field-list" id="orderFields"></div>
+        </section>
+      </div>
+
+      <section class="rug-section">
+        <div class="section-head">
+          <div>
+            <h2>Ковры</h2>
+            <p id="rugCountLabel"></p>
+          </div>
+        </div>
+        <div class="rug-grid" id="rugGrid"></div>
+      </section>
+
+      <details class="raw-card">
+        <summary>Технический результат</summary>
+        <pre id="rawResult"></pre>
+      </details>
+    </section>
+  </main>
+
+  <script src="./smart-parser-next-core.js?v=1"></script>
+  <script src="./smart-parser-next.js?v=1"></script>
+  <script src="./smart-parser-next-refinements.js?v=1"></script>
+  <script src="./smart-parser-next-real-rules.js?v=1"></script>
+  <script src="./smart-parser-form-preview.js?v=1"></script>
+  <script src="./smart-parser-lab.js?v=2"></script>
+</body>
+</html>

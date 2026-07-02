@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Установка полной ПМК v82.8</title>
+<style>
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(580px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-sizing:border-box}h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}.progress{height:9px;margin-top:14px;border-radius:999px;background:#303030;overflow:hidden}.progress>span{display:block;width:4%;height:100%;border-radius:inherit;background:#f7b500;transition:width .2s ease}.actions{display:grid;gap:10px;margin-top:18px}button,a{width:100%;min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;box-sizing:border-box;font-weight:800;font-size:15px;text-decoration:none}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
+</style>
+</head>
+<body>
+<main>
+<h1>Полная версия ПМК v82.8</h1>
+<p>Устанавливается вся функциональность стабильной v82: формы, поиск, цены, распознавание, Google и Яндекс, заметка, этапы работы, архив, месяц и свайпы.</p>
+<p>Заявки, настройки и сохранённые данные на устройстве не удаляются.</p>
+<p id="status" class="status">Подготовка…</p>
+<div class="progress"><span id="bar"></span></div>
+<div class="actions">
+<button id="retry" type="button" hidden>Повторить установку</button>
+<a id="recovery" href="./recovery.html?force=82" hidden>Вернуть стабильную v82</a>
+</div>
+</main>
+<script>
+(() => {
+  const VERSION='82.8';
+  const DATA_CACHE='pmk-calendar-data-v68';
+  const status=document.querySelector('#status');
+  const bar=document.querySelector('#bar');
+  const retry=document.querySelector('#retry');
+  const recovery=document.querySelector('#recovery');
+  const set=(text,percent)=>{status.textContent=text;bar.style.width=`${percent}%`;};
+
+  function waitForActivation(registration){
+    const worker=registration.installing||registration.waiting||registration.active;
+    if(!worker||worker.state==='activated')return Promise.resolve();
+    return new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>reject(new Error('Полная v82.8 не активировалась за 2 минуты')),120000);
+      worker.addEventListener('statechange',()=>{
+        if(worker.state==='activated'){clearTimeout(timer);resolve();}
+        if(worker.state==='redundant'){clearTimeout(timer);reject(new Error('Chrome отклонил установку полной v82.8'));}
+      });
+    });
+  }
+
+  async function verify(stamp){
+    const files=['./sw-v82-8.js','./sw-core-v82-8.js','./version-guard-v82-8.js','./keep-worker-v82-8.js','./workflow-fast-v82-7.js','./workflow-transition-fast-v82-7.js'];
+    const responses=await Promise.all(files.map(url=>fetch(`${url}?check=${stamp}`,{cache:'no-store'})));
+    const failed=responses.find(response=>!response.ok);
+    if(failed)throw new Error(`Не опубликован файл ${failed.url.split('/').pop()}`);
+    const texts=await Promise.all(responses.map(response=>response.text()));
+    if(!texts[0].includes('sw-core-v82-8.js'))throw new Error('Неверная точка запуска v82.8');
+    if(!texts[1].includes("const VERSION='82.8'"))throw new Error('Неверный полный пакет v82.8');
+    if(!texts[2].includes("const VERSION = '82.8'"))throw new Error('Неверный контроль версии v82.8');
+    if(!texts[4].includes('PMK_WORKFLOW_FAST_V82_7'))throw new Error('Не найдено меню этапов');
+    if(!texts[5].includes('PMK_WORKFLOW_TRANSITION_FAST_V82_7'))throw new Error('Не найден быстрый переход статусов');
+  }
+
+  async function clean(){
+    if('serviceWorker' in navigator){
+      const registrations=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
+    }
+    if('caches' in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.filter(key=>key!==DATA_CACHE&&key.startsWith('pmk-calendar-')).map(key=>caches.delete(key).catch(()=>false)));
+    }
+  }
+
+  async function install(){
+    retry.hidden=true;
+    recovery.hidden=true;
+    status.className='status';
+    try{
+      const stamp=Date.now();
+      set('Проверяем полный пакет…',12);
+      await verify(stamp);
+
+      set('Отключаем прежнюю тестовую версию…',25);
+      await clean();
+      if(!('serviceWorker' in navigator))throw new Error('Chrome не поддерживает установку приложения');
+
+      set('Собираем все функции приложения…',42);
+      const registration=await navigator.serviceWorker.register(`./sw-v82-8.js?v=${stamp}`,{scope:'./',updateViaCache:'none'});
+
+      const worker=registration.installing||registration.waiting;
+      if(worker){
+        worker.addEventListener('statechange',()=>{
+          if(worker.state==='installing')set('Загружаем модули полной версии…',58);
+          if(worker.state==='installed')set('Проверяем собранное приложение…',76);
+          if(worker.state==='activating')set('Активируем полную версию…',88);
+        });
+      }
+
+      await registration.update().catch(()=>null);
+      await waitForActivation(registration);
+      const ready=await navigator.serviceWorker.ready;
+      if(!ready?.active)throw new Error('v82.8 установлена, но не стала активной');
+
+      set('Готово. Открываем полную версию…',100);
+      setTimeout(()=>location.replace(`./?v=82-8&full=${Date.now()}`),900);
+    }catch(error){
+      status.className='status error';
+      status.textContent=`Установка остановилась: ${error.message}`;
+      bar.style.width='100%';
+      retry.hidden=false;
+      recovery.hidden=false;
+    }
+  }
+
+  retry.addEventListener('click',install);
+  install();
+})();
+</script>
+</body>
+</html>

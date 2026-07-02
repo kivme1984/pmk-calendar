@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Открываем тест v82.20</title>
+<style>
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:20px;box-sizing:border-box;font-family:Arial,sans-serif;background:#111;color:#fff}main{width:min(520px,100%);padding:24px;border:1px solid #333;border-radius:18px;background:#1a1a1a;box-sizing:border-box}h1{margin:0 0 10px;font-size:24px}p{margin:0 0 16px;color:#c9c9c9;line-height:1.5}button{width:100%;min-height:50px;border:0;border-radius:12px;background:#f7b500;color:#171717;font-size:16px;font-weight:900}
+</style>
+</head>
+<body>
+<main>
+<h1>Тест v82.20</h1>
+<p>Открываем новую тестовую сборку без символов в адресе.</p>
+<button id="open" type="button">Открыть тест</button>
+</main>
+<script>
+(() => {
+  const target='https://cdn.jsdelivr.net/gh/kivme1984/pmk-calendar@49118446493a4dd5cd748025a3b364f6d3c9308f/test-v82-20.html';
+  const open=()=>location.replace(target);
+  document.querySelector('#open').addEventListener('click',open);
+  setTimeout(open,300);
+})();
+</script>
+</body>
+</html>

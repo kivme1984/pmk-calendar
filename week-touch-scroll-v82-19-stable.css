@@ -1,0 +1,13 @@
+@media(max-width:760px){
+  #weekEvents.pmk-week-v82-19{
+    touch-action:pan-y pinch-zoom!important;
+    overscroll-behavior-x:contain!important;
+    overscroll-behavior-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+
+  #weekEvents.pmk-week-v82-19 .day-column,
+  #weekEvents.pmk-week-v82-19 .day-column *{
+    touch-action:pan-y pinch-zoom!important;
+  }
+}

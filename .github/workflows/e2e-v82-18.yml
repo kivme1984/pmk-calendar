@@ -1,0 +1,92 @@
+name: E2E PMK v82.18
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'test-v82-18.html'
+      - 'period-core-v82-18.js'
+      - 'period-core-v82-18.css'
+      - '.github/workflows/e2e-v82-18.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-periods:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Chromium
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.52.0
+          npx playwright install --with-deps chromium
+      - name: Start local server
+        run: |
+          python3 -m http.server 8000 > /tmp/pmk-http.log 2>&1 &
+          echo $! > /tmp/pmk-http.pid
+          sleep 2
+      - name: Test Week and Month on mobile
+        run: |
+          cat > /tmp/test-v82-18.mjs <<'JS'
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({
+            viewport: { width: 390, height: 844 },
+            deviceScaleFactor: 1,
+            isMobile: true,
+            hasTouch: true,
+          });
+
+          page.on('pageerror', error => console.error('PAGE ERROR:', error.message));
+          await page.goto('http://127.0.0.1:8000/test-v82-18.html?ci=1', {
+            waitUntil: 'networkidle',
+            timeout: 120000,
+          });
+
+          await page.waitForFunction(() => Boolean(window.PMK_PERIOD_CORE_V82_18), null, { timeout: 120000 });
+          await page.waitForSelector('#menuToggle', { state: 'visible' });
+
+          await page.click('#menuToggle');
+          await page.click('.nav-item[data-view="week"]');
+          await page.waitForFunction(() => {
+            const title = document.querySelector('#periodTitle')?.textContent?.trim();
+            const board = document.querySelector('#weekEvents');
+            return title === 'Неделя'
+              && document.querySelector('#view-week')?.classList.contains('active')
+              && board?.classList.contains('pmk-week-v82-18')
+              && board.querySelectorAll('.day-column').length === 7;
+          });
+
+          await page.click('#menuToggle');
+          await page.click('.nav-item[data-view="month"]');
+          await page.waitForFunction(() => {
+            const title = document.querySelector('#periodTitle')?.textContent?.trim();
+            const board = document.querySelector('#weekEvents');
+            return title === 'Месяц'
+              && board?.classList.contains('pmk-month-v82-18')
+              && Boolean(document.querySelector('#pmkMonthWeekdaysV8218'))
+              && board.querySelectorAll('.day-column').length >= 28
+              && board.querySelectorAll('.pmk-month-count-v82-18').length === board.querySelectorAll('.day-column').length;
+          });
+
+          const eventsHidden = await page.evaluate(() => [...document.querySelectorAll('#weekEvents .day-event')]
+            .every(node => getComputedStyle(node).display === 'none'));
+          if (!eventsHidden) throw new Error('Month still displays full event cards');
+
+          await page.screenshot({ path: 'v82-18-month.png', fullPage: true });
+          await browser.close();
+          JS
+          node /tmp/test-v82-18.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v82-18-mobile-screenshot
+          path: v82-18-month.png

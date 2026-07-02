@@ -10,18 +10,46 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 </head>
 <body>
 <main>
-<h1>Устанавливаем версию v82</h1>
-<p>Компактная вкладка «Выполнено» и автоматический переход завершённых заявок в архив через 7 дней.</p>
+<h1 id="pageTitle">Устанавливаем версию v82</h1>
+<p id="pageDescription">Компактная вкладка «Выполнено» и автоматический переход завершённых заявок в архив через 7 дней.</p>
 <p id="status" class="status">Проверяем все файлы новой сборки…</p>
 <div class="actions"><button id="retry" type="button" hidden>Повторить обновление</button><a id="safe" href="./safe.html?v=82" hidden>Открыть безопасный режим</a><a id="open" href="./?v=82" hidden>Открыть приложение</a></div>
 </main>
 <script>
 (() => {
-  const VERSION='82';
+  const params=new URLSearchParams(location.search);
   const status=document.querySelector('#status');
   const retry=document.querySelector('#retry');
   const safe=document.querySelector('#safe');
   const open=document.querySelector('#open');
+
+  async function openBrowserTest(version){
+    const file=`test-v${version.replace('.','-')}.html`;
+    document.querySelector('#pageTitle').textContent=`Открываем полный тест v${version}`;
+    document.querySelector('#pageDescription').textContent='Тест запускается в браузере без установки и без изменения рабочей версии.';
+    status.textContent='Проверяем тестовую страницу…';
+    try{
+      const response=await fetch(`./${file}?gateway=${Date.now()}`,{cache:'no-store'});
+      if(!response.ok)throw new Error(`${file}: ${response.status}`);
+      const html=await response.text();
+      document.open();
+      document.write(html);
+      document.close();
+    }catch(error){
+      status.className='status error';
+      status.textContent=`Тест не открылся: ${error.message}`;
+      retry.hidden=false;
+      retry.onclick=()=>openBrowserTest(version);
+    }
+  }
+
+  const requestedTest=params.get('test');
+  if(requestedTest==='82-9'||requestedTest==='82-10'||requestedTest==='82-11'||requestedTest==='82-12'||requestedTest==='82-16'||requestedTest==='82-17'||requestedTest==='82-19'||requestedTest==='82-20'){
+    openBrowserTest(requestedTest.replace('-', '.'));
+    return;
+  }
+
+  const VERSION='82';
   const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
   function waitForActivation(registration){

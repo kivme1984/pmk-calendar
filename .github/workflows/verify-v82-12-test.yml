@@ -1,0 +1,35 @@
+name: Verify PMK v82.12 browser test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-v82-12-test.yml'
+      - 'test-v82-12.html'
+      - 'final-layout-lock-v82-12.js'
+      - 'final-layout-lock-v82-12.css'
+      - 'pmk-release.json'
+      - 'reset.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check v82.12 syntax and markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s test-v82-12.html
+          test -s final-layout-lock-v82-12.js
+          test -s final-layout-lock-v82-12.css
+          node --check final-layout-lock-v82-12.js
+          python3 -m json.tool pmk-release.json >/dev/null
+          grep -q 'PMK_FINAL_LAYOUT_LOCK_V82_12' final-layout-lock-v82-12.js
+          grep -q '58f8368d6d35a007e661f28b0b46a4e3aa9824e7' test-v82-12.html
+          grep -q "requestedTest==='82-12'" reset.html
+          grep -q '"version": "82.12"' pmk-release.json

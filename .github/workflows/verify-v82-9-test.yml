@@ -1,0 +1,51 @@
+name: Verify PMK v82.9 browser test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-v82-9-test.yml'
+      - 'test-v82-9.html'
+      - 'final-ui-v82-9.js'
+      - 'final-ui-v82-9.css'
+      - 'pmk-release.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check files and JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s test-v82-9.html
+          test -s final-ui-v82-9.js
+          test -s final-ui-v82-9.css
+          test -s pmk-release.json
+          node --check final-ui-v82-9.js
+          python3 -m json.tool pmk-release.json >/dev/null
+          grep -q 'PMK_FINAL_UI_V82_9' final-ui-v82-9.js
+          grep -q 'test-v82-9' test-v82-9.html
+      - name: Verify referenced test assets
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('test-v82-9.html').read_text(encoding='utf-8')
+          arrays=re.findall(r'const (?:JS|CSS)=\[(.*?)\];', text, re.S)
+          if len(arrays)!=2:
+              raise SystemExit('Could not parse JS/CSS arrays')
+          missing=[]
+          for block in arrays:
+              for path in re.findall(r"'\./([^']+)'", block):
+                  if not Path(path).is_file(): missing.append(path)
+          if missing:
+              raise SystemExit('Missing assets: '+', '.join(sorted(set(missing))))
+          print('All v82.9 test assets are present.')
+          PY

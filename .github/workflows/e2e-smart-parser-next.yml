@@ -1,0 +1,39 @@
+name: Smart Parser Next Corpus Tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'smart-parser-next-core.js'
+      - 'smart-parser-next.js'
+      - 'smart-parser-next-refinements.js'
+      - 'smart-parser-next-real-rules.js'
+      - 'ci-check-smart-parser-next.mjs'
+      - 'ci-check-smart-parser-real-patterns.mjs'
+      - '.github/workflows/e2e-smart-parser-next.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parser-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run parser corpus tests
+        shell: bash
+        run: |
+          set -o pipefail
+          node --require ./smart-parser-next-real-rules.js ci-check-smart-parser-next.mjs 2>&1 | tee smart-parser-test.log
+          node --require ./smart-parser-next-real-rules.js ci-check-smart-parser-real-patterns.mjs 2>&1 | tee -a smart-parser-test.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-parser-test-log
+          path: smart-parser-test.log
+          if-no-files-found: error

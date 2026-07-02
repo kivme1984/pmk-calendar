@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ПМК Календарь · тест v82.7</title>
+<style>
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-sizing:border-box}h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}.progress{height:8px;margin-top:14px;border-radius:999px;background:#303030;overflow:hidden}.progress span{display:block;width:8%;height:100%;background:#f7b500;transition:width .2s ease}button,a{width:100%;min-height:48px;margin-top:16px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;box-sizing:border-box;font-weight:800;font-size:15px;text-decoration:none}button{color:#171717;background:#f7b500}a{color:#fff;background:#303030}
+</style>
+</head>
+<body>
+<main>
+<h1>Тест v82.7</h1>
+<p>Облегчённая версия без тяжёлых наблюдателей. В меню возвращены «В работе», «К выдаче», «Выполнено» и «Архив».</p>
+<p id="status" class="status">Подготовка…</p>
+<div class="progress"><span id="bar"></span></div>
+<button id="retry" type="button" hidden>Повторить запуск</button>
+<a id="recovery" href="./recovery.html?force=82" hidden>Вернуть стабильную v82</a>
+</main>
+<script>
+(() => {
+  const status=document.querySelector('#status');
+  const bar=document.querySelector('#bar');
+  const retry=document.querySelector('#retry');
+  const recovery=document.querySelector('#recovery');
+  const DATA_CACHE='pmk-calendar-data-v68';
+  const JS=[
+    './app.js',
+    './fast-calendar-sync-v68.js',
+    './yandex-calendar-sync-v69.js',
+    './provider-status-manager-v70.js',
+    './provider-crud-any-calendar-v72.js',
+    './yandex-primary-refresh-v72.js',
+    './compact-floating-note-v73.js',
+    './status-ledger-v80.js',
+    './in-work-workflow-v73.js',
+    './status-pipeline-v81.js',
+    './archive-policy-v82.js',
+    './completed-archive-workflow-v82.js',
+    './floating-note-mobile-v82-1.js',
+    './status-left-column-v82-2.js',
+    './workflow-fast-v82-7.js',
+    './workflow-transition-fast-v82-7.js'
+  ];
+  const CSS=[
+    './compact-floating-note-v73.css',
+    './in-work-workflow-v73.css',
+    './contract-required-v75.css',
+    './instant-status-feedback-v77.css',
+    './completed-archive-workflow-v82.css',
+    './floating-note-mobile-v82-1.css',
+    './status-left-column-v82-2.css',
+    './workflow-fast-v82-7.css',
+    './workflow-transition-fast-v82-7.css'
+  ];
+
+  function set(text,percent){status.textContent=text;bar.style.width=`${percent}%`;}
+
+  async function clean(){
+    if('serviceWorker' in navigator){
+      const registrations=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(item=>item.unregister().catch(()=>false)));
+    }
+    if('caches' in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.filter(key=>key!==DATA_CACHE&&key.startsWith('pmk-calendar-')).map(key=>caches.delete(key).catch(()=>false)));
+    }
+  }
+
+  async function preflight(urls,stamp){
+    const responses=await Promise.all(urls.map(url=>fetch(`${url}${url.includes('?')?'&':'?'}test=82-7-${stamp}`,{cache:'no-store'})));
+    const failed=responses.find(response=>!response.ok);
+    if(failed)throw new Error(`Файл не опубликован: ${failed.url.split('/').pop()} (${failed.status})`);
+  }
+
+  async function launch(){
+    retry.hidden=true;recovery.hidden=true;status.className='status';
+    try{
+      const stamp=Date.now();
+      set('Отключаем старую тестовую сборку…',15);
+      await clean();
+      set('Проверяем рабочие модули…',35);
+      await preflight([...JS,...CSS],stamp);
+      set('Собираем облегчённую версию…',58);
+      const response=await fetch(`./index.html?v82-7=${stamp}`,{cache:'no-store'});
+      if(!response.ok)throw new Error(`index.html: ${response.status}`);
+      let html=await response.text();
+      const closeScript='</scr'+'ipt>';
+      const guard=`<script>window.PMK_SAFE_MODE=true;window.PMK_V82_ISOLATED_TEST=true;try{if(navigator.serviceWorker){Object.defineProperty(navigator.serviceWorker,'register',{configurable:true,value:()=>Promise.resolve({active:navigator.serviceWorker.controller||null})});}}catch(e){}${closeScript}`;
+      const cssTags=CSS.map(url=>`<link rel="stylesheet" href="${url}?v=82-7-${stamp}">`).join('');
+      const jsTags=JS.map(url=>`<script src="${url}?v=82-7-${stamp}" defer>${closeScript}`).join('');
+      html=html.replace(/<link rel="manifest"[^>]*>/i,'');
+      html=html.replace(/<link rel="stylesheet"[^>]*>/i,match=>`${match}${cssTags}`);
+      html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}${jsTags}`);
+      html=html.replace('<title>ПМК Календарь</title>','<title>ПМК Календарь · тест v82.7</title>');
+      set('Открываем календарь…',100);
+      document.open();document.write(html);document.close();
+    }catch(error){
+      status.className='status error';status.textContent=`Запуск остановлен: ${error.message}`;bar.style.width='100%';retry.hidden=false;recovery.hidden=false;
+    }
+  }
+
+  retry.addEventListener('click',launch);
+  launch();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+/* Mobile floating note refinement for the v82.1 candidate. */
+
+.pmk-compact-note-actions{
+  grid-template-columns:34px 34px minmax(0,1fr) auto!important;
+  align-items:stretch;
+}
+
+.pmk-compact-note-actions .pmk-compact-note-icon-action{
+  display:grid!important;
+  place-items:center!important;
+  width:34px!important;
+  min-width:34px!important;
+  min-height:34px!important;
+  padding:0!important;
+  border:1px solid rgba(30,122,74,.2)!important;
+  border-radius:9px!important;
+  color:#1e6e46!important;
+  background:#fff!important;
+  font-size:20px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  box-shadow:none!important;
+}
+
+.pmk-compact-note-actions .pmk-compact-note-icon-action:active{
+  transform:translateY(1px);
+  background:#e4f5e9!important;
+}
+
+@media(max-width:520px){
+  .pmk-compact-note-actions{
+    grid-template-columns:32px 32px minmax(0,1fr) auto!important;
+    gap:5px!important;
+  }
+
+  .pmk-compact-note-actions .pmk-compact-note-icon-action{
+    width:32px!important;
+    min-width:32px!important;
+    min-height:32px!important;
+    font-size:19px!important;
+  }
+
+  .pmk-compact-note-widget.is-open .pmk-compact-note-panel{
+    transform:translateY(-18px);
+  }
+}
