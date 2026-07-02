@@ -39,5 +39,5 @@ jobs:
           name: event-cloud-indicators-test-log
           path: cloud-indicators-test.log
           if-no-files-found: error
-      - if: steps.cloud_test.outcome == 'failure'
+      - if: ${{ steps.cloud_test.outcome == 'failure' }}
         run: cat cloud-indicators-test.log && exit 1
