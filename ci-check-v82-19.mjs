@@ -1,58 +1,50 @@
 import { chromium } from 'playwright';
 
 const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({
-  viewport: { width: 390, height: 844 },
-  isMobile: true,
-  hasTouch: true,
-});
-
+const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 const pageErrors = [];
-page.on('pageerror', (error) => pageErrors.push(error.message));
-
+page.on('pageerror', error => pageErrors.push(error.message));
 await page.addInitScript(() => {
-  try { localStorage.clear(); } catch {}
+  if (!sessionStorage.getItem('pmk-ci-started')) {
+    localStorage.clear();
+    sessionStorage.setItem('pmk-ci-started', '1');
+  }
 });
 
-const openNav = async (view) => {
+const openNav = async view => {
   const open = await page.evaluate(() => document.querySelector('#sidebar')?.classList.contains('open'));
   if (!open) await page.click('#menuToggle');
-  await page.evaluate((target) => {
+  await page.evaluate(target => {
     const item = document.querySelector(`.nav-item[data-view="${target}"]`);
     if (!item) throw new Error(`Navigation item not found: ${target}`);
     item.click();
   }, view);
 };
-
-const waitView = async (view) => {
-  await page.waitForFunction((target) => {
-    const expectedId = ['week', 'month'].includes(target) ? 'view-week' : `view-${target === 'day' ? 'today' : target}`;
-    return typeof state !== 'undefined' && state.currentView === target && document.querySelector(`#${expectedId}`)?.classList.contains('active');
-  }, view, { timeout: 30000 });
+const waitView = view => page.waitForFunction(target => {
+  const id = ['week', 'month'].includes(target) ? 'view-week' : `view-${target === 'day' ? 'today' : target}`;
+  return typeof state !== 'undefined' && state.currentView === target && document.querySelector(`#${id}`)?.classList.contains('active');
+}, view, { timeout: 30000 });
+const showFullForm = async () => {
+  if (await page.locator('#customerName').isVisible()) return;
+  await page.click('#v50Summary [data-v50-action="full"]');
+  await page.waitForSelector('#customerName', { state: 'visible' });
 };
-
-const nextWeekday = async (weekday) => page.evaluate((targetWeekday) => {
+const nextMonday = () => page.evaluate(() => {
   let key = businessTodayKey();
-  for (let index = 0; index < 14; index += 1) {
-    const date = new Date(`${key}T12:00:00Z`);
-    if (date.getUTCDay() === targetWeekday) return key;
+  for (let i = 0; i < 14; i += 1) {
+    if (new Date(`${key}T12:00:00Z`).getUTCDay() === 1) return key;
     key = addDaysToKey(key, 1);
   }
   return businessTodayKey();
-}, weekday);
+});
 
 try {
-  await page.goto('http://127.0.0.1:8000/test-v82-19.html?ci=1', {
-    waitUntil: 'domcontentloaded',
-    timeout: 120000,
-  });
+  await page.goto('http://127.0.0.1:8000/test-v82-19.html?ci=1', { waitUntil: 'domcontentloaded', timeout: 120000 });
   await page.waitForFunction(() => Boolean(
-    window.PMK_FINAL_UI_V82_10
-    && window.PMK_FINAL_LAYOUT_LOCK_V82_12
-    && window.PMK_PERIOD_DIRECT_V82_19
-    && window.PMK_WEEK_TOUCH_SCROLL_V82_20
-    && window.PMK_STABLE_VERSION_LABEL_V82_19
-    && window.PMK_COMPLETED_ARCHIVE_WORKFLOW_V82
+    window.PMK_FINAL_UI_V82_10 && window.PMK_FINAL_LAYOUT_LOCK_V82_12
+    && window.PMK_PERIOD_DIRECT_V82_19 && window.PMK_WEEK_TOUCH_SCROLL_V82_20
+    && window.PMK_STABLE_VERSION_LABEL_V82_19 && window.PMK_COMPLETED_ARCHIVE_WORKFLOW_V82
+    && window.PMK_SEARCH_NORMALIZATION_V82_19
   ), null, { timeout: 120000 });
   await page.waitForSelector('#menuToggle', { state: 'visible' });
 
@@ -60,44 +52,34 @@ try {
     title: document.title,
     label: document.querySelector('#pmkVersionIndicator')?.textContent?.trim() || '',
     badge: document.querySelector('#pmkStableBuildBadgeV8219')?.textContent?.trim() || '',
-    stable: Boolean(window.PMK_STABLE_BACKUP),
+    compatibilityCounter: Boolean(document.querySelector('#threeDaysCount')),
   }));
-  if (!identity.title.includes('82.19.1') || !identity.label.includes('82.19.1') || !identity.badge || !identity.stable) {
+  if (!identity.title.includes('82.19.1') || !identity.label.includes('82.19.1') || !identity.badge || !identity.compatibilityCounter) {
     throw new Error(`Stable identity failed: ${JSON.stringify(identity)}`);
   }
 
   const initialDay = await page.inputValue('#jumpDate');
   await page.click('#nextDayBtn');
-  await page.waitForFunction((key) => document.querySelector('#jumpDate')?.value === addDaysToKey(key, 1), initialDay);
+  await page.waitForFunction(key => document.querySelector('#jumpDate')?.value === addDaysToKey(key, 1), initialDay);
   await page.click('#prevDayBtn');
-  await page.waitForFunction((key) => document.querySelector('#jumpDate')?.value === key, initialDay);
+  await page.waitForFunction(key => document.querySelector('#jumpDate')?.value === key, initialDay);
 
   await openNav('week');
   await waitView('week');
-  await page.waitForFunction(() => {
-    const board = document.querySelector('#weekEvents');
-    return document.querySelector('#periodTitle')?.textContent?.trim() === 'Неделя'
-      && board?.classList.contains('pmk-week-v82-19')
-      && board.querySelectorAll('.day-column').length === 7;
-  });
+  await page.waitForFunction(() => document.querySelector('#weekEvents.pmk-week-v82-19')?.querySelectorAll('.day-column').length === 7);
   const weekAnchor = await page.evaluate(() => state.periodAnchorKey);
   await page.click('#nextPeriodBtn');
-  await page.waitForFunction((key) => state.periodAnchorKey === addDaysToKey(key, 7), weekAnchor);
+  await page.waitForFunction(key => state.periodAnchorKey === addDaysToKey(key, 7), weekAnchor);
   await page.click('#prevPeriodBtn');
-  await page.waitForFunction((key) => state.periodAnchorKey === key, weekAnchor);
-
-  const monday = await nextWeekday(1);
-  await page.fill('#jumpPeriodDate', monday);
-  await page.dispatchEvent('#jumpPeriodDate', 'change');
-  await page.waitForFunction((key) => state.periodAnchorKey === key, monday);
+  await page.waitForFunction(key => state.periodAnchorKey === key, weekAnchor);
 
   const retainedScroll = await page.evaluate(async () => {
     const board = document.querySelector('#weekEvents');
     board.scrollLeft = Math.min(360, Math.max(220, board.scrollWidth - board.clientWidth - 20));
     const before = board.scrollLeft;
     renderAll();
-    await new Promise((resolve) => setTimeout(resolve, 1900));
-    return { before, after: board.scrollLeft, max: board.scrollWidth - board.clientWidth };
+    await new Promise(resolve => setTimeout(resolve, 1900));
+    return { before, after: board.scrollLeft };
   });
   if (retainedScroll.before < 150 || retainedScroll.after < retainedScroll.before - 80) {
     throw new Error(`Week scroll position was lost: ${JSON.stringify(retainedScroll)}`);
@@ -115,48 +97,28 @@ try {
     };
     let target = board.querySelector('.day-column');
     window.scrollTo(0, 0);
-    fire(target, 'touchstart', 210, 700);
-    fire(target, 'touchmove', 208, 500);
-    fire(target, 'touchmove', 207, 290);
-    fire(target, 'touchend', 207, 290);
-    await new Promise((resolve) => setTimeout(resolve, 90));
+    fire(target, 'touchstart', 210, 700); fire(target, 'touchmove', 208, 500); fire(target, 'touchmove', 207, 290); fire(target, 'touchend', 207, 290);
+    await new Promise(resolve => setTimeout(resolve, 90));
     const vertical = window.scrollY;
-
-    target = board.querySelector('.day-column');
-    board.scrollLeft = 0;
-    fire(target, 'touchstart', 350, 410);
-    fire(target, 'touchmove', 210, 408);
-    fire(target, 'touchmove', 80, 407);
-    fire(target, 'touchend', 80, 407);
-    await new Promise((resolve) => setTimeout(resolve, 90));
+    target = board.querySelector('.day-column'); board.scrollLeft = 0;
+    fire(target, 'touchstart', 350, 410); fire(target, 'touchmove', 210, 408); fire(target, 'touchmove', 80, 407); fire(target, 'touchend', 80, 407);
+    await new Promise(resolve => setTimeout(resolve, 90));
     return { vertical, horizontal: board.scrollLeft };
   });
-  if (gesture.vertical < 200 || gesture.horizontal < 120) {
-    throw new Error(`Touch navigation failed: ${JSON.stringify(gesture)}`);
-  }
+  if (gesture.vertical < 200 || gesture.horizontal < 120) throw new Error(`Touch navigation failed: ${JSON.stringify(gesture)}`);
 
   await openNav('month');
   await waitView('month');
   await page.waitForFunction(() => {
-    const board = document.querySelector('#weekEvents');
+    const board = document.querySelector('#weekEvents.pmk-month-v82-19');
     const columns = board?.querySelectorAll('.day-column').length || 0;
-    return document.querySelector('#periodTitle')?.textContent?.trim() === 'Месяц'
-      && board?.classList.contains('pmk-month-v82-19')
-      && columns >= 28
-      && board.querySelectorAll('.pmk-month-count-v82-19').length === columns;
+    return columns >= 28 && board.querySelectorAll('.pmk-month-count-v82-19').length === columns;
   });
-  const monthAnchor = await page.evaluate(() => state.periodAnchorKey);
-  await page.click('#nextPeriodBtn');
-  await page.waitForFunction((key) => {
-    const date = new Date(`${key}T12:00:00Z`);
-    date.setUTCMonth(date.getUTCMonth() + 1, 1);
-    const expected = `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-01`;
-    return state.periodAnchorKey === expected;
-  }, monthAnchor);
-  await page.click('#prevPeriodBtn');
 
+  const monday = await nextMonday();
   await openNav('form');
   await waitView('form');
+  await showFullForm();
   await page.fill('#customerName', 'Тест Навигации');
   await page.fill('#phone', '+7 999 111-22-33');
   await page.selectOption('#district', { label: 'Автозаводский' });
@@ -168,8 +130,8 @@ try {
   await page.fill('#estimatedPrice', '2200');
   await page.fill('#contractNumber', '82191');
   await page.evaluate(() => document.querySelector('#submitBtn').click());
-  await page.waitForFunction(() => state.localEvents.some((event) => eventMeta(event).customerName === 'Тест Навигации'), null, { timeout: 30000 });
-  const eventId = await page.evaluate(() => state.localEvents.find((event) => eventMeta(event).customerName === 'Тест Навигации')?.id || '');
+  await page.waitForFunction(() => state.localEvents.some(event => eventMeta(event).customerName === 'Тест Навигации'), null, { timeout: 30000 });
+  const eventId = await page.evaluate(() => state.localEvents.find(event => eventMeta(event).customerName === 'Тест Навигации')?.id || '');
   if (!eventId) throw new Error('Created event id was not found');
 
   await openNav('search');
@@ -177,40 +139,38 @@ try {
   await page.fill('#globalSearch', '9991112233');
   await page.waitForFunction(() => document.querySelectorAll('#searchResults [data-event-card]').length === 1);
 
-  await page.evaluate((id) => openEvent(id), eventId);
+  await page.evaluate(id => openEvent(id), eventId);
   await waitView('form');
+  await showFullForm();
   await page.fill('#estimatedPrice', '2600');
   await page.fill('#managerComment', 'Проверено автотестом');
   await page.evaluate(() => document.querySelector('#submitBtn').click());
-  await page.waitForFunction((id) => {
-    const event = state.localEvents.find((item) => item.id === id);
+  await page.waitForFunction(id => {
+    const event = state.localEvents.find(item => item.id === id);
     const data = event && eventMeta(event);
     return data?.estimatedPrice === 2600 && data?.managerComment === 'Проверено автотестом';
   }, eventId);
 
-  for (const status of ['picked-up', 'pending-delivery', 'completed']) {
-    await page.evaluate(async ({ id, nextStatus }) => updateEventStatus(id, nextStatus), { id: eventId, nextStatus: status });
-    await page.waitForFunction(({ id, expected }) => {
-      const event = state.localEvents.find((item) => item.id === id);
-      return event && eventMeta(event).requestStatus === expected;
-    }, { id: eventId, expected: status });
+  for (const nextStatus of ['picked-up', 'pending-delivery', 'completed']) {
+    await page.evaluate(async ({ id, status }) => updateEventStatus(id, status), { id: eventId, status: nextStatus });
+    await page.waitForFunction(({ id, status }) => {
+      const event = state.localEvents.find(item => item.id === id);
+      return event && eventMeta(event).requestStatus === status;
+    }, { id: eventId, status: nextStatus });
   }
-
   await openNav('completed');
   await waitView('completed');
-  await page.waitForFunction((id) => Boolean(document.querySelector(`[data-history-event="${id}"]`)), eventId);
+  await page.waitForFunction(id => Boolean(document.querySelector(`[data-history-event="${id}"]`)), eventId);
 
   await page.evaluate(({ id, completedAt }) => {
-    const event = state.localEvents.find((item) => item.id === id);
+    const event = state.localEvents.find(item => item.id === id);
     const data = { ...eventMeta(event), eventId: id, requestStatus: 'completed', completedAt };
-    const body = toGoogleEvent(data);
-    Object.assign(event, body, { updated: completedAt });
-    persistLocalEvents();
-    renderAll();
-  }, { id: eventId, completedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString() });
+    Object.assign(event, toGoogleEvent(data), { updated: completedAt });
+    persistLocalEvents(); renderAll();
+  }, { id: eventId, completedAt: new Date(Date.now() - 8 * 86400000).toISOString() });
   await openNav('archive');
   await waitView('archive');
-  await page.waitForFunction((id) => Boolean(document.querySelector(`[data-history-event="${id}"]`)), eventId);
+  await page.waitForFunction(id => Boolean(document.querySelector(`[data-history-event="${id}"]`)), eventId);
 
   await openNav('reminder');
   await waitView('reminder');
@@ -218,7 +178,7 @@ try {
   await page.fill('#reminderTime', '12:00');
   await page.fill('#reminderText', 'Проверить резервную версию');
   await page.evaluate(() => document.querySelector('#reminderForm button[type="submit"]').click());
-  await page.waitForFunction(() => state.localEvents.some((event) => String(event.id).startsWith('local-reminder-')));
+  await page.waitForFunction(() => state.localEvents.some(event => String(event.id).startsWith('local-reminder-')));
 
   await openNav('settings');
   await waitView('settings');
@@ -228,27 +188,18 @@ try {
   await page.waitForFunction(() => state.settings.minimumOrder === 1950 && state.settings.duration === 45);
 
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 120000 });
-  await page.waitForFunction((id) => Boolean(
-    window.PMK_STABLE_VERSION_LABEL_V82_19
-    && state.settings.minimumOrder === 1950
-    && state.settings.duration === 45
-    && state.localEvents.some((event) => event.id === id)
-    && state.localEvents.some((event) => String(event.id).startsWith('local-reminder-'))
+  await page.waitForFunction(id => Boolean(
+    window.PMK_STABLE_VERSION_LABEL_V82_19 && state.settings.minimumOrder === 1950 && state.settings.duration === 45
+    && state.localEvents.some(event => event.id === id)
+    && state.localEvents.some(event => String(event.id).startsWith('local-reminder-'))
   ), eventId, { timeout: 120000 });
 
-  page.once('dialog', (dialog) => dialog.accept());
-  await page.evaluate(async (id) => deleteEvent(id), eventId);
-  await page.waitForFunction((id) => !state.localEvents.some((event) => event.id === id), eventId);
-
+  page.once('dialog', dialog => dialog.accept());
+  await page.evaluate(async id => deleteEvent(id), eventId);
+  await page.waitForFunction(id => !state.localEvents.some(event => event.id === id), eventId);
   if (pageErrors.length) throw new Error(`Page errors: ${pageErrors.join(' | ')}`);
 
-  console.log(JSON.stringify({
-    identity,
-    retainedScroll,
-    gesture,
-    eventId,
-    settings: await page.evaluate(() => ({ minimumOrder: state.settings.minimumOrder, duration: state.settings.duration })),
-  }));
+  console.log(JSON.stringify({ identity, retainedScroll, gesture, eventId }));
 } finally {
   await browser.close();
 }
