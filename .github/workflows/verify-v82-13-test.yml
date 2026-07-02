@@ -1,0 +1,36 @@
+name: Verify PMK v82.13 browser test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-v82-13-test.yml'
+      - 'test-v82-13.html'
+      - 'final-period-lock-v82-13.js'
+      - 'final-period-lock-v82-13.css'
+      - 'version-indicator-v82-13.js'
+      - 'pmk-release.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check syntax and release markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s test-v82-13.html
+          test -s final-period-lock-v82-13.js
+          test -s final-period-lock-v82-13.css
+          test -s version-indicator-v82-13.js
+          node --check final-period-lock-v82-13.js
+          node --check version-indicator-v82-13.js
+          python3 -m json.tool pmk-release.json >/dev/null
+          grep -q 'PMK_FINAL_PERIOD_LOCK_V82_13' final-period-lock-v82-13.js
+          grep -q 'a76a496ea33820c9d364599c393339b6cca1fd71\|4e6f393da7d6978f26ae705d23cbbd32366c9f70' test-v82-13.html
+          grep -q '"version": "82.13"' pmk-release.json
