@@ -8,6 +8,8 @@ on:
       - 'smart-parser-next.js'
       - 'smart-parser-next-refinements.js'
       - 'smart-parser-next-real-rules.js'
+      - 'smart-parser-next-scope-rules.js'
+      - 'smart-parser-next-final-rules.js'
       - 'ci-check-smart-parser-next.mjs'
       - 'ci-check-smart-parser-real-patterns.mjs'
       - '.github/workflows/e2e-smart-parser-next.yml'
@@ -29,8 +31,8 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          node --require ./smart-parser-next-real-rules.js ci-check-smart-parser-next.mjs 2>&1 | tee smart-parser-test.log
-          node --require ./smart-parser-next-real-rules.js ci-check-smart-parser-real-patterns.mjs 2>&1 | tee -a smart-parser-test.log
+          node --require ./smart-parser-next-final-rules.js ci-check-smart-parser-next.mjs 2>&1 | tee smart-parser-test.log
+          node --require ./smart-parser-next-final-rules.js ci-check-smart-parser-real-patterns.mjs 2>&1 | tee -a smart-parser-test.log
       - if: always()
         uses: actions/upload-artifact@v4
         with:
