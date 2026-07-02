@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/e2e-v82-20-user-validation.yml'
+      - '.github/workflows/e2e-v82-20-compact.yml'
+      - 'test-v82-20.html'
   workflow_dispatch:
 
 permissions:
@@ -21,6 +23,8 @@ jobs:
           cd /tmp/src
           git fetch -q --depth 1 origin 58f8368d6d35a007e661f28b0b46a4e3aa9824e7
           python3 ci-assemble-v82-20.py
+          cp test-version-label-v82-20.js /tmp/pmk-v82-20/
+          cp test-version-label-v82-20.css /tmp/pmk-v82-20/
       - name: Install Chromium
         run: |
           cd /tmp/src
