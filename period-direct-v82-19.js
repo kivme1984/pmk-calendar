@@ -99,6 +99,8 @@
     if (!MODES.has(mode) || directRendering) return;
     directRendering = true;
     try {
+      const previousBoard = $('#weekEvents');
+      const previousLeft = mode === 'week' ? Number(previousBoard?.scrollLeft || 0) : 0;
       ensureAnchor();
       state.currentView = mode;
       showPlanning(mode);
@@ -113,8 +115,10 @@
 
       const board = $('#weekEvents');
       clearDecorations(board);
-      if (mode === 'week') board.classList.add('pmk-week-v82-19');
-      else decorateMonth(board);
+      if (mode === 'week') {
+        board.classList.add('pmk-week-v82-19');
+        if (previousLeft > 0) board.scrollLeft = previousLeft;
+      } else decorateMonth(board);
     } finally {
       directRendering = false;
     }
@@ -175,7 +179,6 @@
     globalThis.renderAll = wrapped;
   }
 
-  // Loaded before final-hotfix-v82-11, so this is the single Week/Month click controller.
   document.addEventListener('click', (event) => {
     const item = event.target.closest('.nav-item[data-view="week"],.nav-item[data-view="month"]');
     if (!item) return;
