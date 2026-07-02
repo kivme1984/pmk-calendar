@@ -99,9 +99,16 @@
       indicator.className = `pmk-event-cloud-status-v82-19${compact ? ' is-compact' : ''}`;
       indicator.setAttribute('role', 'group');
       indicator.setAttribute('aria-label', 'Состояние заявки в облачных календарях');
-      indicator.innerHTML = '<span class="pmk-event-cloud-provider-v82-19 is-google" data-event-cloud-provider="google">G</span><span class="pmk-event-cloud-provider-v82-19 is-yandex" data-event-cloud-provider="yandex">Я</span>';
+      indicator.innerHTML = '<span class="pmk-event-cloud-provider-v82-19 is-google is-offline" data-event-cloud-provider="google">G</span><span class="pmk-event-cloud-provider-v82-19 is-yandex is-offline" data-event-cloud-provider="yandex">Я</span>';
     }
     return indicator;
+  }
+
+  function applyProviderState(node, synced, pending) {
+    if (!node) return;
+    node.classList.toggle('is-synced', synced);
+    node.classList.toggle('is-pending', pending);
+    node.classList.toggle('is-offline', !synced && !pending);
   }
 
   function paint(indicator, event) {
@@ -109,10 +116,8 @@
     const google = $('[data-event-cloud-provider="google"]', indicator);
     const yandex = $('[data-event-cloud-provider="yandex"]', indicator);
 
-    google?.classList.toggle('is-synced', state.google);
-    yandex?.classList.toggle('is-synced', state.yandex);
-    google?.classList.toggle('is-pending', state.googlePending);
-    yandex?.classList.toggle('is-pending', state.yandexPending);
+    applyProviderState(google, state.google, state.googlePending);
+    applyProviderState(yandex, state.yandex, state.yandexPending);
 
     if (google) {
       const title = providerTitle('google', state.google, state.googlePending);
