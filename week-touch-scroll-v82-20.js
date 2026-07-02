@@ -19,10 +19,18 @@
     momentumFrame = 0;
   }
 
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
   function pointFrom(event, changed = false) {
     const list = changed ? event.changedTouches : event.touches;
     const touch = list?.[0];
     return touch ? { x: touch.clientX, y: touch.clientY } : null;
+  }
+
+  function stopParentSwipe(event) {
+    event.stopPropagation();
   }
 
   function onStart(event) {
@@ -31,6 +39,7 @@
     if (!board.matches(BOARD_SELECTOR)) return;
     const point = pointFrom(event);
     if (!point) return;
+    stopParentSwipe(event);
     stopMomentum();
     session = {
       board,
@@ -57,6 +66,7 @@
     if (!session || event.currentTarget !== session.board) return;
     const point = pointFrom(event);
     if (!point) return;
+    stopParentSwipe(event);
     const dx = point.x - session.startX;
     const dy = point.y - session.startY;
     if (!session.axis) session.axis = chooseAxis(dx, dy);
@@ -68,13 +78,11 @@
     const now = performance.now();
     const elapsed = Math.max(8, now - session.lastTime);
     if (session.axis === 'x') {
-      const next = session.startLeft - dx;
-      session.board.scrollLeft = next;
-      session.velocityX = (session.lastX - point.x) / elapsed;
+      session.board.scrollLeft = session.startLeft - dx;
+      session.velocityX = clamp((session.lastX - point.x) / elapsed, -1.8, 1.8);
     } else {
-      const next = session.startTop - dy;
-      scrollRoot().scrollTop = next;
-      session.velocityY = (session.lastY - point.y) / elapsed;
+      scrollRoot().scrollTop = session.startTop - dy;
+      session.velocityY = clamp((session.lastY - point.y) / elapsed, -1.8, 1.8);
     }
     session.lastX = point.x;
     session.lastY = point.y;
@@ -83,10 +91,10 @@
 
   function runMomentum(axis, velocity, board) {
     const root = scrollRoot();
-    let current = velocity * 17;
+    let current = clamp(velocity * 17, -28, 28);
     const step = () => {
-      current *= 0.92;
-      if (Math.abs(current) < 0.22) {
+      current *= 0.9;
+      if (Math.abs(current) < 0.35) {
         momentumFrame = 0;
         return;
       }
@@ -94,11 +102,12 @@
       else root.scrollTop += current;
       momentumFrame = requestAnimationFrame(step);
     };
-    if (Math.abs(current) >= 0.22) momentumFrame = requestAnimationFrame(step);
+    if (Math.abs(current) >= 0.35) momentumFrame = requestAnimationFrame(step);
   }
 
   function onEnd(event) {
     if (!session || event.currentTarget !== session.board) return;
+    stopParentSwipe(event);
     const ended = session;
     session = null;
     if (ended.moved) suppressClickUntil = performance.now() + 380;
@@ -106,7 +115,8 @@
     if (ended.axis === 'y') runMomentum('y', ended.velocityY, ended.board);
   }
 
-  function onCancel() {
+  function onCancel(event) {
+    stopParentSwipe(event);
     session = null;
   }
 
