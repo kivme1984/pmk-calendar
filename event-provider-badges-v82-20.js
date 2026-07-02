@@ -41,7 +41,7 @@
     const pending = new Set(queued.map((item) => String(item?.provider || '')));
     const providers = new Set(Array.isArray(event?._providers) ? event._providers : []);
     const id = String(event?.id || '');
-    const yandexNative = event?._provider === 'yandex' || id.startsWith('local-yandex-');
+    const yandexNative = Boolean(event?._yandexMirror || event?._provider === 'yandex' || id.startsWith('local-yandex-'));
     const googleNative = !isLocal(event) && event?._provider !== 'yandex';
 
     return {
