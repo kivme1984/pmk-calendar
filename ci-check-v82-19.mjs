@@ -152,11 +152,12 @@ try {
   }, eventId);
 
   for (const nextStatus of ['picked-up', 'pending-delivery', 'completed']) {
-    await page.evaluate(async ({ id, status }) => updateEventStatus(id, status), { id: eventId, status: nextStatus });
+    await page.evaluate(({ id, status }) => updateEventStatus(id, status), { id: eventId, status: nextStatus });
     await page.waitForFunction(({ id, status }) => {
       const event = state.localEvents.find(item => item.id === id);
       return event && eventMeta(event).requestStatus === status;
     }, { id: eventId, status: nextStatus });
+    await page.waitForTimeout(1200);
   }
   await openNav('completed');
   await waitView('completed');
@@ -178,6 +179,8 @@ try {
   await page.fill('#reminderTime', '12:00');
   await page.fill('#reminderText', 'Проверить резервную версию');
   await page.evaluate(() => document.querySelector('#reminderForm button[type="submit"]').click());
+  await page.waitForSelector('#pmkReminderConfirmDialog[open]');
+  await page.click('#pmkReminderConfirmSave');
   await page.waitForFunction(() => state.localEvents.some(event => String(event.id).startsWith('local-reminder-')));
 
   await openNav('settings');
