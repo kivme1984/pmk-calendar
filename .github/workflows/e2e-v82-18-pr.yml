@@ -1,0 +1,44 @@
+name: E2E PMK v82.18 PR
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'test-v82-18.html'
+      - 'period-core-v82-18.js'
+      - 'period-core-v82-18.css'
+      - '.github/workflows/e2e-v82-18-pr.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install playwright@1.52.0
+      - run: npx playwright install --with-deps chromium
+      - run: |
+          python3 -m http.server 8000 >/tmp/pmk-http.log 2>&1 &
+          sleep 2
+      - run: |
+          cat > /tmp/check.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+          await page.goto('http://127.0.0.1:8000/test-v82-18.html?ci=1', { waitUntil: 'networkidle', timeout: 120000 });
+          await page.waitForFunction(() => Boolean(window.PMK_PERIOD_CORE_V82_18), null, { timeout: 120000 });
+          await page.click('#menuToggle');
+          await page.click('.nav-item[data-view="week"]');
+          await page.waitForFunction(() => document.querySelector('#periodTitle')?.textContent?.trim() === 'Неделя' && document.querySelector('#weekEvents')?.classList.contains('pmk-week-v82-18') && document.querySelectorAll('#weekEvents .day-column').length === 7);
+          await page.click('#menuToggle');
+          await page.click('.nav-item[data-view="month"]');
+          await page.waitForFunction(() => document.querySelector('#periodTitle')?.textContent?.trim() === 'Месяц' && document.querySelector('#weekEvents')?.classList.contains('pmk-month-v82-18') && document.querySelectorAll('#weekEvents .pmk-month-count-v82-18').length >= 28);
+          await browser.close();
+          JS
+          node /tmp/check.mjs
