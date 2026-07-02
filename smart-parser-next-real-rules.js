@@ -12,17 +12,30 @@
     return String(value || '').toLowerCase().replace(/ё/g, 'е');
   }
 
+  function removeWarning(parsed, fragment) {
+    parsed.confidence.warnings = parsed.confidence.warnings.filter(warning => !warning.includes(fragment));
+  }
+
+  function addWarning(parsed, warning) {
+    if (!parsed.confidence.warnings.includes(warning)) parsed.confidence.warnings.push(warning);
+  }
+
   function parse(rawText = '') {
     const parsed = originalParse(rawText);
     const source = canonical(parsed.text);
 
     const stainsDenied = /удал(?:ять|ение)?\s+пятн[а-я]*\s+не\s+(?:нужно|надо)|пятн[а-я]*[^.\n]{0,40}(?:если\s+есть\s+)?не\s+(?:выводим|выводить)/.test(source);
-    if (stainsDenied) {
-      parsed.rugs.forEach((rug, index) => {
+    const stainsConditional = /(?:если|при\s+наличии)\s+(?:будут\s+)?пятн[а-я]*|пятн[а-я]*\s+если\s+есть/.test(source);
+
+    parsed.rugs.forEach((rug, index) => {
+      if (stainsDenied) {
         rug.services.stainRemoval = 'denied';
-        parsed.confidence.warnings = parsed.confidence.warnings.filter(warning => !warning.includes(`Ковёр ${index + 1}: услуга stainRemoval`));
-      });
-    }
+        removeWarning(parsed, `Ковёр ${index + 1}: услуга stainRemoval`);
+      } else if (stainsConditional) {
+        rug.services.stainRemoval = 'review';
+        addWarning(parsed, `Ковёр ${index + 1}: услуга stainRemoval требует осмотра`);
+      }
+    });
 
     parsed.confidence.warnings = [...new Set(parsed.confidence.warnings)];
     parsed.confidence.score = Math.max(0, 100 - parsed.confidence.warnings.length * 12);
