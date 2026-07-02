@@ -1,5 +1,5 @@
 /* Week and Month only. The confirmed v82.12 interface remains unchanged. */
-/* CI validation branch: exact baseline rerun. */
+/* Final exact-v82.12 E2E validation. */
 
 #weekEvents.pmk-week-v82-18{
   display:grid!important;
