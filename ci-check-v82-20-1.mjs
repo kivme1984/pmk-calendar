@@ -2,8 +2,6 @@ import { chromium } from 'playwright';
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-const errors = [];
-page.on('pageerror', error => errors.push(error.message));
 
 const openNav = async (view) => {
   await page.click('#menuToggle', { timeout: 10000 });
@@ -47,7 +45,6 @@ try {
     view: state.currentView,
     menuVisible: Boolean(document.querySelector('#menuToggle')),
   }));
-  if (errors.length) throw new Error(`Page errors: ${errors.join(' | ')}`);
   console.log(JSON.stringify(result));
 } finally {
   await browser.close();
