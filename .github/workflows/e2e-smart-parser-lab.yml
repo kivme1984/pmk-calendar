@@ -7,6 +7,7 @@ on:
       - 'smart-parser-lab.html'
       - 'smart-parser-lab.css'
       - 'smart-parser-lab.js'
+      - 'smart-parser-form-preview.js'
       - 'smart-parser-next-core.js'
       - 'smart-parser-next.js'
       - 'smart-parser-next-refinements.js'
