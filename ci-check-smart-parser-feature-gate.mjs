@@ -26,7 +26,7 @@ try {
   const plain = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const plainErrors = await collectErrors(plain);
   await plain.goto('http://127.0.0.1:8000/smart-parser-feature-gate-test.html?plain=1', { waitUntil: 'networkidle' });
-  await plain.waitForSelector('#requestForm', { timeout: 15000 });
+  await plain.waitForSelector('#requestForm', { timeout: 15000, state: 'attached' });
   await plain.waitForFunction(() => Boolean(globalThis.PMK_SMART_PARSER_FEATURE_GATE));
   const plainState = await plain.evaluate(() => ({
     gate: globalThis.PMK_SMART_PARSER_FEATURE_GATE,
