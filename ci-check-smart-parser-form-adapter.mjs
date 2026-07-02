@@ -47,8 +47,8 @@ try {
 
   const rugs = page.locator('#rugsContainer .rug-card');
   assert.equal(await rugs.count(), 2);
-  assert.equal(await rugs.nth(0).locator('.rug-length').inputValue(), '3');
-  assert.equal(await rugs.nth(0).locator('.rug-width').inputValue(), '2');
+  assert.equal(Number(await rugs.nth(0).locator('.rug-length').inputValue()), 3);
+  assert.equal(Number(await rugs.nth(0).locator('.rug-width').inputValue()), 2);
   assert.equal(await rugs.nth(0).locator('.rug-material').inputValue(), 'Шерсть');
   assert.equal(await rugs.nth(0).locator('.rug-issues input[value="Пятна"]').isChecked(), false);
   assert.equal(await rugs.nth(1).locator('.rug-pile').inputValue(), 'Более 1 см');
