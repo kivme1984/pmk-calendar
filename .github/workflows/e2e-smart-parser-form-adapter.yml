@@ -1,12 +1,12 @@
-name: Smart Parser Lab Mobile Check
+name: Smart Parser Form Adapter Check
 
 on:
   pull_request:
     branches: [main]
     paths:
-      - 'smart-parser-lab.html'
-      - 'smart-parser-lab.css'
-      - 'smart-parser-lab.js'
+      - 'smart-parser-form-test.html'
+      - 'smart-parser-form-adapter.js'
+      - 'smart-parser-form-adapter.css'
       - 'smart-parser-next-core.js'
       - 'smart-parser-next.js'
       - 'smart-parser-next-refinements.js'
@@ -14,15 +14,15 @@ on:
       - 'smart-parser-next-scope-rules.js'
       - 'smart-parser-next-final-rules.js'
       - 'smart-parser-next-identical-rugs.js'
-      - 'ci-check-smart-parser-lab.mjs'
-      - '.github/workflows/e2e-smart-parser-lab.yml'
+      - 'ci-check-smart-parser-form-adapter.mjs'
+      - '.github/workflows/e2e-smart-parser-form-adapter.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  lab-mobile:
+  form-adapter-mobile:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -32,19 +32,16 @@ jobs:
           node-version: '22'
       - run: npm install --silent playwright@1.52.0
       - run: npx playwright install --with-deps chromium >/dev/null 2>&1
-      - name: Start local server
-        shell: bash
-        run: |
-          python3 -m http.server 8000 >/tmp/smart-parser-lab-http.log 2>&1 &
-      - name: Run lab mobile test
+      - run: python3 -m http.server 8000 >/tmp/smart-parser-form-http.log 2>&1 &
+      - name: Run mobile form adapter test
         shell: bash
         run: |
           set -o pipefail
           sleep 2
-          node ci-check-smart-parser-lab.mjs 2>&1 | tee smart-parser-lab-test.log
+          node ci-check-smart-parser-form-adapter.mjs 2>&1 | tee smart-parser-form-test.log
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smart-parser-lab-test-log
-          path: smart-parser-lab-test.log
+          name: smart-parser-form-test-log
+          path: smart-parser-form-test.log
           if-no-files-found: error
