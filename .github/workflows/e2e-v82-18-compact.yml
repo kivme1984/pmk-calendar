@@ -1,0 +1,37 @@
+name: E2E PMK v82.18 Compact
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'period-core-v82-18.js'
+      - 'period-core-v82-18.css'
+      - 'test-v82-18.html'
+      - 'ci-check-v82-18.mjs'
+      - 'ci-assemble-v82-18.py'
+      - '.github/workflows/e2e-v82-18-compact.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Prepare repository
+        run: |
+          git clone -q --branch "$GITHUB_HEAD_REF" --depth 1 "https://github.com/$GITHUB_REPOSITORY.git" .
+          git fetch -q --depth 1 origin 58f8368d6d35a007e661f28b0b46a4e3aa9824e7
+          python3 ci-assemble-v82-18.py
+      - name: Install browser
+        run: |
+          npm install --silent playwright@1.52.0
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+      - name: Run mobile proof
+        run: |
+          cd /tmp/pmk-site
+          python3 -m http.server 8000 >/tmp/pmk-http.log 2>&1 &
+          cd "$GITHUB_WORKSPACE"
+          sleep 2
+          node ci-check-v82-18.mjs
