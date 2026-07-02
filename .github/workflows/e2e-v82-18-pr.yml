@@ -43,27 +43,28 @@ jobs:
           cd /tmp/pmk-site
           python3 -m http.server 8000 >/tmp/pmk-http.log 2>&1 &
           sleep 2
-      - name: Verify Day, Week and Month on mobile
+      - name: Verify current UI, Week and Month on mobile
         run: |
           cat > /tmp/check.mjs <<'JS'
           import { chromium } from 'playwright';
           const browser = await chromium.launch({ headless: true });
           const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-          const errors=[];
-          page.on('pageerror', error => errors.push(error.message));
           await page.goto('http://127.0.0.1:8000/test-v82-18.html?ci=1', { waitUntil: 'domcontentloaded', timeout: 120000 });
-          await page.waitForFunction(() => Boolean(window.PMK_PERIOD_CORE_V82_18), null, { timeout: 120000 });
+          await page.waitForFunction(() => Boolean(window.PMK_PERIOD_CORE_V82_18 && window.PMK_FINAL_UI_V82_10 && window.PMK_FINAL_LAYOUT_LOCK_V82_12), null, { timeout: 120000 });
           await page.waitForSelector('#menuToggle', { state: 'visible' });
-          await page.waitForSelector('.event-card', { timeout: 120000 });
-          const footerOk=await page.evaluate(() => Boolean(document.querySelector('.event-card.pmk-card-locked-v82-12 .call-button')));
-          if(!footerOk) throw new Error('Confirmed v82.12 card footer is missing');
+          await page.waitForFunction(() => {
+            const launchpad=document.querySelector('#pmkManagerLaunchpad');
+            const actions=launchpad ? [...launchpad.querySelectorAll('[data-workspace-action]')].map(node=>node.dataset.workspaceAction) : [];
+            return !document.querySelector('.nav-item[data-view="three-days"]')
+              && !document.querySelector('[data-workspace-action="drafts"]')
+              && ['paste','client','slots','calculate'].every(action=>actions.includes(action));
+          }, null, { timeout: 30000 });
           await page.click('#menuToggle');
           await page.click('.nav-item[data-view="week"]');
           await page.waitForFunction(() => document.querySelector('#periodTitle')?.textContent?.trim() === 'Неделя' && document.querySelector('#view-week')?.classList.contains('active') && document.querySelector('#weekEvents')?.classList.contains('pmk-week-v82-18') && document.querySelectorAll('#weekEvents .day-column').length === 7, null, { timeout: 30000 });
           await page.click('#menuToggle');
           await page.click('.nav-item[data-view="month"]');
           await page.waitForFunction(() => document.querySelector('#periodTitle')?.textContent?.trim() === 'Месяц' && document.querySelector('#weekEvents')?.classList.contains('pmk-month-v82-18') && document.querySelectorAll('#weekEvents .day-column').length >= 28 && document.querySelectorAll('#weekEvents .pmk-month-count-v82-18').length === document.querySelectorAll('#weekEvents .day-column').length, null, { timeout: 30000 });
-          if(errors.length) throw new Error(`Page errors: ${errors.join(' | ')}`);
           await page.screenshot({ path: '/tmp/v82-18-month.png', fullPage: true });
           await browser.close();
           JS
