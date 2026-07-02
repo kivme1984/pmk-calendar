@@ -27,6 +27,9 @@ for name in (
     'final-layout-lock-v82-19-stable.js',
     'menu-performance-v82-19.js',
     'menu-performance-v82-19.css',
+    'quick-actions-icons-v82-19.js',
+    'quick-actions-icons-v82-19.css',
+    'edge-menu-swipe-v82-19.js',
     'test-v82-19.html',
 ):
     shutil.copy2(root / name, out / name)
