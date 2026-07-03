@@ -9,7 +9,9 @@ function ConvertFrom-SecureToPlain([Security.SecureString]$SecureValue) {
 
 function New-Base64UrlSecret([int]$Bytes = 32) {
   $buffer = New-Object byte[] $Bytes
-  [Security.Cryptography.RandomNumberGenerator]::Fill($buffer)
+  $rng = [Security.Cryptography.RandomNumberGenerator]::Create()
+  try { $rng.GetBytes($buffer) }
+  finally { $rng.Dispose() }
   return [Convert]::ToBase64String($buffer).TrimEnd('=').Replace('+','-').Replace('/','_')
 }
 
@@ -68,7 +70,8 @@ $config = [ordered]@{
   apiUrl = $workerUrl
   label = 'Постоянный вход Google'
 }
-$config | ConvertTo-Json | Set-Content -Path $configPath -Encoding UTF8
+$configJson = $config | ConvertTo-Json
+[IO.File]::WriteAllText($configPath, $configJson + [Environment]::NewLine, (New-Object Text.UTF8Encoding($false)))
 
 Set-Clipboard -Value $redirectUri
 Write-Host ''
@@ -76,6 +79,7 @@ Write-Host 'СЕРВЕР ГОТОВ' -ForegroundColor Green
 Write-Host "Worker: $workerUrl"
 Write-Host "Redirect URI скопирован: $redirectUri" -ForegroundColor Yellow
 Write-Host 'Откройте Google Cloud Console, добавьте этот URI в Authorized redirect URIs и сохраните.'
+Write-Host 'Также проверьте OAuth consent screen: для длительного входа приложение не должно оставаться в статусе Testing.' -ForegroundColor Yellow
 Start-Process 'https://console.cloud.google.com/apis/credentials'
 
 $gitRoot = Join-Path $repoRoot '.git'
