@@ -1,8 +1,8 @@
 'use strict';
 
 (() => {
-  const VERSION = '82.19.1';
-  const RELEASE = '82.19.1';
+  const VERSION = '82';
+  const RELEASE = '82.19.2';
   const BRANCH = '82';
   window.PMK_APP_VERSION = RELEASE;
   document.documentElement.dataset.pmkVersion = RELEASE;
@@ -19,7 +19,7 @@
       heading.insertAdjacentElement('afterend', panel);
     }
     panel.querySelector('#settingsVersionValue').textContent = `v${RELEASE}`;
-    panel.querySelector('#settingsVersionRelease').textContent = 'Облачные статусы, быстрые периоды и исправленные свайпы · 2026-07-03';
+    panel.querySelector('#settingsVersionRelease').textContent = 'Исправление формы: один ряд кнопок, без служебных плашек · 2026-07-03';
     panel.querySelector('#settingsUpdateButton').href = `./reset.html?v=${RELEASE}-settings`;
     return true;
   }
