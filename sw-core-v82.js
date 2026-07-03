@@ -1,7 +1,7 @@
-const VERSION='82.19.2';
+const VERSION='82.20.0';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-19-2.js';
-const BUNDLE_CSS='./__pmk-styles-v82-19-2.css';
+const BUNDLE_JS='./__pmk-app-v82-20-0.js';
+const BUNDLE_CSS='./__pmk-styles-v82-20-0.css';
 
 const JS=`
 ./app.js
@@ -69,6 +69,7 @@ const JS=`
 ./version-guard-v82.js
 ./smart-parser-feature-gate.js
 ./workflow-ui-cleanup-v82-19-2.js
+./persistent-google-auth-v82-20.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -113,9 +114,10 @@ const CSS=`
 ./quick-actions-icons-v82-19.css
 ./event-cloud-indicators-v82-19.css
 ./workflow-ui-cleanup-v82-19-2.css
+./persistent-google-auth-v82-20.css
 `.trim().split(/\s+/);
 
-const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./icons/icon-192.png','./icons/icon-512.png'];
+const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./pmk-google-auth-config.json','./icons/icon-192.png','./icons/icon-512.png'];
 
 function fetchWithTimeout(url,timeout=12000){
   const controller=new AbortController();
@@ -127,9 +129,10 @@ async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
   const text=await response.text();
-  if(url.includes('version-guard-v82.js')&&(!text.includes("const VERSION = '82'")||!text.includes("const RELEASE = '82.19.2'")))throw new Error('Неверный контрольный файл v82.19.2');
-  if(url.includes('event-cloud-indicators-v82-19.js')&&!text.includes('PMK_EVENT_CLOUD_INDICATORS_V82_19'))throw new Error('Не получены облачные индикаторы v82.19.2');
-  if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_WORKFLOW_UI_CLEANUP_V82_19_2'))throw new Error('Не получено исправление интерфейса v82.19.2');
+  if(url.includes('version-guard-v82.js')&&(!text.includes("const VERSION = '82'")||!text.includes("const RELEASE = '82.20.0'")))throw new Error('Неверный контрольный файл v82.20.0');
+  if(url.includes('event-cloud-indicators-v82-19.js')&&!text.includes('PMK_EVENT_CLOUD_INDICATORS_V82_19'))throw new Error('Не получены облачные индикаторы v82.20.0');
+  if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_WORKFLOW_UI_CLEANUP_V82_19_2'))throw new Error('Не получено исправление интерфейса v82.20.0');
+  if(url.includes('persistent-google-auth-v82-20.js')&&!text.includes('PMK_PERSISTENT_GOOGLE_AUTH_V82_20'))throw new Error('Не получен модуль постоянного входа Google v82.20.0');
   return text;
 }
 
@@ -169,6 +172,7 @@ self.addEventListener('fetch',event=>{
   const url=new URL(event.request.url);
   if(url.pathname.endsWith('/app.js'))return event.respondWith(cached(BUNDLE_JS).then(value=>value||fetch(event.request)));
   if(url.pathname.endsWith('/styles.css'))return event.respondWith(cached(BUNDLE_CSS).then(value=>value||fetch(event.request)));
+  if(url.pathname.endsWith('/pmk-google-auth-config.json'))return event.respondWith(fetch(event.request,{cache:'no-store'}).catch(()=>cached('./pmk-google-auth-config.json')));
   if(event.request.mode==='navigate')return event.respondWith(cached('./index.html').then(value=>value||fetch(event.request)));
   event.respondWith(caches.match(event.request).then(value=>value||fetch(event.request)));
 });
