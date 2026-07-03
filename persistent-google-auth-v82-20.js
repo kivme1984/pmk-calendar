@@ -209,6 +209,10 @@
   }
 
   function ensureSettingsCard() {
+    if (!config?.enabled || !config?.apiUrl) {
+      document.querySelector('#pmkPersistentGoogleCard')?.remove();
+      return null;
+    }
     const grid = document.querySelector('#view-settings .settings-grid');
     if (!grid) return null;
     let card = document.querySelector('#pmkPersistentGoogleCard');
@@ -267,19 +271,15 @@
 
   document.addEventListener('click', event => {
     const button = event.target.closest('#connectGoogleBtn,#pmkPersistentGoogleConnect');
-    if (!button) return;
-    loadConfig().then(active => {
-      if (!active.enabled || !active.apiUrl) return;
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      startPersistentAuthorization();
-    });
+    if (!button || !config?.enabled || !config?.apiUrl) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    startPersistentAuthorization();
   }, true);
 
   function boot() {
     installOverrides();
-    updatePersistentUi();
     loadConfig().then(active => {
       updatePersistentUi();
       if (active.enabled && active.apiUrl && readSession()) refreshAccessToken({ quiet: !returnedWithSession });
@@ -297,6 +297,7 @@
   }
 
   installOverrides();
+  loadConfig();
   document.readyState === 'loading'
     ? document.addEventListener('DOMContentLoaded', boot, { once: true })
     : boot();
