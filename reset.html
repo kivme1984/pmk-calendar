@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Обновление ПМК Календаря до v82.19.1</title>
+<title>Обновление ПМК Календаря до v82.20.0</title>
 <style>
 body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-shadow:0 24px 70px rgba(0,0,0,.38)}h1{margin:0 0 10px;font-size:25px}p{margin:0;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#9fe0b8}.error{color:#ff9b90}.actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}
 </style>
 </head>
 <body>
 <main>
-<h1 id="title">Устанавливаем основную версию v82.19.1</h1>
-<p id="description">Облачные индикаторы Google и Яндекс, быстрые периоды, исправленные свайпы и компактный архив.</p>
+<h1 id="title">Устанавливаем основную версию v82.20.0</h1>
+<p id="description">Исправленная рабочая форма и подготовка постоянного входа Google без повторного подключения.</p>
 <p id="status" class="status">Проверяем файлы обновления…</p>
 <div class="actions">
 <button id="retry" type="button" hidden>Повторить обновление</button>
-<a id="safe" href="./safe.html?v=82.19.1" hidden>Открыть безопасный режим</a>
-<a id="open" href="./?v=82.19.1" hidden>Открыть приложение</a>
+<a id="safe" href="./safe.html?v=82.20.0" hidden>Открыть безопасный режим</a>
+<a id="open" href="./?v=82.20.0" hidden>Открыть приложение</a>
 </div>
 </main>
 <script>
@@ -34,7 +34,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
     }
   }
 
-  const VERSION='82.19.1';
+  const VERSION='82.20.0';
   const status=document.querySelector('#status');
   const retry=document.querySelector('#retry');
   const safe=document.querySelector('#safe');
@@ -43,25 +43,27 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   const description=document.querySelector('#description');
 
   if(smartParserMode){
-    title.textContent='Подготавливаем умный ввод для v82.19.1';
+    title.textContent='Подготавливаем умный ввод для v82.20.0';
     description.textContent='Тестовый режим запускается отдельно и не изменяет обычную работу календаря.';
-    open.href='./?v=82.19.1&smart-parser=1';
+    open.href='./?v=82.20.0&smart-parser=1';
     open.textContent='Открыть умный ввод';
   }
 
   async function verify(){
     const stamp=Date.now();
     const checks=[
-      ['./sw.js','sw-core-v82.js'],
-      ['./sw-core-v82.js',"const VERSION='82.19.1'"],
-      ['./sw-core-v82.js','smart-parser-feature-gate.js'],
-      ['./smart-parser-feature-gate.js','PMK_SMART_PARSER_FEATURE_GATE'],
-      ['./version-guard-v82.js',"const RELEASE = '82.19.1'"],
+      ['./sw.js','PMK Calendar v82.20.0'],
+      ['./sw-core-v82.js',"const VERSION='82.20.0'"],
+      ['./sw-core-v82.js','persistent-google-auth-v82-20.js'],
+      ['./persistent-google-auth-v82-20.js','PMK_PERSISTENT_GOOGLE_AUTH_V82_20'],
+      ['./persistent-google-auth-v82-20.css','.pmk-persistent-google-card'],
+      ['./pmk-google-auth-config.json','"enabled"'],
+      ['./version-guard-v82.js',"const RELEASE = '82.20.0'"],
+      ['./workflow-ui-cleanup-v82-19-2.js','PMK_WORKFLOW_UI_CLEANUP_V82_19_2'],
       ['./event-cloud-indicators-v82-19.js','PMK_EVENT_CLOUD_INDICATORS_V82_19'],
       ['./period-direct-v82-19.js','PMK_PERIOD_DIRECT_V82_19'],
       ['./week-touch-scroll-v82-19-stable.js','PMK_WEEK_TOUCH_SCROLL_V82_19_STABLE'],
-      ['./final-layout-lock-v82-19-stable.js','PMK_FINAL_LAYOUT_LOCK_V82_19_STABLE'],
-      ['./stable-version-label-v82-19.js',"const VERSION = '82.19.1'"]
+      ['./smart-parser-feature-gate.js','PMK_SMART_PARSER_FEATURE_GATE']
     ];
     for(const [path,marker] of checks){
       const response=await fetch(`${path}?verify=${stamp}`,{cache:'no-store'});
@@ -87,18 +89,18 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
   async function update(){
     retry.hidden=true;safe.hidden=true;open.hidden=true;
     status.className='status';
-    status.textContent=smartParserMode?'Проверяем умный ввод и актуальную сборку v82.19.1…':'Проверяем облачные статусы, меню и свайпы…';
+    status.textContent=smartParserMode?'Проверяем умный ввод и сборку v82.20.0…':'Проверяем форму и модуль постоянного входа Google…';
     try{
       await verify();
       if(!('serviceWorker' in navigator))throw new Error('Этот браузер не поддерживает обновление приложения');
-      status.textContent=smartParserMode?'Устанавливаем тестовый режим поверх v82.19.1…':'Устанавливаем проверенный пакет v82.19.1…';
+      status.textContent=smartParserMode?'Устанавливаем тестовый режим поверх v82.20.0…':'Устанавливаем пакет v82.20.0…';
       const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}-${Date.now()}`,{updateViaCache:'none'});
       await registration.update();
       await waitForActivation(registration);
-      status.textContent=smartParserMode?'Умный ввод проверен. Открываем тестовый режим…':'Основная версия v82.19.1 установлена. Открываем приложение…';
+      status.textContent=smartParserMode?'Умный ввод проверен. Открываем тестовый режим…':'Основная версия v82.20.0 установлена. Открываем приложение…';
       open.hidden=false;
       const target=`./?v=${VERSION}&verified=${Date.now()}${smartParserMode?'&smart-parser=1':''}`;
-      setTimeout(()=>location.replace(target),700);
+      setTimeout(()=>location.replace(target),900);
     }catch(error){
       status.className='status error';
       status.textContent=`Обновление не завершено: ${error.message}`;
