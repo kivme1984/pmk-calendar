@@ -1,0 +1,10 @@
+name = "pmk-google-auth"
+main = "src/index.js"
+compatibility_date = "2026-07-03"
+workers_dev = true
+
+[vars]
+GOOGLE_CLIENT_ID = "590025911241-pcl02les7r12l6stk1mb4aesdv294nba.apps.googleusercontent.com"
+APP_ORIGIN = "https://kivme1984.github.io"
+APP_PATH = "/pmk-calendar/"
+SESSION_DAYS = "365"
