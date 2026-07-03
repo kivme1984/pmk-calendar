@@ -1,13 +1,13 @@
 {
-  "version": "82.19.2",
-  "release": "workflow-ui-cleanup",
+  "version": "82.20.0",
+  "release": "persistent-google-auth-ready",
   "date": "2026-07-03",
   "features": [
-    "all-v82-19-1-functions-preserved",
-    "forced-new-service-worker-cache",
-    "single-bottom-action-bar-in-full-form",
-    "remove-duplicate-native-form-actions",
-    "remove-version-badges-from-working-interface",
-    "version-remains-visible-in-settings"
+    "all-v82-19-2-functions-preserved",
+    "persistent-google-auth-client-module",
+    "cloudflare-oauth-worker-source",
+    "automatic-access-token-refresh",
+    "one-time-google-account-connection",
+    "feature-hidden-until-backend-enabled"
   ]
 }
