@@ -1,0 +1,10 @@
+html[data-pmk-workflow-cleanup="82.19.2"] #pmkVersionIndicator,
+html[data-pmk-workflow-cleanup="82.19.2"] #pmkStableBuildBadgeV8219,
+html[data-pmk-workflow-cleanup="82.19.2"] .pmk-stable-build-badge-v82-19,
+html[data-pmk-workflow-cleanup="82.19.2"] #requestForm .form-actions{
+  display:none!important;
+}
+
+html[data-pmk-workflow-cleanup="82.19.2"] #v50StickyActions{
+  display:grid!important;
+}
