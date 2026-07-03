@@ -4,13 +4,8 @@
   if (globalThis.PMK_STABLE_VERSION_LABEL_V82_19) return;
   globalThis.PMK_STABLE_VERSION_LABEL_V82_19 = true;
 
-  const VERSION = '82.19.1';
-  const IS_BACKUP = globalThis.PMK_STABLE_BACKUP === true;
-  const CHANNEL = IS_BACKUP ? 'Резервная' : 'Основная';
-  const LABEL = `${CHANNEL} v${VERSION}`;
+  const VERSION = '82.20.0';
   let scheduled = false;
-  let indicatorObserver = null;
-  let observedIndicator = null;
 
   function installSearchNormalization() {
     if (globalThis.PMK_SEARCH_NORMALIZATION_V82_19 || typeof eventSearchText !== 'function') return;
@@ -60,17 +55,9 @@
     button.addEventListener('click', () => setTimeout(persistPricing, 0));
   }
 
-  function watchIndicator(indicator) {
-    if (!indicator || indicator === observedIndicator) return;
-    indicatorObserver?.disconnect();
-    observedIndicator = indicator;
-    indicatorObserver = new MutationObserver(scheduleApply);
-    indicatorObserver.observe(indicator, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['class', 'href', 'title'],
-    });
+  function removeVisualVersionLabels() {
+    document.querySelector('#pmkVersionIndicator')?.remove();
+    document.querySelectorAll('#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19').forEach(node => node.remove());
   }
 
   function apply() {
@@ -78,32 +65,9 @@
     installSearchNormalization();
     ensureCompatibilityNodes();
     installPricingPersistence();
+    removeVisualVersionLabels();
     document.documentElement.dataset.pmkCandidate = VERSION;
-    if (document.title !== `ПМК Календарь · ${LABEL}`) document.title = `ПМК Календарь · ${LABEL}`;
-
-    const indicator = document.querySelector('#pmkVersionIndicator');
-    if (indicator) {
-      watchIndicator(indicator);
-      if (indicator.className !== 'pmk-version-indicator-v82-10 is-current pmk-stable-version-v82-19') {
-        indicator.className = 'pmk-version-indicator-v82-10 is-current pmk-stable-version-v82-19';
-      }
-      if (indicator.getAttribute('href') !== '#') indicator.href = '#';
-      const title = IS_BACKUP
-        ? 'Открыта проверенная резервная версия ПМК Календаря'
-        : 'Открыта основная версия ПМК Календаря';
-      if (indicator.title !== title) indicator.title = title;
-      if (indicator.textContent?.trim() !== LABEL) indicator.innerHTML = `<i></i><span>${LABEL}</span>`;
-    }
-
-    let badge = document.querySelector('#pmkStableBuildBadgeV8219');
-    if (!badge) {
-      badge = document.createElement('div');
-      badge.id = 'pmkStableBuildBadgeV8219';
-      badge.className = 'pmk-stable-build-badge-v82-19';
-      document.body.appendChild(badge);
-    }
-    const badgeText = `${CHANNEL.toUpperCase()} v${VERSION}`;
-    if (badge.textContent !== badgeText) badge.textContent = badgeText;
+    document.title = 'ПМК Календарь';
   }
 
   function scheduleApply() {
@@ -114,17 +78,11 @@
 
   function boot() {
     apply();
-    const brand = document.querySelector('.app-header .brand');
-    if (brand) new MutationObserver(scheduleApply).observe(brand, { childList: true });
-
     let attempts = 0;
     const timer = setInterval(() => {
       attempts += 1;
       scheduleApply();
-      const ready = document.querySelector('#pmkVersionIndicator')
-        && document.querySelector('#pmkStableBuildBadgeV8219')
-        && document.querySelector('#saveSettingsBtn')?.dataset.pmkStablePricingV8219 === '1';
-      if (ready || attempts >= 12) clearInterval(timer);
+      if (attempts >= 12 || document.querySelector('#saveSettingsBtn')?.dataset.pmkStablePricingV8219 === '1') clearInterval(timer);
     }, 250);
   }
 
