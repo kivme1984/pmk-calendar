@@ -1,7 +1,7 @@
 {
-  "version": "82.19.1",
-  "label": "Основная v82.19.1",
+  "version": "82.19.2",
+  "label": "Основная v82.19.2",
   "testUrl": "./test-v82-19.html",
-  "updateUrl": "./reset.html?v=82.19.1",
-  "publishedAt": "2026-07-03T00:00:00Z"
+  "updateUrl": "./reset.html?v=82.19.2",
+  "publishedAt": "2026-07-03T03:00:00Z"
 }
