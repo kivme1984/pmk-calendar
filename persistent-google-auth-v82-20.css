@@ -1,0 +1,17 @@
+.pmk-persistent-google-card{
+  display:grid;
+  gap:14px;
+  border-color:#d8d8d8;
+}
+.pmk-persistent-google-card h2{margin:0}
+.pmk-persistent-google-card p{margin:0;color:#555;line-height:1.45}
+.pmk-persistent-google-card.is-connected{
+  border-color:#a8d8b7;
+  background:#f2fbf5;
+}
+.pmk-persistent-google-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.pmk-persistent-google-actions .button{flex:1 1 190px}
