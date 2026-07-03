@@ -1,7 +1,7 @@
-const VERSION='82.19.1';
+const VERSION='82.19.2';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-19-1.js';
-const BUNDLE_CSS='./__pmk-styles-v82-19-1.css';
+const BUNDLE_JS='./__pmk-app-v82-19-2.js';
+const BUNDLE_CSS='./__pmk-styles-v82-19-2.css';
 
 const JS=`
 ./app.js
@@ -68,6 +68,7 @@ const JS=`
 ./event-cloud-indicators-v82-19.js
 ./version-guard-v82.js
 ./smart-parser-feature-gate.js
+./workflow-ui-cleanup-v82-19-2.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -111,6 +112,7 @@ const CSS=`
 ./menu-performance-v82-19.css
 ./quick-actions-icons-v82-19.css
 ./event-cloud-indicators-v82-19.css
+./workflow-ui-cleanup-v82-19-2.css
 `.trim().split(/\s+/);
 
 const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./icons/icon-192.png','./icons/icon-512.png'];
@@ -125,8 +127,9 @@ async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
   const text=await response.text();
-  if(url.includes('version-guard-v82.js')&&!text.includes("const VERSION = '82.19.1'"))throw new Error('Неверный контрольный файл v82.19.1');
-  if(url.includes('event-cloud-indicators-v82-19.js')&&!text.includes('PMK_EVENT_CLOUD_INDICATORS_V82_19'))throw new Error('Не получены облачные индикаторы v82.19.1');
+  if(url.includes('version-guard-v82.js')&&(!text.includes("const VERSION = '82'")||!text.includes("const RELEASE = '82.19.2'")))throw new Error('Неверный контрольный файл v82.19.2');
+  if(url.includes('event-cloud-indicators-v82-19.js')&&!text.includes('PMK_EVENT_CLOUD_INDICATORS_V82_19'))throw new Error('Не получены облачные индикаторы v82.19.2');
+  if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_WORKFLOW_UI_CLEANUP_V82_19_2'))throw new Error('Не получено исправление интерфейса v82.19.2');
   return text;
 }
 
