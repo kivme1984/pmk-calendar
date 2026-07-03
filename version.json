@@ -1,16 +1,13 @@
 {
-  "version": "82.19.1",
-  "release": "cloud-status-main",
+  "version": "82.19.2",
+  "release": "workflow-ui-cleanup",
   "date": "2026-07-03",
   "features": [
-    "all-v82-functions-preserved",
-    "compact-completed-cards-and-seven-day-auto-archive",
-    "direct-period-navigation-with-week-scroll-reset",
-    "vertical-page-scroll-preserved-over-week-cards",
-    "fast-menu-rendering",
-    "edge-swipe-menu-opening",
-    "quick-action-icons",
-    "google-and-yandex-cloud-status-indicators-near-contract-number",
-    "main-application-promotion-of-tested-v82-19-1"
+    "all-v82-19-1-functions-preserved",
+    "forced-new-service-worker-cache",
+    "single-bottom-action-bar-in-full-form",
+    "remove-duplicate-native-form-actions",
+    "remove-version-badges-from-working-interface",
+    "version-remains-visible-in-settings"
   ]
 }
