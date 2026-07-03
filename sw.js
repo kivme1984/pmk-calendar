@@ -1,3 +1,3 @@
-// PMK Calendar service worker v82.19.2 — forced cache refresh
+// PMK Calendar v82.20.0
 importScripts('./sw-special-router-v82.js');
-importScripts('./sw-core-v82.js?v=82.19.2');
+importScripts('./sw-core-v82.js?v=82.20.0');
