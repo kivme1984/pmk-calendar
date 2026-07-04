@@ -1,12 +1,12 @@
 {
-  "version": "82.37.0",
-  "release": "save-guard-compact-day-cards",
+  "version": "82.38.0",
+  "release": "restore-day-card-layout",
   "date": "2026-07-05",
   "features": [
-    "update-loop-fixed-current-version",
-    "google-save-fallback-to-local",
-    "compact-day-event-cards",
-    "day-card-functionality-preserved",
-    "v82-cache-bump"
+    "restore-original-day-card-layout",
+    "compact-card-sizing-without-redesign",
+    "remove-broken-v82-37-card-style",
+    "save-guard-preserved",
+    "update-loop-current-version-fixed"
   ]
 }
