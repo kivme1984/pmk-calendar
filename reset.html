@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>Обновление ПМК Календаря до v82.38.0</title>
+  <title>Обновление ПМК Календаря до v82.39.0</title>
   <style>
     body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}
     main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-shadow:0 24px 70px rgba(0,0,0,.38)}
@@ -13,17 +13,17 @@
 </head>
 <body>
   <main>
-    <h1>Устанавливаем v82.38.0</h1>
-    <p>Возвращаем нормальную карточку дня и делаем её компактнее без перелома дизайна и функционала.</p>
+    <h1>Устанавливаем v82.39.0</h1>
+    <p>Отключаем сломанную левую колонку статусов, которая превращала карточку в вертикальные зелёные столбы.</p>
     <p id="status" class="status">Проверяем файлы обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
-      <a href="./?v=82.38.0">Открыть приложение</a>
-      <a href="./safe.html?v=82.38.0">Безопасный режим</a>
+      <a href="./?v=82.39.0">Открыть приложение</a>
+      <a href="./safe.html?v=82.39.0">Безопасный режим</a>
     </div>
   </main>
   <script>
-    const VERSION='82.38.0';
+    const VERSION='82.39.0';
     const status=document.getElementById('status');
     const button=document.getElementById('install');
     async function check(path,marker){
@@ -35,12 +35,12 @@
     async function run(){
       button.disabled=true;
       status.className='status';
-      status.textContent='Проверяем v82.38.0...';
+      status.textContent='Проверяем v82.39.0...';
       try{
-        await check('./sw.js','PMK Calendar v82.38.0');
-        await check('./sw-core-v82.js',"const VERSION='82.38.0'");
-        await check('./update-manager-v82-20.js','PMK_UPDATE_MANAGER_V82_38');
-        await check('./day-card-restore-v82-38.js','PMK_DAY_CARD_RESTORE_V82_38');
+        await check('./sw.js','PMK Calendar v82.39.0');
+        await check('./sw-core-v82.js',"const VERSION='82.39.0'");
+        await check('./update-manager-v82-20.js','PMK_UPDATE_MANAGER_V82_39');
+        await check('./status-left-column-v82-2.js','PMK_STATUS_LEFT_COLUMN_DISABLED_V82_39');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
         status.textContent='Обновляем кэш...';
         const reg=await navigator.serviceWorker.register('./sw.js?v='+VERSION+'-'+Date.now(),{updateViaCache:'none'});
