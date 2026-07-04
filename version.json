@@ -1,13 +1,11 @@
 {
-  "version": "82.20.0",
-  "release": "persistent-google-auth-ready",
-  "date": "2026-07-03",
+  "version": "82.34.0",
+  "release": "classic-month-calendar-counters",
+  "date": "2026-07-05",
   "features": [
-    "all-v82-19-2-functions-preserved",
-    "persistent-google-auth-client-module",
-    "cloudflare-oauth-worker-source",
-    "automatic-access-token-refresh",
-    "one-time-google-account-connection",
-    "feature-hidden-until-backend-enabled"
+    "classic-month-calendar-grid",
+    "large-daily-request-counters",
+    "compact-district-point-counters",
+    "v82-cache-bump"
   ]
 }
