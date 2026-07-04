@@ -1,6 +1,6 @@
 {
-  "version": "82.39.0",
-  "label": "Основная v82.39.0 — отключена сломанная левая колонка статусов",
-  "publishedAt": "2026-07-05T20:20:00Z",
-  "buildToken": "disable-left-status-column-v82-39"
+  "version": "82.40.0",
+  "label": "Основная v82.40.0 — откат карточки дня без compact-стилей",
+  "publishedAt": "2026-07-05T20:40:00Z",
+  "buildToken": "card-visual-rollback-save-guard-v82-40"
 }
