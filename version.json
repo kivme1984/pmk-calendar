@@ -1,12 +1,12 @@
 {
-  "version": "82.40.0",
-  "release": "card-visual-rollback-save-guard",
+  "version": "82.41.0",
+  "release": "status-row-under-date",
   "date": "2026-07-05",
   "features": [
-    "rollback-day-card-visuals-to-pre-compact-state",
-    "remove-v82-37-v82-38-card-style-modules-from-bundle",
+    "status-buttons-moved-to-horizontal-row-under-date",
+    "card-visual-rollback-preserved",
     "save-guard-without-card-css",
-    "left-status-column-remains-disabled",
+    "left-status-column-disabled",
     "update-loop-current-version-fixed"
   ]
 }
