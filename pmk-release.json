@@ -1,6 +1,6 @@
 {
-  "version": "82.37.0",
-  "label": "Основная v82.37.0 — сохранение и компактные карточки дня",
-  "publishedAt": "2026-07-05T19:30:00Z",
-  "buildToken": "save-guard-compact-day-v82-37"
+  "version": "82.38.0",
+  "label": "Основная v82.38.0 — нормальная компактная карточка дня",
+  "publishedAt": "2026-07-05T20:00:00Z",
+  "buildToken": "restore-day-card-layout-v82-38"
 }
