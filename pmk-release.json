@@ -1,7 +1,6 @@
 {
-  "version": "82.20.0",
-  "label": "Основная v82.20.0",
-  "testUrl": "./test-v82-20.html",
-  "updateUrl": "./reset.html?v=82.20.0",
-  "publishedAt": "2026-07-03T05:00:00Z"
+  "version": "82.34.0",
+  "label": "Основная v82.34.0 — классический месяц",
+  "publishedAt": "2026-07-05T18:00:00Z",
+  "buildToken": "classic-month-calendar-counters"
 }
