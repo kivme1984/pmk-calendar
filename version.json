@@ -1,12 +1,12 @@
 {
-  "version": "82.36.0",
-  "release": "clean-month-grid-no-duplicates",
+  "version": "82.37.0",
+  "release": "save-guard-compact-day-cards",
   "date": "2026-07-05",
   "features": [
-    "external-month-summary",
-    "remove-duplicate-weekday-row",
-    "remove-legacy-month-bottom-counters",
-    "plain-vertical-district-list",
+    "update-loop-fixed-current-version",
+    "google-save-fallback-to-local",
+    "compact-day-event-cards",
+    "day-card-functionality-preserved",
     "v82-cache-bump"
   ]
 }
