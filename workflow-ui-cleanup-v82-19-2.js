@@ -8,6 +8,7 @@
   globalThis.PMK_COMPACT_ADDRESS_FIELDS_V82_20 = true;
   globalThis.PMK_ADDRESS_AUTOFILL_LABEL_V82_20 = true;
   globalThis.PMK_SEARCH_FREEZE_GUARD_V82_20 = true;
+  globalThis.PMK_DADATA_ADDRESS_LABEL_V82_21 = true;
 
   let scheduled = false;
   let observer = null;
@@ -178,21 +179,43 @@
     else field.insertBefore(document.createTextNode(text), field.firstChild);
   }
 
-  function installAddressFieldHelp() {
+  function ensureDefaultSettlement() {
+    const settlement = document.querySelector('#settlement');
+    if (!settlement) return;
+    if (!settlement.value.trim()) settlement.value = 'Нижний Новгород';
+    settlement.placeholder = 'Нижний Новгород';
+  }
+
+  function installStreetFieldHelp() {
     const street = document.querySelector('#street');
     const field = street?.closest('.field');
     if (!street || !field) return;
-    replaceFieldText(field, 'Поиск адреса (автопоиск и вставка) *');
-    street.placeholder = 'Введите улицу и дом — выберите вариант из автопоиска';
-    street.title = 'Автопоиск адреса. После выбора адрес вставится в поля: улица, дом, квартира, подъезд и этаж.';
-    street.setAttribute('aria-label', 'Поиск адреса: автопоиск и вставка во все поля адреса');
+    replaceFieldText(field, 'Улица *');
+    street.placeholder = 'Например, Большая Покровская';
+    street.title = 'Обычное поле улицы. Автопоиск находится выше в поле «Адрес клиента». Сюда улица вставляется после выбора адреса.';
+    street.setAttribute('aria-label', 'Улица');
+    field.querySelectorAll('.pmk-address-autofill-hint-v82-20').forEach(node => node.remove());
+  }
+
+  function installDadataAddressHelp() {
+    const candidates = [...document.querySelectorAll('label,.field,div')]
+      .filter(node => /Адрес клиента/i.test(node.textContent || '') && node.querySelector?.('input'));
+    const field = candidates.find(node => !node.querySelector('#street') && !node.querySelector('#settlement'));
+    if (!field) return;
+    replaceFieldText(field, 'Адрес клиента (автопоиск и вставка)');
+    const input = field.querySelector('input');
+    if (input) {
+      input.placeholder = 'Введите минимум 3 символа и выберите адрес из списка';
+      input.title = 'DaData: автопоиск адреса. После выбора адрес вставится в населённый пункт, улицу, дом, квартиру, подъезд и этаж.';
+      input.setAttribute('aria-label', 'Адрес клиента: автопоиск и вставка во все поля адреса');
+    }
     let hint = field.querySelector('.pmk-address-autofill-hint-v82-20');
-    if (!hint) {
+    if (!hint && input) {
       hint = document.createElement('small');
       hint.className = 'pmk-address-autofill-hint-v82-20';
-      street.insertAdjacentElement('afterend', hint);
+      input.insertAdjacentElement('afterend', hint);
     }
-    hint.textContent = 'Автопоиск: выберите адрес — он вставится в поля ниже.';
+    if (hint) hint.textContent = 'Автопоиск: выберите адрес — он вставится в поля ниже.';
   }
 
   function installAddressAutofillLabel() {
@@ -276,7 +299,9 @@
     installAddRugFocusFix();
     installSearchFreezeGuard();
     installCompactAddressLayout();
-    installAddressFieldHelp();
+    ensureDefaultSettlement();
+    installStreetFieldHelp();
+    installDadataAddressHelp();
     installAddressAutofillLabel();
     document.documentElement.dataset.pmkWorkflowCleanup = '82.19.2';
     document.documentElement.dataset.pmkFullFormDoneFix = '82.20';
@@ -284,6 +309,7 @@
     document.documentElement.dataset.pmkCompactAddressFields = '82.20';
     document.documentElement.dataset.pmkAddressAutofillLabel = '82.20';
     document.documentElement.dataset.pmkSearchFreezeGuard = '82.20';
+    document.documentElement.dataset.pmkDadataAddressLabel = '82.21';
 
     document.querySelectorAll('#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19')
       .forEach(node => node.remove());
