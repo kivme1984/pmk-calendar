@@ -1,0 +1,91 @@
+'use strict';
+
+(() => {
+  if (window.PMK_UPDATE_MANAGER_V82_20) return;
+  window.PMK_UPDATE_MANAGER_V82_20 = true;
+
+  const CURRENT = '82.20.0';
+  const CHECK_EVERY = 1000 * 60 * 20;
+  const STYLE_ID = 'pmkUpdateManagerStyle';
+  let lastCheck = 0;
+  let pendingRelease = null;
+
+  function compare(a, b) {
+    const aa = String(a || '').split('.').map(Number);
+    const bb = String(b || '').split('.').map(Number);
+    for (let i = 0; i < Math.max(aa.length, bb.length); i += 1) {
+      const diff = (aa[i] || 0) - (bb[i] || 0);
+      if (diff) return diff;
+    }
+    return 0;
+  }
+
+  function css() {
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = `
+      .pmk-update-modal-backdrop{position:fixed;inset:0;z-index:2147482500;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.55);backdrop-filter:blur(5px)}
+      .pmk-update-modal{width:min(420px,100%);border-radius:22px;background:#fff;color:#171717;box-shadow:0 28px 90px rgba(0,0,0,.35);padding:22px}
+      .pmk-update-modal h2{margin:0 0 8px;font-size:24px;line-height:1.12}.pmk-update-modal p{margin:0 0 18px;color:#555;line-height:1.4;font-size:15px}
+      .pmk-update-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pmk-update-actions button{min-height:50px;border-radius:14px;border:1px solid #ddd;font:800 16px/1.1 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}.pmk-update-later{background:#fff;color:#222}.pmk-update-now{border-color:#f6b400!important;background:#f6b400;color:#111}
+      .pmk-update-loading .pmk-update-now{opacity:.75;pointer-events:none}
+    `;
+    document.head.append(style);
+  }
+
+  function dialog(release) {
+    css();
+    if (document.getElementById('pmkUpdateModal')) return;
+    const box = document.createElement('div');
+    box.id = 'pmkUpdateModal';
+    box.className = 'pmk-update-modal-backdrop';
+    box.innerHTML = `<div class="pmk-update-modal" role="dialog" aria-modal="true"><h2>Доступно обновление</h2><p>Есть новая версия ПМК Календаря: <b>${release.version || ''}</b>. Обновить приложение сейчас?</p><div class="pmk-update-actions"><button type="button" class="pmk-update-later">Позже</button><button type="button" class="pmk-update-now">Обновить</button></div></div>`;
+    box.querySelector('.pmk-update-later').addEventListener('click', () => box.remove());
+    box.querySelector('.pmk-update-now').addEventListener('click', () => updateNow(release, box));
+    document.body.append(box);
+  }
+
+  async function clearOldCaches() {
+    if (!window.caches) return;
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k.startsWith('pmk-calendar-v')).map(k => caches.delete(k)));
+  }
+
+  async function updateNow(release, box) {
+    box?.classList.add('pmk-update-loading');
+    try {
+      const regs = navigator.serviceWorker ? await navigator.serviceWorker.getRegistrations() : [];
+      await Promise.all(regs.map(reg => reg.update().catch(() => null)));
+      await clearOldCaches();
+    } catch {}
+    const url = release.updateUrl || './reset.html';
+    location.href = `${url}${url.includes('?') ? '&' : '?'}release=auto-update-${Date.now()}`;
+  }
+
+  async function check(force = false) {
+    if (!force && Date.now() - lastCheck < CHECK_EVERY) return;
+    lastCheck = Date.now();
+    try {
+      const response = await fetch(`./pmk-release.json?update=${Date.now()}`, { cache: 'no-store' });
+      if (!response.ok) return;
+      const release = await response.json();
+      if (compare(release.version, CURRENT) > 0 || release.forceUpdate === true || release.buildToken) {
+        const token = `${release.version || ''}|${release.buildToken || ''}|${release.publishedAt || ''}`;
+        if (sessionStorage.getItem('pmk-update-later-token') === token && !force) return;
+        pendingRelease = release;
+        dialog(release);
+      }
+    } catch {}
+  }
+
+  window.PMK_UPDATE_MANAGER = { check, updateNow: () => pendingRelease && updateNow(pendingRelease) };
+
+  function boot() {
+    setTimeout(() => check(true), 1200);
+    setInterval(check, CHECK_EVERY);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+  }
+
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot, { once: true }) : boot();
+})();
