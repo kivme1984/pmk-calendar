@@ -1,6 +1,6 @@
 {
-  "version": "82.38.0",
-  "label": "Основная v82.38.0 — нормальная компактная карточка дня",
-  "publishedAt": "2026-07-05T20:00:00Z",
-  "buildToken": "restore-day-card-layout-v82-38"
+  "version": "82.39.0",
+  "label": "Основная v82.39.0 — отключена сломанная левая колонка статусов",
+  "publishedAt": "2026-07-05T20:20:00Z",
+  "buildToken": "disable-left-status-column-v82-39"
 }
