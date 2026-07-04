@@ -72,6 +72,7 @@ const JS=`
 ./persistent-google-auth-v82-20.js
 ./mobile-keyboard-form-v82-20.js
 ./keyboard-submit-safe-v82-20.js
+./update-manager-v82-20.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -121,7 +122,7 @@ const CSS=`
 ./keyboard-submit-safe-v82-20.css
 `.trim().split(/\s+/);
 
-const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./pmk-google-auth-config.json','./icons/icon-192.png','./icons/icon-512.png'];
+const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./pmk-google-auth-config.json','./pmk-release.json','./icons/icon-192.png','./icons/icon-512.png'];
 
 function fetchWithTimeout(url,timeout=12000){
   const controller=new AbortController();
@@ -138,7 +139,8 @@ async function textAsset(url){
   if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_WORKFLOW_UI_CLEANUP_V82_19_2'))throw new Error('Не получено исправление интерфейса v82.20.0');
   if(url.includes('persistent-google-auth-v82-20.js')&&!text.includes('PMK_PERSISTENT_GOOGLE_AUTH_V82_20'))throw new Error('Не получен модуль постоянного входа Google v82.20.0');
   if(url.includes('mobile-keyboard-form-v82-20.js')&&!text.includes('PMK_MOBILE_KEYBOARD_FORM_V82_20'))throw new Error('Не получен фикс мобильной клавиатуры v82.20.0');
-  if(url.includes('keyboard-submit-safe-v82-20.js')&&!text.includes('PMK_KEYBOARD_SUBMIT_SAFE_V82_20'))throw new Error('Не получена кнопка Готово над клавиатурой v82.20.0');
+  if(url.includes('keyboard-submit-safe-v82-20.js')&&!text.includes('PMK_KEYBOARD_SUBMIT_SAFE_V82_20'))throw new Error('Не получен фикс кнопки клавиатуры v82.20.0');
+  if(url.includes('update-manager-v82-20.js')&&!text.includes('PMK_UPDATE_MANAGER_V82_20'))throw new Error('Не получен менеджер обновлений v82.20.0');
   return text;
 }
 
@@ -178,6 +180,7 @@ self.addEventListener('fetch',event=>{
   const url=new URL(event.request.url);
   if(url.pathname.endsWith('/app.js'))return event.respondWith(cached(BUNDLE_JS).then(value=>value||fetch(event.request)));
   if(url.pathname.endsWith('/styles.css'))return event.respondWith(cached(BUNDLE_CSS).then(value=>value||fetch(event.request)));
+  if(url.pathname.endsWith('/pmk-release.json'))return event.respondWith(fetch(event.request,{cache:'no-store'}).catch(()=>cached('./pmk-release.json')));
   if(url.pathname.endsWith('/pmk-google-auth-config.json'))return event.respondWith(fetch(event.request,{cache:'no-store'}).catch(()=>cached('./pmk-google-auth-config.json')));
   if(event.request.mode==='navigate')return event.respondWith(cached('./index.html').then(value=>value||fetch(event.request)));
   event.respondWith(caches.match(event.request).then(value=>value||fetch(event.request)));
