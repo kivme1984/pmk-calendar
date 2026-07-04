@@ -1,6 +1,6 @@
 {
   "version": "82.46.0",
-  "label": "Основная v82.46.0 — статусы толще, нижние кнопки тоньше",
-  "publishedAt": "2026-07-05T22:20:00Z",
-  "buildToken": "status-thicker-bottom-actions-thinner-v82-46"
+  "label": "Основная v82.47.0 — финальный override карточки через reset",
+  "publishedAt": "2026-07-05T22:40:00Z",
+  "buildToken": "status-action-buttons-15x-taller-v82-46"
 }
