@@ -4,10 +4,12 @@
   if (globalThis.PMK_WORKFLOW_UI_CLEANUP_V82_19_2) return;
   globalThis.PMK_WORKFLOW_UI_CLEANUP_V82_19_2 = true;
   globalThis.PMK_FULL_FORM_DONE_FIX_V82_20 = true;
+  globalThis.PMK_ADD_RUG_FOCUS_FIX_V82_20 = true;
 
   let scheduled = false;
   let observer = null;
   let doneFixBound = false;
+  let addRugFocusBound = false;
 
   function isSettingsView() {
     return Boolean(document.querySelector('#view-settings.active'));
@@ -30,6 +32,7 @@
       body.v50-manager-preview.v50-full-form #requestForm .form-actions{display:flex!important;visibility:visible!important;opacity:1!important}
       body.v50-manager-preview.v50-full-form #v50StickyActions{display:none!important}
       body.v50-manager-preview.v50-full-form #addRugBtn{margin-bottom:18px}
+      body.v50-manager-preview #rugsContainer .rug-card.pmk-new-rug-focus-v82-20{outline:2px solid #ffc400;outline-offset:4px}
     `;
     document.head.appendChild(style);
   }
@@ -79,12 +82,58 @@
     }, true);
   }
 
+  function lastRugCard() {
+    const cards = [...document.querySelectorAll('#rugsContainer .rug-card')];
+    return cards[cards.length - 1] || null;
+  }
+
+  function focusNewRug(previousCount = 0) {
+    const card = lastRugCard();
+    const currentCount = document.querySelectorAll('#rugsContainer .rug-card').length;
+    if (!card || currentCount <= previousCount) return;
+
+    document.querySelectorAll('#rugsContainer .rug-card.pmk-new-rug-focus-v82-20')
+      .forEach(node => node.classList.remove('pmk-new-rug-focus-v82-20'));
+    card.classList.add('pmk-new-rug-focus-v82-20');
+
+    const scroller = card.closest('.v50-editor-open') || document.querySelector('#view-form.active') || document.scrollingElement || document.documentElement;
+    try {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch {
+      card.scrollIntoView();
+    }
+
+    if (scroller && scroller !== document.scrollingElement && scroller !== document.documentElement && scroller.scrollHeight > scroller.clientHeight) {
+      const top = card.offsetTop - Math.max(80, Math.round(scroller.clientHeight * 0.18));
+      scroller.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+
+    const firstInput = card.querySelector('.rug-length,.rug-width,.rug-material,input,select,textarea');
+    setTimeout(() => firstInput?.focus?.({ preventScroll: true }), 260);
+    setTimeout(() => card.classList.remove('pmk-new-rug-focus-v82-20'), 1800);
+  }
+
+  function installAddRugFocusFix() {
+    if (addRugFocusBound) return;
+    addRugFocusBound = true;
+    document.addEventListener('click', event => {
+      const button = event.target.closest('#addRugBtn');
+      if (!button) return;
+      const previousCount = document.querySelectorAll('#rugsContainer .rug-card').length;
+      setTimeout(() => focusNewRug(previousCount), 0);
+      setTimeout(() => focusNewRug(previousCount), 160);
+      setTimeout(() => focusNewRug(previousCount), 420);
+    }, true);
+  }
+
   function clean() {
     scheduled = false;
     ensureDoneFixStyles();
     installDoneFix();
+    installAddRugFocusFix();
     document.documentElement.dataset.pmkWorkflowCleanup = '82.19.2';
     document.documentElement.dataset.pmkFullFormDoneFix = '82.20';
+    document.documentElement.dataset.pmkAddRugFocusFix = '82.20';
 
     document.querySelectorAll('#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19')
       .forEach(node => node.remove());
@@ -134,8 +183,8 @@
             || element === document.body;
         }
         return [...mutation.addedNodes].some(node => node.nodeType === 1 && (
-          node.matches?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save')
-          || node.querySelector?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save')
+          node.matches?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card')
+          || node.querySelector?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card')
         ));
       });
       if (relevant) scheduleClean();
@@ -153,7 +202,7 @@
     clean();
     installObserver();
     document.addEventListener('click', event => {
-      if (event.target.closest('.nav-item,[data-view],[data-v50-action="full"],.v50-editor-done,.v50-editor-back,.v50-editor-save')) {
+      if (event.target.closest('.nav-item,[data-view],[data-v50-action="full"],#addRugBtn,.v50-editor-done,.v50-editor-back,.v50-editor-save')) {
         setTimeout(scheduleClean, 0);
         setTimeout(scheduleClean, 180);
       }
