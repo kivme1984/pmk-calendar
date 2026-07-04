@@ -1,7 +1,7 @@
 'use strict';
 
 (() => {
-  if (window.PMK_UPDATE_MANAGER_V82_44) return;
+  if (window.PMK_UPDATE_MANAGER_V82_45) return;
   window.PMK_UPDATE_MANAGER_V82_20 = true;
   window.PMK_UPDATE_MANAGER_V82_35 = true;
   window.PMK_UPDATE_MANAGER_V82_37 = true;
@@ -12,9 +12,10 @@
   window.PMK_UPDATE_MANAGER_V82_42 = true;
   window.PMK_UPDATE_MANAGER_V82_43 = true;
   window.PMK_UPDATE_MANAGER_V82_44 = true;
+  window.PMK_UPDATE_MANAGER_V82_45 = true;
 
-  const CURRENT = '82.44.0';
-  const CURRENT_TOKEN = 'thin-status-buttons-not-narrow-v82-44';
+  const CURRENT = '82.45.0';
+  const CURRENT_TOKEN = 'thin-status-buttons-not-narrow-v82-45';
   const CHECK_EVERY = 1000 * 60 * 20;
   const STYLE_ID = 'pmkUpdateManagerStyle';
   const INSTALLED_VERSION_KEY = 'pmk-installed-version';
