@@ -1,8 +1,9 @@
 'use strict';
 
 (() => {
-  if (globalThis.PMK_PERIOD_DIRECT_V82_19) return;
+  if (globalThis.PMK_PERIOD_DIRECT_V82_36) return;
   globalThis.PMK_PERIOD_DIRECT_V82_19 = true;
+  globalThis.PMK_PERIOD_DIRECT_V82_36 = true;
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -15,9 +16,7 @@
   }
 
   function ensureAnchor() {
-    if (!state.periodAnchorKey) {
-      state.periodAnchorKey = state.selectedDayKey || businessTodayKey();
-    }
+    if (!state.periodAnchorKey) state.periodAnchorKey = state.selectedDayKey || businessTodayKey();
   }
 
   function showPlanning(mode) {
@@ -43,8 +42,7 @@
     );
     $('#pmkMonthWeekdays')?.remove();
     $('#pmkMonthWeekdaysV8219')?.remove();
-    $$('.pmk-month-count-v82-9,.pmk-month-count-v82-10,.pmk-month-count-v82-19', board)
-      .forEach((node) => node.remove());
+    $$('.pmk-month-count-v82-9,.pmk-month-count-v82-10,.pmk-month-count-v82-19', board).forEach((node) => node.remove());
     $$('.day-column', board).forEach((column) => {
       column.style.removeProperty('grid-column-start');
     });
@@ -64,7 +62,12 @@
     return 'точек';
   }
 
+  function hasCleanMonth(board) {
+    return Boolean(board?.classList?.contains('pmk-month-clean-v82-36') || globalThis.PMK_MONTH_CLEAN_GRID_V82_36);
+  }
+
   function decorateMonth(board) {
+    if (hasCleanMonth(board)) return;
     $('#view-week')?.classList.add('pmk-month-shell-v82-19');
     board.classList.add('pmk-month-v82-19');
 
@@ -118,7 +121,13 @@
       if (mode === 'week') {
         board.classList.add('pmk-week-v82-19');
         if (previousLeft > 0) board.scrollLeft = previousLeft;
-      } else decorateMonth(board);
+      } else if (!hasCleanMonth(board)) {
+        decorateMonth(board);
+      } else {
+        $('#pmkMonthWeekdays')?.remove();
+        $('#pmkMonthWeekdaysV8219')?.remove();
+        $$('.pmk-month-count-v82-19', board).forEach((node) => node.remove());
+      }
     } finally {
       directRendering = false;
     }
@@ -165,13 +174,14 @@
   }
 
   function installRenderHook() {
-    if (typeof renderAll !== 'function' || renderAll.__pmkPeriodDirectV8219) return;
+    if (typeof renderAll !== 'function' || renderAll.__pmkPeriodDirectV8236) return;
     const previous = renderAll;
-    const wrapped = function renderAllV8219(...args) {
+    const wrapped = function renderAllV8236(...args) {
       const result = previous(...args);
       if (MODES.has(activeMode())) scheduleRender(activeMode());
       return result;
     };
+    wrapped.__pmkPeriodDirectV8236 = true;
     wrapped.__pmkPeriodDirectV8219 = true;
     wrapped.__pmkFinalV8210 = true;
     wrapped.__pmkFinalV829 = true;
