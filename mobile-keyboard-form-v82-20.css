@@ -1,0 +1,47 @@
+html.pmk-keyboard-active,
+body.pmk-keyboard-active {
+  height: auto !important;
+  min-height: 100dvh !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: contain;
+}
+
+body.pmk-keyboard-active {
+  padding-bottom: calc(var(--pmk-keyboard-height, 0px) + env(safe-area-inset-bottom, 0px) + 96px) !important;
+}
+
+.pmk-keyboard-active .main-content,
+.pmk-keyboard-active .content,
+.pmk-keyboard-active .view,
+.pmk-keyboard-active .form-card,
+.pmk-keyboard-active form,
+.pmk-keyboard-active #eventForm,
+.pmk-keyboard-active #requestForm,
+.pmk-keyboard-active #managerForm {
+  scroll-padding-bottom: calc(var(--pmk-keyboard-height, 0px) + 140px) !important;
+}
+
+.pmk-keyboard-active input,
+.pmk-keyboard-active textarea,
+.pmk-keyboard-active select {
+  scroll-margin-bottom: calc(var(--pmk-keyboard-height, 0px) + 135px) !important;
+  scroll-margin-top: 90px !important;
+}
+
+@media (max-width: 760px) {
+  .pmk-keyboard-active .form-actions,
+  .pmk-keyboard-active .modal-actions,
+  .pmk-keyboard-active .request-actions {
+    position: sticky !important;
+    bottom: calc(var(--pmk-keyboard-height, 0px) + env(safe-area-inset-bottom, 0px) + 8px) !important;
+    z-index: 80 !important;
+    padding: 10px 0 0 !important;
+    background: linear-gradient(to top, rgba(255,255,255,.98), rgba(255,255,255,.9), rgba(255,255,255,0)) !important;
+    backdrop-filter: blur(8px);
+  }
+
+  .pmk-keyboard-active #submitBtn,
+  .pmk-keyboard-active button[type="submit"] {
+    min-height: 48px !important;
+  }
+}
