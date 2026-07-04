@@ -1,12 +1,12 @@
 {
-  "version": "82.38.0",
-  "release": "restore-day-card-layout",
+  "version": "82.39.0",
+  "release": "disable-left-status-column",
   "date": "2026-07-05",
   "features": [
-    "restore-original-day-card-layout",
-    "compact-card-sizing-without-redesign",
-    "remove-broken-v82-37-card-style",
-    "save-guard-preserved",
+    "disable-broken-left-status-column",
+    "restore-status-buttons-to-actions-row",
+    "remove-v82-2-test-badge",
+    "keep-restored-compact-day-card",
     "update-loop-current-version-fixed"
   ]
 }
