@@ -1,11 +1,13 @@
 'use strict';
 
 (() => {
-  if (window.PMK_UPDATE_MANAGER_V82_35) return;
+  if (window.PMK_UPDATE_MANAGER_V82_37) return;
   window.PMK_UPDATE_MANAGER_V82_20 = true;
   window.PMK_UPDATE_MANAGER_V82_35 = true;
+  window.PMK_UPDATE_MANAGER_V82_37 = true;
 
-  const CURRENT = '82.35.0';
+  const CURRENT = '82.37.0';
+  const CURRENT_TOKEN = 'save-guard-compact-day-v82-37';
   const CHECK_EVERY = 1000 * 60 * 20;
   const STYLE_ID = 'pmkUpdateManagerStyle';
   const INSTALLED_VERSION_KEY = 'pmk-installed-version';
@@ -41,7 +43,7 @@
   function rememberInstalled(release = {}) {
     try {
       localStorage.setItem(INSTALLED_VERSION_KEY, release.version || CURRENT);
-      if (release.buildToken) localStorage.setItem(INSTALLED_TOKEN_KEY, release.buildToken);
+      localStorage.setItem(INSTALLED_TOKEN_KEY, release.buildToken || CURRENT_TOKEN);
       sessionStorage.setItem('pmk-update-later-token', releaseToken(release));
     } catch {}
   }
@@ -130,7 +132,7 @@
   window.PMK_UPDATE_MANAGER = { check, updateNow: () => pendingRelease && updateNow(pendingRelease) };
 
   function boot() {
-    rememberInstalled({ version: CURRENT, buildToken: 'compact-month-no-loop-v82-35' });
+    rememberInstalled({ version: CURRENT, buildToken: CURRENT_TOKEN });
     cleanupModal();
     setTimeout(() => check(true), 1200);
     setInterval(check, CHECK_EVERY);
