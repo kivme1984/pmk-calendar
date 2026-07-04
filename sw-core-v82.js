@@ -1,7 +1,7 @@
-const VERSION='82.23.0';
+const VERSION='82.24.0';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-23-0.js';
-const BUNDLE_CSS='./__pmk-styles-v82-23-0.css';
+const BUNDLE_JS='./__pmk-app-v82-24-0.js';
+const BUNDLE_CSS='./__pmk-styles-v82-24-0.css';
 
 const JS=`
 ./app.js
@@ -134,6 +134,7 @@ async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
   const text=await response.text();
+  if(url.includes('android-autofill-off-v53.js')&&!text.includes('PMK_GOOGLE_AUTOFILL_SAVE_OFF_V82_24'))throw new Error('Не получен фикс отключения Google Autofill v82.24.0');
   if(url.includes('address-autocomplete.js')&&!text.includes('PMK_ADDRESS_INSTANT_SELECT_V82_23'))throw new Error('Не получен мгновенный выбор адреса v82.23.0');
   if(url.includes('version-guard-v82.js')&&(!text.includes("const VERSION = '82'")||!text.includes("const RELEASE = '82.20.0'")))throw new Error('Неверный контрольный файл v82.20.0');
   if(url.includes('event-cloud-indicators-v82-19.js')&&!text.includes('PMK_EVENT_CLOUD_INDICATORS_V82_19'))throw new Error('Не получены облачные индикаторы v82.20.0');
