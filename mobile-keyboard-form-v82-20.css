@@ -7,25 +7,38 @@ body.pmk-keyboard-active {
 }
 
 body.pmk-keyboard-active {
-  padding-bottom: calc(var(--pmk-keyboard-height, 0px) + env(safe-area-inset-bottom, 0px) + 96px) !important;
+  padding-bottom: var(--pmk-keyboard-spacer, 0px) !important;
+}
+
+.pmk-keyboard-scroll-spacer {
+  display: block !important;
+  flex: 0 0 auto !important;
+  pointer-events: none !important;
 }
 
 .pmk-keyboard-active .main-content,
 .pmk-keyboard-active .content,
 .pmk-keyboard-active .view,
+.pmk-keyboard-active .step-panel,
+.pmk-keyboard-active .form-step,
 .pmk-keyboard-active .form-card,
+.pmk-keyboard-active .request-form,
+.pmk-keyboard-active .manager-form,
 .pmk-keyboard-active form,
 .pmk-keyboard-active #eventForm,
 .pmk-keyboard-active #requestForm,
 .pmk-keyboard-active #managerForm {
-  scroll-padding-bottom: calc(var(--pmk-keyboard-height, 0px) + 140px) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-padding-bottom: var(--pmk-keyboard-spacer, 320px) !important;
+  padding-bottom: max(var(--pmk-keyboard-height, 0px), 24px) !important;
 }
 
 .pmk-keyboard-active input,
 .pmk-keyboard-active textarea,
 .pmk-keyboard-active select {
-  scroll-margin-bottom: calc(var(--pmk-keyboard-height, 0px) + 135px) !important;
-  scroll-margin-top: 90px !important;
+  scroll-margin-bottom: calc(var(--pmk-keyboard-height, 0px) + 220px) !important;
+  scroll-margin-top: 110px !important;
 }
 
 @media (max-width: 760px) {
