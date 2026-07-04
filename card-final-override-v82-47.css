@@ -1,0 +1,219 @@
+/* PMK Calendar v82.47.0 — final day-card compact override. Loaded last on purpose. */
+
+#view-today #todayEvents .event-card,
+#view-day #todayEvents .event-card,
+.event-card.pmk-card-tight-v82-43{
+  padding-top:10px!important;
+  padding-bottom:10px!important;
+  margin-bottom:10px!important;
+  gap:8px!important;
+  align-items:start!important;
+}
+
+#view-today #todayEvents .event-card>.event-time,
+#view-day #todayEvents .event-card>.event-time,
+.event-card.pmk-card-tight-v82-43>.event-time{
+  padding-top:9px!important;
+  padding-bottom:9px!important;
+  gap:2px!important;
+  align-content:start!important;
+}
+
+#view-today #todayEvents .event-card>.event-main,
+#view-day #todayEvents .event-card>.event-main,
+.event-card.pmk-card-tight-v82-43>.event-main{
+  gap:6px!important;
+}
+
+#view-today #todayEvents .event-card .event-card-header,
+#view-day #todayEvents .event-card .event-card-header,
+.event-card.pmk-card-tight-v82-43 .event-card-header{
+  margin:0!important;
+  gap:6px!important;
+}
+
+#view-today #todayEvents .event-card .event-card-header h3,
+#view-day #todayEvents .event-card .event-card-header h3,
+.event-card.pmk-card-tight-v82-43 .event-card-header h3{
+  margin:0!important;
+  line-height:1.08!important;
+}
+
+#view-today #todayEvents .event-card .contract-chip,
+#view-day #todayEvents .event-card .contract-chip,
+.event-card.pmk-card-tight-v82-43 .contract-chip{
+  min-height:30px!important;
+  padding:5px 10px!important;
+}
+
+#view-today #todayEvents .event-card .event-quick-badges,
+#view-day #todayEvents .event-card .event-quick-badges,
+.event-card.pmk-card-tight-v82-43 .event-quick-badges{
+  gap:5px!important;
+  margin:0!important;
+}
+
+#view-today #todayEvents .event-card .quick-badge,
+#view-day #todayEvents .event-card .quick-badge,
+.event-card.pmk-card-tight-v82-43 .quick-badge{
+  min-height:22px!important;
+  padding:3px 8px!important;
+  line-height:1.05!important;
+}
+
+#view-today #todayEvents .event-card .address-block,
+#view-day #todayEvents .event-card .address-block,
+.event-card.pmk-card-tight-v82-43 .address-block{
+  min-height:34px!important;
+  padding:7px 10px!important;
+  margin:0!important;
+  line-height:1.12!important;
+}
+
+#view-today #todayEvents .event-card .event-comment,
+#view-day #todayEvents .event-card .event-comment,
+.event-card.pmk-card-tight-v82-43 .event-comment{
+  padding:7px 10px!important;
+  margin:0!important;
+  gap:5px!important;
+  min-height:0!important;
+}
+
+#view-today #todayEvents .event-card .event-comment p,
+#view-day #todayEvents .event-card .event-comment p,
+.event-card.pmk-card-tight-v82-43 .event-comment p{
+  margin:0!important;
+  line-height:1.15!important;
+  max-height:38px!important;
+  overflow:hidden!important;
+}
+
+/* Status buttons inside the left date/time column. They stay full width, but not huge. */
+#view-today #todayEvents .event-card .event-time>.status-row,
+#view-day #todayEvents .event-card .event-time>.status-row,
+.event-card.pmk-card-tight-v82-43 .event-time>.status-row,
+.event-card.pmk-card-tight-v82-43 .pmk-status-in-date-row-v82-46{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  width:100%!important;
+  gap:4px!important;
+  margin:8px 0 0!important;
+  padding:0!important;
+  border:0!important;
+}
+
+#view-today #todayEvents .event-card .event-time>.status-row .status-action,
+#view-day #todayEvents .event-card .event-time>.status-row .status-action,
+.event-card.pmk-card-tight-v82-43 .event-time>.status-row .status-action,
+.event-card.pmk-card-tight-v82-43 .pmk-status-in-date-row-v82-46 .status-action{
+  width:100%!important;
+  min-height:28px!important;
+  height:28px!important;
+  padding:0 6px!important;
+  border-radius:8px!important;
+  font-size:8.5px!important;
+  line-height:1!important;
+  text-align:center!important;
+}
+
+#view-today #todayEvents .event-card .event-actions,
+#view-day #todayEvents .event-card .event-actions,
+.event-card.pmk-card-tight-v82-43 .event-actions{
+  margin-top:4px!important;
+  padding-top:0!important;
+  gap:4px!important;
+}
+
+#view-today #todayEvents .event-card .manage-row,
+#view-day #todayEvents .event-card .manage-row,
+.event-card.pmk-card-tight-v82-43 .manage-row{
+  gap:6px!important;
+  align-items:center!important;
+}
+
+/* Bottom action buttons: force a real, visible compact height. */
+#view-today #todayEvents .event-card .manage-row .mini-button,
+#view-day #todayEvents .event-card .manage-row .mini-button,
+#view-today #todayEvents .event-card .manage-row .call-button,
+#view-day #todayEvents .event-card .manage-row .call-button,
+#view-today #todayEvents .event-card .manage-row .open-button,
+#view-day #todayEvents .event-card .manage-row .open-button,
+#view-today #todayEvents .event-card .manage-row .menu-button,
+#view-day #todayEvents .event-card .manage-row .menu-button,
+#view-today #todayEvents .event-card .card-menu>summary,
+#view-day #todayEvents .event-card .card-menu>summary,
+.event-card.pmk-card-tight-v82-43 .manage-row .mini-button,
+.event-card.pmk-card-tight-v82-43 .manage-row .call-button,
+.event-card.pmk-card-tight-v82-43 .manage-row .open-button,
+.event-card.pmk-card-tight-v82-43 .manage-row .menu-button,
+.event-card.pmk-card-tight-v82-43 .card-menu>summary{
+  min-height:34px!important;
+  height:34px!important;
+  max-height:34px!important;
+  padding-top:0!important;
+  padding-bottom:0!important;
+  border-radius:12px!important;
+  line-height:1!important;
+  display:grid!important;
+  place-items:center!important;
+  align-content:center!important;
+}
+
+#view-today #todayEvents .event-card .card-menu,
+#view-day #todayEvents .event-card .card-menu,
+.event-card.pmk-card-tight-v82-43 .card-menu{
+  height:34px!important;
+  min-height:34px!important;
+}
+
+@media(max-width:760px){
+  #view-today #todayEvents .event-card,
+  #view-day #todayEvents .event-card,
+  .event-card.pmk-card-tight-v82-43{
+    grid-template-columns:90px minmax(0,1fr)!important;
+    padding:9px!important;
+    gap:7px!important;
+    margin-bottom:9px!important;
+  }
+  #view-today #todayEvents .event-card>.event-time,
+  #view-day #todayEvents .event-card>.event-time,
+  .event-card.pmk-card-tight-v82-43>.event-time{
+    width:90px!important;
+    min-width:90px!important;
+    padding-top:8px!important;
+    padding-bottom:8px!important;
+  }
+  #view-today #todayEvents .event-card .event-time>.status-row .status-action,
+  #view-day #todayEvents .event-card .event-time>.status-row .status-action,
+  .event-card.pmk-card-tight-v82-43 .event-time>.status-row .status-action,
+  .event-card.pmk-card-tight-v82-43 .pmk-status-in-date-row-v82-46 .status-action{
+    min-height:27px!important;
+    height:27px!important;
+    font-size:7.9px!important;
+  }
+  #view-today #todayEvents .event-card .manage-row .mini-button,
+  #view-day #todayEvents .event-card .manage-row .mini-button,
+  #view-today #todayEvents .event-card .manage-row .call-button,
+  #view-day #todayEvents .event-card .manage-row .call-button,
+  #view-today #todayEvents .event-card .manage-row .open-button,
+  #view-day #todayEvents .event-card .manage-row .open-button,
+  #view-today #todayEvents .event-card .manage-row .menu-button,
+  #view-day #todayEvents .event-card .manage-row .menu-button,
+  #view-today #todayEvents .event-card .card-menu>summary,
+  #view-day #todayEvents .event-card .card-menu>summary,
+  .event-card.pmk-card-tight-v82-43 .manage-row .mini-button,
+  .event-card.pmk-card-tight-v82-43 .manage-row .call-button,
+  .event-card.pmk-card-tight-v82-43 .manage-row .open-button,
+  .event-card.pmk-card-tight-v82-43 .manage-row .menu-button,
+  .event-card.pmk-card-tight-v82-43 .card-menu>summary{
+    min-height:32px!important;
+    height:32px!important;
+    max-height:32px!important;
+  }
+  #view-today #todayEvents .event-card .card-menu,
+  #view-day #todayEvents .event-card .card-menu,
+  .event-card.pmk-card-tight-v82-43 .card-menu{
+    height:32px!important;
+    min-height:32px!important;
+  }
+}
