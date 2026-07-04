@@ -4,6 +4,10 @@
   if (globalThis.PMK_SAVE_GUARD_COMPACT_DAY_V82_37) return;
   globalThis.PMK_SAVE_GUARD_COMPACT_DAY_V82_37 = true;
 
+  function toast(message, type = 'error') {
+    try { if (typeof showToast === 'function') showToast(message, type); } catch {}
+  }
+
   function injectStyles() {
     if (document.getElementById('pmkCompactDayCardsV8237Styles')) return;
     const style = document.createElement('style');
@@ -58,29 +62,32 @@
   }
 
   function patchSaveRequest() {
-    if (typeof globalThis.saveRequest !== 'function') return false;
-    if (globalThis.saveRequest.__pmkSaveGuardV8237) return true;
-    const original = globalThis.saveRequest;
+    if (typeof saveRequest !== 'function') return false;
+    if (saveRequest.__pmkSaveGuardV8237) return true;
+    const original = saveRequest;
     const wrapped = async function saveRequestGuardV8237(data, localOnly = false) {
       try {
         return await original.call(this, data, localOnly);
       } catch (error) {
         const message = error?.message || String(error || 'Ошибка сохранения');
-        if (!localOnly && globalThis.state?.token) {
+        let hasToken = false;
+        try { hasToken = typeof state !== 'undefined' && Boolean(state.token); } catch {}
+        if (!localOnly && hasToken) {
           try {
-            globalThis.showToast?.('Google не принял заявку. Сохраняю локально на устройстве.', 'error');
+            toast('Google не принял заявку. Сохраняю локально на устройстве.', 'error');
             return await original.call(this, data, true);
           } catch (fallbackError) {
-            globalThis.showToast?.(fallbackError?.message || message, 'error');
+            toast(fallbackError?.message || message, 'error');
             throw fallbackError;
           }
         }
-        globalThis.showToast?.(message, 'error');
+        toast(message, 'error');
         throw error;
       }
     };
     wrapped.__pmkSaveGuardV8237 = true;
-    globalThis.saveRequest = wrapped;
+    try { globalThis.saveRequest = wrapped; } catch {}
+    try { saveRequest = wrapped; } catch {}
     return true;
   }
 
