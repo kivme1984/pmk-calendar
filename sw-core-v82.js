@@ -1,7 +1,7 @@
-const VERSION='82.27.0';
+const VERSION='82.28.0';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-27-0.js';
-const BUNDLE_CSS='./__pmk-styles-v82-27-0.css';
+const BUNDLE_JS='./__pmk-app-v82-28-0.js';
+const BUNDLE_CSS='./__pmk-styles-v82-28-0.css';
 
 const JS=`
 ./app.js
@@ -70,6 +70,7 @@ const JS=`
 ./smart-parser-feature-gate.js
 ./workflow-ui-cleanup-v82-19-2.js
 ./weekly-minimal-v82-26.js
+./month-summary-v82-28.js
 ./persistent-google-auth-v82-20.js
 ./mobile-keyboard-form-v82-20.js
 ./keyboard-submit-safe-v82-20.js
@@ -135,6 +136,7 @@ async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
   const text=await response.text();
+  if(url.includes('month-summary-v82-28.js')&&!text.includes('PMK_MONTH_SUMMARY_COUNTERS_V82_28'))throw new Error('Не получены счётчики месяца v82.28.0');
   if(url.includes('weekly-minimal-v82-26.js')&&!text.includes('PMK_WEEKLY_WORK_INFO_V82_27'))throw new Error('Не получены недельные карточки со статусом временем и районом v82.27.0');
   if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_ORDER_SOURCE_PRICING_SECTION_V82_25'))throw new Error('Не получен перенос источника заказа v82.25.0');
   if(url.includes('android-autofill-off-v53.js')&&!text.includes('PMK_GOOGLE_AUTOFILL_SAVE_OFF_V82_24'))throw new Error('Не получен фикс отключения Google Autofill v82.24.0');
