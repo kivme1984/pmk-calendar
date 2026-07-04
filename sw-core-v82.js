@@ -1,7 +1,7 @@
-const VERSION='82.37.0';
+const VERSION='82.38.0';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-37-0.js';
-const BUNDLE_CSS='./__pmk-styles-v82-37-0.css';
+const BUNDLE_JS='./__pmk-app-v82-38-0.js';
+const BUNDLE_CSS='./__pmk-styles-v82-38-0.css';
 
 const JS=`
 ./app.js
@@ -77,6 +77,7 @@ const JS=`
 ./keyboard-submit-safe-v82-20.js
 ./update-manager-v82-20.js
 ./day-save-compact-v82-37.js
+./day-card-restore-v82-38.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -138,8 +139,9 @@ async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
   const text=await response.text();
-  if(url.includes('day-save-compact-v82-37.js')&&!text.includes('PMK_SAVE_GUARD_COMPACT_DAY_V82_37'))throw new Error('Не получены компактные карточки и защита сохранения v82.37.0');
-  if(url.includes('update-manager-v82-20.js')&&!text.includes('PMK_UPDATE_MANAGER_V82_37'))throw new Error('Не получен менеджер обновлений v82.37.0');
+  if(url.includes('day-card-restore-v82-38.js')&&!text.includes('PMK_DAY_CARD_RESTORE_V82_38'))throw new Error('Не получено восстановление карточек дня v82.38.0');
+  if(url.includes('day-save-compact-v82-37.js')&&!text.includes('PMK_SAVE_GUARD_COMPACT_DAY_V82_37'))throw new Error('Не получена защита сохранения v82.37.0');
+  if(url.includes('update-manager-v82-20.js')&&!text.includes('PMK_UPDATE_MANAGER_V82_38'))throw new Error('Не получен менеджер обновлений v82.38.0');
   if(url.includes('month-summary-v82-28.js')&&!text.includes('PMK_MONTH_CLEAN_GRID_V82_36'))throw new Error('Не получена чистая месячная таблица v82.36.0');
   if(url.includes('period-direct-v82-19.js')&&!text.includes('PMK_PERIOD_DIRECT_V82_36'))throw new Error('Не получено отключение старых дублей месяца v82.36.0');
   if(url.includes('quick-insert-compact-v82-29.js')&&!text.includes('PMK_QUICK_INSERT_COMPACT_V82_29'))throw new Error('Не получена компактная быстрая вставка v82.29.0');
