@@ -1,7 +1,7 @@
-const VERSION='82.33.0';
+const VERSION='82.34.0';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-33-0.js';
-const BUNDLE_CSS='./__pmk-styles-v82-33-0.css';
+const BUNDLE_JS='./__pmk-app-v82-34-0.js';
+const BUNDLE_CSS='./__pmk-styles-v82-34-0.css';
 
 const JS=`
 ./app.js
@@ -125,7 +125,7 @@ const CSS=`
 ./keyboard-submit-safe-v82-20.css
 `.trim().split(/\s+/);
 
-const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./pmk-google-auth-config.json','./pmk-release.json','./icons/icon-192.png','./icons/icon-512.png'];
+const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./pmk-release.json','./pmk-google-auth-config.json','./icons/icon-192.png','./icons/icon-512.png'];
 
 function fetchWithTimeout(url,timeout=12000){
   const controller=new AbortController();
@@ -137,7 +137,7 @@ async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
   const text=await response.text();
-  if(url.includes('month-summary-v82-28.js')&&!text.includes('PMK_MONTH_ROUTE_COUNTERS_V82_33'))throw new Error('Не получена таблица месяца со счётчиками районов v82.33.0');
+  if(url.includes('month-summary-v82-28.js')&&!text.includes('PMK_MONTH_CLASSIC_TABLE_V82_34'))throw new Error('Не получена классическая месячная таблица v82.34.0');
   if(url.includes('quick-insert-compact-v82-29.js')&&!text.includes('PMK_QUICK_INSERT_COMPACT_V82_29'))throw new Error('Не получена компактная быстрая вставка v82.29.0');
   if(url.includes('weekly-minimal-v82-26.js')&&!text.includes('PMK_WEEKLY_WORK_INFO_V82_27'))throw new Error('Не получены недельные карточки со статусом временем и районом v82.27.0');
   if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_ORDER_SOURCE_PRICING_SECTION_V82_25'))throw new Error('Не получен перенос источника заказа v82.25.0');
