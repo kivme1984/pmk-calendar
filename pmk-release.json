@@ -1,6 +1,6 @@
 {
-  "version": "82.35.0",
-  "label": "Основная v82.35.0 — компактный месяц без цикла обновления",
-  "publishedAt": "2026-07-05T18:30:00Z",
-  "buildToken": "compact-month-no-loop-v82-35"
+  "version": "82.36.0",
+  "label": "Основная v82.36.0 — чистый месяц без дублей",
+  "publishedAt": "2026-07-05T19:00:00Z",
+  "buildToken": "clean-month-grid-no-duplicates-v82-36"
 }
