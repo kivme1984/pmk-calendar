@@ -1,7 +1,7 @@
-const VERSION='82.43.0';
+const VERSION='82.44.0';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-43-0.js';
-const BUNDLE_CSS='./__pmk-styles-v82-43-0.css';
+const BUNDLE_JS='./__pmk-app-v82-44-0.js';
+const BUNDLE_CSS='./__pmk-styles-v82-44-0.css';
 
 const JS=`
 ./app.js
@@ -138,9 +138,9 @@ async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
   const text=await response.text();
-  if(url.includes('status-left-column-v82-2.js')&&!text.includes('PMK_DAY_CARD_TIGHT_V82_43'))throw new Error('Не получено уплотнение карточки и узкие статусы v82.43.0');
+  if(url.includes('status-left-column-v82-2.js')&&!text.includes('PMK_DAY_CARD_THIN_STATUS_V82_44'))throw new Error('Не получены тонкие кнопки статуса v82.44.0');
   if(url.includes('day-save-guard-v82-40.js')&&!text.includes('PMK_SAVE_GUARD_V82_40'))throw new Error('Не получена защита сохранения без стилей карточки v82.40.0');
-  if(url.includes('update-manager-v82-20.js')&&!text.includes('PMK_UPDATE_MANAGER_V82_43'))throw new Error('Не получен менеджер обновлений v82.43.0');
+  if(url.includes('update-manager-v82-20.js')&&!text.includes('PMK_UPDATE_MANAGER_V82_44'))throw new Error('Не получен менеджер обновлений v82.44.0');
   if(url.includes('month-summary-v82-28.js')&&!text.includes('PMK_MONTH_CLEAN_GRID_V82_36'))throw new Error('Не получена чистая месячная таблица v82.36.0');
   if(url.includes('period-direct-v82-19.js')&&!text.includes('PMK_PERIOD_DIRECT_V82_36'))throw new Error('Не получено отключение старых дублей месяца v82.36.0');
   if(url.includes('quick-insert-compact-v82-29.js')&&!text.includes('PMK_QUICK_INSERT_COMPACT_V82_29'))throw new Error('Не получена компактная быстрая вставка v82.29.0');
