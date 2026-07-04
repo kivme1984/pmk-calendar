@@ -1,7 +1,7 @@
 'use strict';
 
 (() => {
-  if (window.PMK_UPDATE_MANAGER_V82_41) return;
+  if (window.PMK_UPDATE_MANAGER_V82_42) return;
   window.PMK_UPDATE_MANAGER_V82_20 = true;
   window.PMK_UPDATE_MANAGER_V82_35 = true;
   window.PMK_UPDATE_MANAGER_V82_37 = true;
@@ -9,9 +9,10 @@
   window.PMK_UPDATE_MANAGER_V82_39 = true;
   window.PMK_UPDATE_MANAGER_V82_40 = true;
   window.PMK_UPDATE_MANAGER_V82_41 = true;
+  window.PMK_UPDATE_MANAGER_V82_42 = true;
 
-  const CURRENT = '82.41.0';
-  const CURRENT_TOKEN = 'status-row-under-date-v82-41';
+  const CURRENT = '82.42.0';
+  const CURRENT_TOKEN = 'status-buttons-in-date-column-v82-42';
   const CHECK_EVERY = 1000 * 60 * 20;
   const STYLE_ID = 'pmkUpdateManagerStyle';
   const INSTALLED_VERSION_KEY = 'pmk-installed-version';
