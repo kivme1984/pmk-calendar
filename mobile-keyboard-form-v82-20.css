@@ -13,6 +13,21 @@ body.pmk-keyboard-active {
 }
 
 @media (max-width: 760px) {
+  #requestForm .form-actions,
+  .pmk-keyboard-active #requestForm .form-actions {
+    position: static !important;
+    bottom: auto !important;
+    z-index: auto !important;
+    margin: 18px 0 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+  }
+
+  #requestForm .form-actions .button {
+    width: 100% !important;
+  }
+
   .pmk-keyboard-active #view-form {
     height: var(--pmk-visual-height, 100dvh) !important;
     max-height: var(--pmk-visual-height, 100dvh) !important;
@@ -32,16 +47,5 @@ body.pmk-keyboard-active {
   .pmk-keyboard-active select {
     scroll-margin-bottom: 140px !important;
     scroll-margin-top: 96px !important;
-  }
-
-  .pmk-keyboard-active .form-actions,
-  .pmk-keyboard-active .modal-actions,
-  .pmk-keyboard-active .request-actions {
-    position: static !important;
-    bottom: auto !important;
-    z-index: auto !important;
-    background: transparent !important;
-    backdrop-filter: none !important;
-    margin-bottom: 0 !important;
   }
 }
