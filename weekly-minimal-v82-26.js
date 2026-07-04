@@ -3,6 +3,7 @@
 (() => {
   if (globalThis.PMK_WEEKLY_MINIMAL_CARDS_V82_26) return;
   globalThis.PMK_WEEKLY_MINIMAL_CARDS_V82_26 = true;
+  globalThis.PMK_WEEKLY_WORK_INFO_V82_27 = true;
 
   const originalRenderPeriod = globalThis.renderPeriod;
 
@@ -15,8 +16,11 @@
       .week-board.week-board .pmk-week-minimal-event-v82-26 b{font-size:14px!important;line-height:1.15!important}
       .week-board.week-board .pmk-week-minimal-event-v82-26 span{font-size:12px!important;line-height:1.2!important}
       .week-board.week-board .pmk-week-minimal-event-v82-26 .pmk-week-address-v82-26{font-weight:700!important;color:var(--text-muted,#6b7280)!important}
-      .week-board.week-board .pmk-week-minimal-event-v82-26 .pmk-week-meta-v82-26{display:flex!important;gap:6px!important;flex-wrap:wrap!important}
-      .week-board.week-board .pmk-week-minimal-event-v82-26 .pmk-week-meta-v82-26 span{padding:3px 6px!important;border-radius:999px!important;background:rgba(0,0,0,.06)!important}
+      .week-board.week-board .pmk-week-minimal-event-v82-26 .pmk-week-meta-v82-26,
+      .week-board.week-board .pmk-week-minimal-event-v82-26 .pmk-week-work-v82-27{display:flex!important;gap:6px!important;flex-wrap:wrap!important}
+      .week-board.week-board .pmk-week-minimal-event-v82-26 .pmk-week-meta-v82-26 span,
+      .week-board.week-board .pmk-week-minimal-event-v82-26 .pmk-week-work-v82-27 span{padding:3px 6px!important;border-radius:999px!important;background:rgba(0,0,0,.06)!important}
+      .week-board.week-board .pmk-week-minimal-event-v82-26 .pmk-week-work-v82-27 span:first-child{font-weight:900!important}
     `;
     document.head.appendChild(style);
   }
@@ -46,7 +50,12 @@
     const address = displayAddress(data, event) || 'Адрес не указан';
     const rugs = Array.isArray(data.rugs) ? data.rugs.length : 0;
     const price = money(data.estimatedPrice);
+    const start = event.start?.dateTime || event.start;
+    const end = event.end?.dateTime || event.end;
+    const time = `${formatTime(start)}–${formatTime(end)}`;
+    const district = data.district || 'Район не указан';
     return `<button class="day-event status-${currentStatus.className} pmk-week-minimal-event-v82-26" data-open-event="${escapeHtml(event.id)}">
+      <span class="pmk-week-work-v82-27"><span>${escapeHtml(time)}</span><span>${escapeHtml(currentStatus.label)}</span><span>${escapeHtml(district)}</span></span>
       <b>${escapeHtml(title)}</b>
       <span class="pmk-week-address-v82-26">${escapeHtml(address)}</span>
       <span class="pmk-week-meta-v82-26"><span>Ковры: ${rugs} ${rugWord(rugs)}</span><span>Стоимость: ${escapeHtml(price)}</span></span>
