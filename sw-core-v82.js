@@ -1,7 +1,7 @@
-const VERSION='82.34.0';
+const VERSION='82.35.0';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-34-0.js';
-const BUNDLE_CSS='./__pmk-styles-v82-34-0.css';
+const BUNDLE_JS='./__pmk-app-v82-35-0.js';
+const BUNDLE_CSS='./__pmk-styles-v82-35-0.css';
 
 const JS=`
 ./app.js
@@ -137,7 +137,7 @@ async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
   const text=await response.text();
-  if(url.includes('month-summary-v82-28.js')&&!text.includes('PMK_MONTH_CLASSIC_TABLE_V82_34'))throw new Error('Не получена классическая месячная таблица v82.34.0');
+  if(url.includes('month-summary-v82-28.js')&&!text.includes('PMK_MONTH_COMPACT_CLASSIC_V82_35'))throw new Error('Не получена компактная месячная таблица v82.35.0');
   if(url.includes('quick-insert-compact-v82-29.js')&&!text.includes('PMK_QUICK_INSERT_COMPACT_V82_29'))throw new Error('Не получена компактная быстрая вставка v82.29.0');
   if(url.includes('weekly-minimal-v82-26.js')&&!text.includes('PMK_WEEKLY_WORK_INFO_V82_27'))throw new Error('Не получены недельные карточки со статусом временем и районом v82.27.0');
   if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_ORDER_SOURCE_PRICING_SECTION_V82_25'))throw new Error('Не получен перенос источника заказа v82.25.0');
@@ -148,7 +148,7 @@ async function textAsset(url){
   if(url.includes('persistent-google-auth-v82-20.js')&&!text.includes('PMK_PERSISTENT_GOOGLE_AUTH_V82_20'))throw new Error('Не получен модуль постоянного входа Google v82.20.0');
   if(url.includes('mobile-keyboard-form-v82-20.js')&&!text.includes('PMK_MOBILE_KEYBOARD_FORM_V82_20'))throw new Error('Не получен фикс мобильной клавиатуры v82.20.0');
   if(url.includes('keyboard-submit-safe-v82-20.js')&&!text.includes('PMK_KEYBOARD_SUBMIT_SAFE_V82_20'))throw new Error('Не получен фикс кнопки клавиатуры v82.20.0');
-  if(url.includes('update-manager-v82-20.js')&&!text.includes('PMK_UPDATE_MANAGER_V82_20'))throw new Error('Не получен менеджер обновлений v82.20.0');
+  if(url.includes('update-manager-v82-20.js')&&!text.includes('PMK_UPDATE_MANAGER_V82_35'))throw new Error('Не получен менеджер обновлений v82.35.0');
   return text;
 }
 
