@@ -1,6 +1,7 @@
 'use strict';
 
 globalThis.PMK_ADDRESS_FAST_SELECT_V82_22 = true;
+globalThis.PMK_ADDRESS_INSTANT_SELECT_V82_23 = true;
 
 const PMK_ADDRESS_API_URL = 'https://lucky-math-8e63pmk-address.standart-media.workers.dev/suggest';
 const PMK_DISTRICTS = [
@@ -13,6 +14,7 @@ let addressDebounceTimer = null;
 let addressActiveIndex = -1;
 let addressSuggestions = [];
 let addressApplyRequestId = 0;
+let addressPreviewTimer = null;
 
 function normalizePmkDistrict(value = '') {
   const clean = String(value)
@@ -49,27 +51,13 @@ function addressErrorMessage(error = {}) {
   const details = String(payload.details || '').toLowerCase();
   const backendMessage = String(payload.error || error.message || '');
 
-  if (backendMessage.includes('DADATA_API_KEY is not configured')) {
-    return 'В Cloudflare не найден секрет DADATA_API_KEY. Проверьте точное имя переменной и выполните Deploy.';
-  }
-  if (status === 401) {
-    return 'DaData отклонила API-ключ: ошибка 401. Проверьте, что в Value вставлен верхний «API-ключ», без слова Token и без пробелов.';
-  }
-  if (status === 403) {
-    return 'DaData запретила доступ: ошибка 403. Проверьте подтверждение почты и активность API-ключа в личном кабинете.';
-  }
-  if (status === 429) {
-    return 'Превышен лимит запросов DaData. Попробуйте позже.';
-  }
-  if (status >= 500) {
-    return `Cloudflare Worker вернул ошибку ${status}${backendMessage ? `: ${backendMessage}` : ''}.`;
-  }
-  if (details.includes('unauthorized') || details.includes('token')) {
-    return 'DaData не приняла API-ключ. Проверьте значение секрета DADATA_API_KEY.';
-  }
-  if (error.name === 'TypeError' || /failed to fetch|networkerror|load failed/i.test(backendMessage)) {
-    return 'Нет соединения с Cloudflare Worker или запрос заблокирован браузером. Откройте страницу проверки сервиса.';
-  }
+  if (backendMessage.includes('DADATA_API_KEY is not configured')) return 'В Cloudflare не найден секрет DADATA_API_KEY. Проверьте точное имя переменной и выполните Deploy.';
+  if (status === 401) return 'DaData отклонила API-ключ: ошибка 401. Проверьте, что в Value вставлен верхний «API-ключ», без слова Token и без пробелов.';
+  if (status === 403) return 'DaData запретила доступ: ошибка 403. Проверьте подтверждение почты и активность API-ключа в личном кабинете.';
+  if (status === 429) return 'Превышен лимит запросов DaData. Попробуйте позже.';
+  if (status >= 500) return `Cloudflare Worker вернул ошибку ${status}${backendMessage ? `: ${backendMessage}` : ''}.`;
+  if (details.includes('unauthorized') || details.includes('token')) return 'DaData не приняла API-ключ. Проверьте значение секрета DADATA_API_KEY.';
+  if (error.name === 'TypeError' || /failed to fetch|networkerror|load failed/i.test(backendMessage)) return 'Нет соединения с Cloudflare Worker или запрос заблокирован браузером. Откройте страницу проверки сервиса.';
   return `Адресный сервис недоступен${status ? ` — ошибка ${status}` : ''}${backendMessage ? `: ${backendMessage}` : ''}.`;
 }
 
@@ -136,84 +124,59 @@ function highlightAddressSuggestion() {
   });
 }
 
-function setAddressField(selector, value, eventName = 'input') {
+function setAddressValue(selector, value) {
   const element = qs(selector);
   if (!element || value == null || value === '') return false;
   element.value = value;
-  element.dispatchEvent(new Event(eventName, { bubbles: true }));
   return true;
 }
 
-function applyAddressFieldsFromSuggestion(selected = {}, { allowEmptyDistrict = false } = {}) {
+function scheduleAddressAfterFill(districtChanged = false) {
+  clearTimeout(addressPreviewTimer);
+  addressPreviewTimer = setTimeout(() => {
+    try { if (districtChanged) qs('#district')?.dispatchEvent(new Event('change', { bubbles: true })); } catch {}
+    try { schedulePreviewUpdate(); } catch {}
+    try { qs('#requestForm')?.dispatchEvent(new Event('input', { bubbles: true })); } catch {}
+  }, 90);
+}
+
+function applyAddressFieldsFromSuggestion(selected = {}) {
   const data = selected.data || {};
   const settlement = settlementFromAddressData(data);
   const district = districtFromAddressData(data);
   const house = [data.house, data.block ? `к ${data.block}` : ''].filter(Boolean).join(' ');
 
-  if (settlement) setAddressField('#settlement', settlement);
-  else setAddressField('#settlement', 'Нижний Новгород');
+  setAddressValue('#settlement', settlement || 'Нижний Новгород');
+  setAddressValue('#street', data.street_with_type || data.street || '');
+  setAddressValue('#houseNumber', house);
+  setAddressValue('#apartmentNumber', data.flat || '');
+  const districtChanged = district ? setAddressValue('#district', district) : false;
 
-  setAddressField('#street', data.street_with_type || data.street || '');
-  setAddressField('#houseNumber', house);
-  setAddressField('#apartmentNumber', data.flat || '');
+  scheduleAddressAfterFill(districtChanged);
 
-  if (district) setAddressField('#district', district, 'change');
-  else if (allowEmptyDistrict) qs('#district')?.dispatchEvent(new Event('change', { bubbles: true }));
-
-  schedulePreviewUpdate();
-
-  return {
-    settlement,
-    district,
-    hasStreet: Boolean(data.street_with_type || data.street),
-    hasHouse: Boolean(house),
-  };
+  return { settlement, district, hasStreet: Boolean(data.street_with_type || data.street), hasHouse: Boolean(house) };
 }
 
 function updateAddressStatusFromResult(result = {}) {
-  if (result.district && result.district !== 'За городом') {
-    addressStatus(`Адрес вставлен. Район: ${result.district}`, 'success');
-  } else if (result.district === 'За городом') {
-    addressStatus('Адрес вставлен. Выезд за город — проверьте стоимость доставки.', 'warning');
-  } else {
-    addressStatus('Адрес вставлен. Если район не определился — выберите его вручную.', 'warning');
-  }
-}
-
-function maybeRefineAddressInBackground(item, requestId) {
-  const data = item?.data || {};
-  const hasEnough = Boolean((data.street_with_type || data.street) && data.house);
-  if (hasEnough) return;
-
-  requestAddressSuggestions(item.unrestricted_value || item.value || '', 1)
-    .then(items => {
-      if (requestId !== addressApplyRequestId || !items?.[0]) return;
-      const result = applyAddressFieldsFromSuggestion(items[0], { allowEmptyDistrict: true });
-      updateAddressStatusFromResult(result);
-    })
-    .catch(error => {
-      if (error.name !== 'AbortError') console.warn(error);
-    });
+  if (result.district && result.district !== 'За городом') addressStatus(`Адрес вставлен. Район: ${result.district}`, 'success');
+  else if (result.district === 'За городом') addressStatus('Адрес вставлен. Выезд за город — проверьте стоимость доставки.', 'warning');
+  else addressStatus('Адрес вставлен. Если район не определился — выберите его вручную.', 'warning');
 }
 
 function applyAddressSuggestion(item) {
   const input = qs('#addressSearch');
   if (!input || !item) return;
 
-  const requestId = ++addressApplyRequestId;
+  addressApplyRequestId += 1;
+  clearTimeout(addressDebounceTimer);
+  addressAbortController?.abort();
+  addressAbortController = null;
+
   input.value = item.value || '';
   closeAddressSuggestions();
-  addressStatus('Адрес вставляется…', 'loading');
 
-  const result = applyAddressFieldsFromSuggestion(item, { allowEmptyDistrict: true });
-  input.value = item.value || '';
+  const result = applyAddressFieldsFromSuggestion(item);
   updateAddressStatusFromResult(result);
-
-  requestAnimationFrame(() => {
-    try { qs('#houseNumber')?.focus?.({ preventScroll: true }); } catch {}
-  });
-
-  maybeRefineAddressInBackground(item, requestId);
 }
 
 function createAddressSearchUI() {
@@ -263,7 +226,7 @@ function createAddressSearchUI() {
         closeAddressSuggestions();
         addressStatus(addressErrorMessage(error), 'error');
       }
-    }, 260);
+    }, 220);
   });
 
   input.addEventListener('keydown', event => {
@@ -279,24 +242,20 @@ function createAddressSearchUI() {
     } else if (event.key === 'Enter' && addressActiveIndex >= 0) {
       event.preventDefault();
       applyAddressSuggestion(addressSuggestions[addressActiveIndex]);
-    } else if (event.key === 'Escape') {
-      closeAddressSuggestions();
-    }
+    } else if (event.key === 'Escape') closeAddressSuggestions();
   });
 
-  qs('#addressSuggestions').addEventListener('pointerdown', event => {
+  function pick(event) {
     const button = event.target.closest('[data-address-index]');
     if (!button) return;
     event.preventDefault();
+    event.stopPropagation();
     applyAddressSuggestion(addressSuggestions[Number(button.dataset.addressIndex)]);
-  }, { passive: false });
+  }
 
-  qs('#addressSuggestions').addEventListener('click', event => {
-    const button = event.target.closest('[data-address-index]');
-    if (!button) return;
-    event.preventDefault();
-    applyAddressSuggestion(addressSuggestions[Number(button.dataset.addressIndex)]);
-  });
+  qs('#addressSuggestions').addEventListener('touchstart', pick, { passive: false });
+  qs('#addressSuggestions').addEventListener('pointerdown', pick, { passive: false });
+  qs('#addressSuggestions').addEventListener('click', pick);
 
   document.addEventListener('click', event => {
     if (!wrap.contains(event.target)) closeAddressSuggestions();
