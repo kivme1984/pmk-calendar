@@ -9,6 +9,7 @@
   globalThis.PMK_ADDRESS_AUTOFILL_LABEL_V82_20 = true;
   globalThis.PMK_SEARCH_FREEZE_GUARD_V82_20 = true;
   globalThis.PMK_DADATA_ADDRESS_LABEL_V82_21 = true;
+  globalThis.PMK_ORDER_SOURCE_PRICING_SECTION_V82_25 = true;
 
   let scheduled = false;
   let observer = null;
@@ -51,6 +52,7 @@
       body.v50-manager-preview .pmk-address-autofill-hint-v82-20{display:block;margin-top:4px;font-size:11px;line-height:1.2;font-weight:800;color:#6b7280}
       body.v50-manager-preview [data-v50-action="address"].pmk-address-autofill-label-v82-20 b{line-height:1.08!important}
       body.v50-manager-preview [data-v50-action="address"].pmk-address-autofill-label-v82-20 small{display:block;margin-top:2px;font-size:10px;line-height:1.05;font-weight:800;opacity:.82}
+      body.v50-manager-preview .pmk-price-details-card-v82-25 .pmk-order-source-relocated-v82-25{margin-top:8px!important}
       #eventDetailsDialog[open]{z-index:99999!important}
       #eventDetailsDialog .details-close{pointer-events:auto!important;touch-action:manipulation!important}
       @media(max-width:420px){
@@ -230,6 +232,26 @@
     });
   }
 
+  function installOrderSourcePlacement() {
+    const source = document.querySelector('#orderSource');
+    const field = source?.closest('.field');
+    const priceCard = document.querySelector('#estimatedPrice')?.closest('.form-card');
+    if (!source || !field || !priceCard) return;
+    field.classList.add('pmk-order-source-relocated-v82-25');
+    priceCard.classList.add('pmk-price-details-card-v82-25');
+    replaceFieldText(field, 'Источник заказа');
+
+    const regular = document.querySelector('#regularCustomer')?.closest('.toggle-row');
+    const managerComment = document.querySelector('#managerComment')?.closest('.field');
+    if (regular && regular.parentElement === priceCard) {
+      if (regular.nextElementSibling !== field) regular.insertAdjacentElement('afterend', field);
+      return;
+    }
+    if (managerComment && managerComment.parentElement === priceCard && managerComment.previousElementSibling !== field) {
+      priceCard.insertBefore(field, managerComment);
+    }
+  }
+
   function closeDetailsDialog() {
     const dialog = document.querySelector('#eventDetailsDialog');
     if (!dialog) return false;
@@ -303,6 +325,7 @@
     installStreetFieldHelp();
     installDadataAddressHelp();
     installAddressAutofillLabel();
+    installOrderSourcePlacement();
     document.documentElement.dataset.pmkWorkflowCleanup = '82.19.2';
     document.documentElement.dataset.pmkFullFormDoneFix = '82.20';
     document.documentElement.dataset.pmkAddRugFocusFix = '82.20';
@@ -310,6 +333,7 @@
     document.documentElement.dataset.pmkAddressAutofillLabel = '82.20';
     document.documentElement.dataset.pmkSearchFreezeGuard = '82.20';
     document.documentElement.dataset.pmkDadataAddressLabel = '82.21';
+    document.documentElement.dataset.pmkOrderSourcePlacement = '82.25';
 
     document.querySelectorAll('#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19')
       .forEach(node => node.remove());
@@ -354,13 +378,14 @@
           return element?.id === 'pmkVersionIndicator'
             || element?.id === 'pmkStableBuildBadgeV8219'
             || element?.id === 'v50StickyActions'
+            || element?.id === 'orderSource'
             || element?.classList?.contains('form-actions')
             || element?.classList?.contains('view')
             || element === document.body;
         }
         return [...mutation.addedNodes].some(node => node.nodeType === 1 && (
-          node.matches?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field,[data-v50-action="address"],#eventDetailsDialog')
-          || node.querySelector?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field,[data-v50-action="address"],#eventDetailsDialog')
+          node.matches?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field,[data-v50-action="address"],#eventDetailsDialog,#orderSource,#regularCustomer,#estimatedPrice')
+          || node.querySelector?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field,[data-v50-action="address"],#eventDetailsDialog,#orderSource,#regularCustomer,#estimatedPrice')
         ));
       });
       if (relevant) scheduleClean();
@@ -378,7 +403,7 @@
     clean();
     installObserver();
     document.addEventListener('click', event => {
-      if (event.target.closest('.nav-item,[data-view],[data-v50-action="full"],#addRugBtn,.v50-editor-done,.v50-editor-back,.v50-editor-save')) {
+      if (event.target.closest('.nav-item,[data-view],[data-v50-action="full"],#addRugBtn,.v50-editor-done,.v50-editor-back,.v50-editor-save,#orderSource')) {
         setTimeout(scheduleClean, 0);
         setTimeout(scheduleClean, 180);
       }
