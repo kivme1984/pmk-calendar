@@ -1,32 +1,33 @@
 'use strict';
 
 (() => {
-  if (window.PMK_KEYBOARD_SUBMIT_SAFE_V82_20) return;
+  if (window.PMK_KEYBOARD_SUBMIT_SAFE_V82_20_2) return;
+  window.PMK_KEYBOARD_SUBMIT_SAFE_V82_20_2 = true;
   window.PMK_KEYBOARD_SUBMIT_SAFE_V82_20 = true;
 
   const ID = 'pmkKeyboardSubmitSafe';
   const EDITABLE = 'input,textarea,select,[contenteditable="true"]';
 
-  function kb() {
-    const vv = window.visualViewport;
-    return vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
-  }
-
   function editing() {
     return Boolean(document.activeElement && document.activeElement.matches && document.activeElement.matches(EDITABLE));
+  }
+
+  function keyboardOffset() {
+    const vv = window.visualViewport;
+    if (!vv) return 10;
+    const h = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    return h > 40 ? h + 12 : 10;
   }
 
   function action() {
     const topDone = [...document.querySelectorAll('button')].find(b => b.id !== ID && String(b.textContent || '').trim() === 'Готово' && b.offsetParent !== null);
     const submit = document.querySelector('#submitBtn');
-    const draft = document.querySelector('#saveDraftBtn');
     const form = document.querySelector('#requestForm');
     document.activeElement && document.activeElement.blur && document.activeElement.blur();
     setTimeout(() => {
-      if (topDone) topDone.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-      else if (submit) submit.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-      else if (form && form.requestSubmit) form.requestSubmit();
-      else if (draft) draft.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      if (topDone) topDone.click();
+      else if (form && form.requestSubmit) form.requestSubmit(submit || undefined);
+      else if (submit) submit.click();
     }, 80);
   }
 
@@ -37,26 +38,28 @@
     b.id = ID;
     b.type = 'button';
     b.textContent = 'Готово';
-    b.addEventListener('click', e => { e.preventDefault(); action(); });
+    b.addEventListener('pointerdown', e => e.stopPropagation(), true);
+    b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); action(); });
     document.body.appendChild(b);
     return b;
   }
 
   function sync() {
-    const h = kb();
-    const show = h > 80 && editing();
     const b = ensure();
+    const show = editing();
     b.hidden = !show;
-    if (show) b.style.bottom = `${h + 12}px`;
+    if (show) b.style.bottom = `${keyboardOffset()}px`;
   }
 
   function boot() {
     ensure();
-    document.addEventListener('focusin', () => setTimeout(sync, 160), true);
-    document.addEventListener('focusout', () => setTimeout(sync, 240), true);
+    document.addEventListener('focusin', () => setTimeout(sync, 80), true);
+    document.addEventListener('focusout', () => setTimeout(sync, 350), true);
+    document.addEventListener('click', () => setTimeout(sync, 80), true);
     window.addEventListener('resize', sync, { passive: true });
     window.visualViewport && window.visualViewport.addEventListener('resize', sync, { passive: true });
-    setInterval(sync, 600);
+    window.visualViewport && window.visualViewport.addEventListener('scroll', sync, { passive: true });
+    setInterval(sync, 400);
   }
 
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot, { once: true }) : boot();
