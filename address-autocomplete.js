@@ -1,5 +1,7 @@
 'use strict';
 
+globalThis.PMK_ADDRESS_FAST_SELECT_V82_22 = true;
+
 const PMK_ADDRESS_API_URL = 'https://lucky-math-8e63pmk-address.standart-media.workers.dev/suggest';
 const PMK_DISTRICTS = [
   'Автозаводский', 'Ленинский', 'Канавинский', 'Московский',
@@ -10,6 +12,7 @@ let addressAbortController = null;
 let addressDebounceTimer = null;
 let addressActiveIndex = -1;
 let addressSuggestions = [];
+let addressApplyRequestId = 0;
 
 function normalizePmkDistrict(value = '') {
   const clean = String(value)
@@ -133,45 +136,84 @@ function highlightAddressSuggestion() {
   });
 }
 
-async function applyAddressSuggestion(item) {
-  const input = qs('#addressSearch');
-  if (!input || !item) return;
-  input.value = item.value || '';
-  closeAddressSuggestions();
-  addressStatus('Уточняем дом и район…', 'loading');
+function setAddressField(selector, value, eventName = 'input') {
+  const element = qs(selector);
+  if (!element || value == null || value === '') return false;
+  element.value = value;
+  element.dispatchEvent(new Event(eventName, { bubbles: true }));
+  return true;
+}
 
-  let selected = item;
-  try {
-    const detailed = await requestAddressSuggestions(item.unrestricted_value || item.value || '', 1);
-    if (detailed[0]) selected = detailed[0];
-  } catch (error) {
-    if (error.name !== 'AbortError') console.warn(error);
-  }
-
+function applyAddressFieldsFromSuggestion(selected = {}, { allowEmptyDistrict = false } = {}) {
   const data = selected.data || {};
   const settlement = settlementFromAddressData(data);
   const district = districtFromAddressData(data);
   const house = [data.house, data.block ? `к ${data.block}` : ''].filter(Boolean).join(' ');
 
-  if (settlement) qs('#settlement').value = settlement;
-  if (data.street_with_type || data.street) qs('#street').value = data.street_with_type || data.street;
-  if (house) qs('#houseNumber').value = house;
-  if (data.flat) qs('#apartmentNumber').value = data.flat;
-  if (district) {
-    qs('#district').value = district;
-    qs('#district').dispatchEvent(new Event('change', { bubbles: true }));
-  }
+  if (settlement) setAddressField('#settlement', settlement);
+  else setAddressField('#settlement', 'Нижний Новгород');
 
-  input.value = selected.value || item.value || '';
+  setAddressField('#street', data.street_with_type || data.street || '');
+  setAddressField('#houseNumber', house);
+  setAddressField('#apartmentNumber', data.flat || '');
+
+  if (district) setAddressField('#district', district, 'change');
+  else if (allowEmptyDistrict) qs('#district')?.dispatchEvent(new Event('change', { bubbles: true }));
+
   schedulePreviewUpdate();
 
-  if (district && district !== 'За городом') {
-    addressStatus(`Район определён: ${district}`, 'success');
-  } else if (district === 'За городом') {
-    addressStatus('Адрес определён как выезд за город. Проверьте район и стоимость доставки.', 'warning');
+  return {
+    settlement,
+    district,
+    hasStreet: Boolean(data.street_with_type || data.street),
+    hasHouse: Boolean(house),
+  };
+}
+
+function updateAddressStatusFromResult(result = {}) {
+  if (result.district && result.district !== 'За городом') {
+    addressStatus(`Адрес вставлен. Район: ${result.district}`, 'success');
+  } else if (result.district === 'За городом') {
+    addressStatus('Адрес вставлен. Выезд за город — проверьте стоимость доставки.', 'warning');
   } else {
-    addressStatus('Адрес найден, но район не определён. Выберите район вручную.', 'warning');
+    addressStatus('Адрес вставлен. Если район не определился — выберите его вручную.', 'warning');
   }
+}
+
+function maybeRefineAddressInBackground(item, requestId) {
+  const data = item?.data || {};
+  const hasEnough = Boolean((data.street_with_type || data.street) && data.house);
+  if (hasEnough) return;
+
+  requestAddressSuggestions(item.unrestricted_value || item.value || '', 1)
+    .then(items => {
+      if (requestId !== addressApplyRequestId || !items?.[0]) return;
+      const result = applyAddressFieldsFromSuggestion(items[0], { allowEmptyDistrict: true });
+      updateAddressStatusFromResult(result);
+    })
+    .catch(error => {
+      if (error.name !== 'AbortError') console.warn(error);
+    });
+}
+
+function applyAddressSuggestion(item) {
+  const input = qs('#addressSearch');
+  if (!input || !item) return;
+
+  const requestId = ++addressApplyRequestId;
+  input.value = item.value || '';
+  closeAddressSuggestions();
+  addressStatus('Адрес вставляется…', 'loading');
+
+  const result = applyAddressFieldsFromSuggestion(item, { allowEmptyDistrict: true });
+  input.value = item.value || '';
+  updateAddressStatusFromResult(result);
+
+  requestAnimationFrame(() => {
+    try { qs('#houseNumber')?.focus?.({ preventScroll: true }); } catch {}
+  });
+
+  maybeRefineAddressInBackground(item, requestId);
 }
 
 function createAddressSearchUI() {
@@ -221,7 +263,7 @@ function createAddressSearchUI() {
         closeAddressSuggestions();
         addressStatus(addressErrorMessage(error), 'error');
       }
-    }, 350);
+    }, 260);
   });
 
   input.addEventListener('keydown', event => {
@@ -242,9 +284,17 @@ function createAddressSearchUI() {
     }
   });
 
+  qs('#addressSuggestions').addEventListener('pointerdown', event => {
+    const button = event.target.closest('[data-address-index]');
+    if (!button) return;
+    event.preventDefault();
+    applyAddressSuggestion(addressSuggestions[Number(button.dataset.addressIndex)]);
+  }, { passive: false });
+
   qs('#addressSuggestions').addEventListener('click', event => {
     const button = event.target.closest('[data-address-index]');
     if (!button) return;
+    event.preventDefault();
     applyAddressSuggestion(addressSuggestions[Number(button.dataset.addressIndex)]);
   });
 
