@@ -1,32 +1,25 @@
 'use strict';
 
 (() => {
-  if (window.PMK_MOBILE_KEYBOARD_FORM_V82_20_3) return;
-  window.PMK_MOBILE_KEYBOARD_FORM_V82_20_3 = true;
+  if (window.PMK_MOBILE_KEYBOARD_FORM_V82_20_4) return;
+  window.PMK_MOBILE_KEYBOARD_FORM_V82_20_4 = true;
   window.PMK_MOBILE_KEYBOARD_FORM_V82_20 = true;
 
   const ROOT_CLASS = 'pmk-keyboard-active';
-  const FOCUS_SELECTOR = 'input, textarea, select, [contenteditable="true"]';
+  const EDITABLE = 'input, textarea, select, [contenteditable="true"]';
   const SPACER_CLASS = 'pmk-keyboard-scroll-spacer';
   let lastFocused = null;
-  let lastKeyboardHeight = 0;
-  let lastLiftAt = 0;
 
-  function viewport() { return window.visualViewport || null; }
-  function keyboardHeight() {
-    const vv = viewport();
-    if (!vv) return 0;
-    return Math.round(Math.max(0, window.innerHeight - vv.height - vv.offsetTop));
+  function vv() { return window.visualViewport || null; }
+  function isEditable(el) { return Boolean(el?.matches?.(EDITABLE)); }
+  function visualBottom() { return vv() ? vv().offsetTop + vv().height : window.innerHeight; }
+  function visualHeight() { return Math.round(vv()?.height || window.innerHeight); }
+  function keyboardOpen() { return isEditable(document.activeElement); }
+
+  function formView() {
+    return document.querySelector('#view-form') || document.querySelector('#requestForm') || document.body;
   }
-  function visualHeight() { return Math.round(viewport()?.height || window.innerHeight); }
-  function isEditable(element) { return Boolean(element && element.matches && element.matches(FOCUS_SELECTOR)); }
-  function scrollRoot() { return document.scrollingElement || document.documentElement; }
-  function activePanel() {
-    return document.querySelector('.step-panel:not(.hidden),.form-step:not(.hidden),.view:not(.hidden),#view-form:not(.hidden),#view-add:not(.hidden)') || document.body;
-  }
-  function formContainer(element) {
-    return element?.closest?.('.step-panel,.form-step,.modal,.dialog,.form-modal,.request-form,.manager-form,.main-content,#eventForm,#requestForm,#managerForm') || activePanel();
-  }
+
   function ensureSpacer() {
     let spacer = document.querySelector(`.${SPACER_CLASS}`);
     if (!spacer) {
@@ -34,84 +27,75 @@
       spacer.className = SPACER_CLASS;
       spacer.setAttribute('aria-hidden', 'true');
     }
-    const parent = formContainer(lastFocused);
-    if (parent && spacer.parentElement !== parent) parent.append(spacer);
+    const form = document.querySelector('#requestForm') || formView();
+    if (spacer.parentElement !== form) form.append(spacer);
     return spacer;
   }
-  function setKeyboardState() {
-    const height = keyboardHeight();
-    const active = height > 80;
-    lastKeyboardHeight = active ? height : 0;
-    const spacerHeight = active ? Math.max(height + 260, Math.round(visualHeight() * 0.9)) : 0;
 
+  function applyState() {
+    const active = keyboardOpen();
+    const h = visualHeight();
+    const spacer = active ? Math.max(360, Math.round(h * 0.9)) : 0;
     document.documentElement.classList.toggle(ROOT_CLASS, active);
     document.body.classList.toggle(ROOT_CLASS, active);
-    document.documentElement.style.setProperty('--pmk-keyboard-height', `${lastKeyboardHeight}px`);
-    document.documentElement.style.setProperty('--pmk-keyboard-spacer', `${spacerHeight}px`);
-    document.body.style.setProperty('--pmk-keyboard-height', `${lastKeyboardHeight}px`);
-    document.body.style.setProperty('--pmk-keyboard-spacer', `${spacerHeight}px`);
-
-    const spacer = ensureSpacer();
-    spacer.style.height = `${spacerHeight}px`;
-    spacer.style.minHeight = `${spacerHeight}px`;
-    spacer.hidden = !active;
-    return active;
+    document.documentElement.style.setProperty('--pmk-visual-height', `${h}px`);
+    document.documentElement.style.setProperty('--pmk-keyboard-spacer', `${spacer}px`);
+    document.body.style.setProperty('--pmk-visual-height', `${h}px`);
+    document.body.style.setProperty('--pmk-keyboard-spacer', `${spacer}px`);
+    const node = ensureSpacer();
+    node.hidden = !active;
+    node.style.height = `${spacer}px`;
+    node.style.minHeight = `${spacer}px`;
   }
-  function nearestScrollable(element) {
-    let node = element;
+
+  function nearestScroller(el) {
+    let node = el;
     while (node && node !== document.body && node !== document.documentElement) {
       const style = getComputedStyle(node);
       if (/(auto|scroll)/.test(`${style.overflowY}${style.overflow}`) && node.scrollHeight > node.clientHeight + 8) return node;
       node = node.parentElement;
     }
-    return scrollRoot();
+    return document.scrollingElement || document.documentElement;
   }
-  function liftFieldOnce(target) {
-    if (!target) return;
-    setKeyboardState();
-    if (!lastKeyboardHeight) return;
 
-    const now = Date.now();
-    if (now - lastLiftAt < 260) return;
-    lastLiftAt = now;
-
-    const vv = viewport();
-    const visibleBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
-    const rect = target.getBoundingClientRect();
-    const desiredBottom = visibleBottom - 140;
-    if (rect.bottom <= desiredBottom && rect.top >= 96) return;
-
-    const delta = rect.bottom > desiredBottom ? rect.bottom - desiredBottom : rect.top - 110;
-    const scroller = nearestScrollable(target);
-    if (Math.abs(delta) < 8) return;
-    if (scroller === scrollRoot()) window.scrollBy({ top: delta, behavior: 'auto' });
-    else scroller.scrollTop += delta;
+  function reveal(el) {
+    if (!el) return;
+    applyState();
+    requestAnimationFrame(() => {
+      const bottom = visualBottom();
+      const rect = el.getBoundingClientRect();
+      const safeBottom = bottom - 96;
+      const safeTop = (vv()?.offsetTop || 0) + 92;
+      let delta = 0;
+      if (rect.bottom > safeBottom) delta = rect.bottom - safeBottom;
+      else if (rect.top < safeTop) delta = rect.top - safeTop;
+      if (Math.abs(delta) < 6) return;
+      const scroller = nearestScroller(el);
+      if (scroller === document.scrollingElement || scroller === document.documentElement) window.scrollBy({ top: delta, behavior: 'auto' });
+      else scroller.scrollTop += delta;
+    });
   }
+
   function onFocus(event) {
     if (!isEditable(event.target)) return;
     lastFocused = event.target;
-    setKeyboardState();
-    setTimeout(() => liftFieldOnce(lastFocused), 180);
-    setTimeout(() => liftFieldOnce(lastFocused), 520);
+    setTimeout(() => reveal(lastFocused), 120);
+    setTimeout(() => reveal(lastFocused), 420);
   }
-  function onViewportResize() {
-    const previous = lastKeyboardHeight;
-    setKeyboardState();
-    if (lastFocused && Math.abs(lastKeyboardHeight - previous) > 40) setTimeout(() => liftFieldOnce(lastFocused), 120);
+
+  function sync() {
+    applyState();
+    if (lastFocused && isEditable(document.activeElement)) setTimeout(() => reveal(lastFocused), 80);
   }
-  function install() {
-    setKeyboardState();
+
+  function boot() {
+    applyState();
     document.addEventListener('focusin', onFocus, true);
-    document.addEventListener('click', event => {
-      if (isEditable(event.target)) {
-        lastFocused = event.target;
-        setKeyboardState();
-      }
-    }, true);
-    window.addEventListener('resize', onViewportResize, { passive: true });
-    window.addEventListener('orientationchange', onViewportResize, { passive: true });
-    viewport()?.addEventListener('resize', onViewportResize, { passive: true });
+    document.addEventListener('focusout', () => setTimeout(applyState, 220), true);
+    window.addEventListener('resize', sync, { passive: true });
+    window.addEventListener('orientationchange', sync, { passive: true });
+    vv()?.addEventListener('resize', sync, { passive: true });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
-  else install();
+
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot, { once: true }) : boot();
 })();
