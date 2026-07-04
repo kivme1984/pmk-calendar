@@ -7,11 +7,14 @@
   globalThis.PMK_ADD_RUG_FOCUS_FIX_V82_20 = true;
   globalThis.PMK_COMPACT_ADDRESS_FIELDS_V82_20 = true;
   globalThis.PMK_ADDRESS_AUTOFILL_LABEL_V82_20 = true;
+  globalThis.PMK_SEARCH_FREEZE_GUARD_V82_20 = true;
 
   let scheduled = false;
   let observer = null;
   let doneFixBound = false;
   let addRugFocusBound = false;
+  let searchGuardBound = false;
+  let searchRenderTimer = null;
 
   function isSettingsView() {
     return Boolean(document.querySelector('#view-settings.active'));
@@ -41,11 +44,14 @@
       body.v50-manager-preview .pmk-client-address-card-v82-20 select{min-height:44px!important;padding-top:8px!important;padding-bottom:8px!important}
       body.v50-manager-preview .pmk-address-compact-grid-v82-20{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px 8px!important}
       body.v50-manager-preview .pmk-address-house-v82-20{order:1}
-      body.v50-manager-preview .pmk-address-entrance-v82-20{order:2}
-      body.v50-manager-preview .pmk-address-floor-v82-20{order:3}
-      body.v50-manager-preview .pmk-address-apartment-v82-20{order:4}
+      body.v50-manager-preview .pmk-address-apartment-v82-20{order:2}
+      body.v50-manager-preview .pmk-address-entrance-v82-20{order:3}
+      body.v50-manager-preview .pmk-address-floor-v82-20{order:4}
+      body.v50-manager-preview .pmk-address-autofill-hint-v82-20{display:block;margin-top:4px;font-size:11px;line-height:1.2;font-weight:800;color:#6b7280}
       body.v50-manager-preview [data-v50-action="address"].pmk-address-autofill-label-v82-20 b{line-height:1.08!important}
       body.v50-manager-preview [data-v50-action="address"].pmk-address-autofill-label-v82-20 small{display:block;margin-top:2px;font-size:10px;line-height:1.05;font-weight:800;opacity:.82}
+      #eventDetailsDialog[open]{z-index:99999!important}
+      #eventDetailsDialog .details-close{pointer-events:auto!important;touch-action:manipulation!important}
       @media(max-width:420px){
         body.v50-manager-preview .pmk-address-compact-grid-v82-20{grid-template-columns:1fr 1fr!important;gap:6px!important}
         body.v50-manager-preview .pmk-client-address-card-v82-20 .field-grid{gap:6px!important}
@@ -154,15 +160,39 @@
 
   function installCompactAddressLayout() {
     const house = addClassForField('#houseNumber', 'pmk-address-house-v82-20');
+    const apartment = addClassForField('#apartmentNumber', 'pmk-address-apartment-v82-20');
     const entrance = addClassForField('#entrance', 'pmk-address-entrance-v82-20');
     const floor = addClassForField('#floor', 'pmk-address-floor-v82-20');
-    const apartment = addClassForField('#apartmentNumber', 'pmk-address-apartment-v82-20');
     const addressGrid = house?.parentElement;
-    if (addressGrid && entrance?.parentElement === addressGrid && floor?.parentElement === addressGrid && apartment?.parentElement === addressGrid) {
+    if (addressGrid && apartment?.parentElement === addressGrid && entrance?.parentElement === addressGrid && floor?.parentElement === addressGrid) {
       addressGrid.classList.add('pmk-address-compact-grid-v82-20');
     }
     const card = document.querySelector('#customerName')?.closest('.form-card');
     card?.classList.add('pmk-client-address-card-v82-20');
+  }
+
+  function replaceFieldText(field, text) {
+    if (!field) return;
+    const node = [...field.childNodes].find(item => item.nodeType === Node.TEXT_NODE && item.nodeValue.trim());
+    if (node) node.nodeValue = text;
+    else field.insertBefore(document.createTextNode(text), field.firstChild);
+  }
+
+  function installAddressFieldHelp() {
+    const street = document.querySelector('#street');
+    const field = street?.closest('.field');
+    if (!street || !field) return;
+    replaceFieldText(field, 'Поиск адреса (автопоиск и вставка) *');
+    street.placeholder = 'Введите улицу и дом — выберите вариант из автопоиска';
+    street.title = 'Автопоиск адреса. После выбора адрес вставится в поля: улица, дом, квартира, подъезд и этаж.';
+    street.setAttribute('aria-label', 'Поиск адреса: автопоиск и вставка во все поля адреса');
+    let hint = field.querySelector('.pmk-address-autofill-hint-v82-20');
+    if (!hint) {
+      hint = document.createElement('small');
+      hint.className = 'pmk-address-autofill-hint-v82-20';
+      street.insertAdjacentElement('afterend', hint);
+    }
+    hint.textContent = 'Автопоиск: выберите адрес — он вставится в поля ниже.';
   }
 
   function installAddressAutofillLabel() {
@@ -170,11 +200,73 @@
       if (button.dataset.pmkAddressAutofillLabel === '1') return;
       button.dataset.pmkAddressAutofillLabel = '1';
       button.classList.add('pmk-address-autofill-label-v82-20');
-      button.title = 'Автопоиск адреса и вставка улицы, дома, подъезда, этажа и квартиры по полям';
+      button.title = 'Автопоиск адреса и вставка улицы, дома, квартиры, подъезда и этажа по полям';
       button.setAttribute('aria-label', 'Адрес: автопоиск и вставка во все поля адреса');
       const icon = button.querySelector('span')?.outerHTML || '<span>📍</span>';
       button.innerHTML = `${icon}<b>Адрес<small>(автопоиск<br>и вставка)</small></b>`;
     });
+  }
+
+  function closeDetailsDialog() {
+    const dialog = document.querySelector('#eventDetailsDialog');
+    if (!dialog) return false;
+    try {
+      if (typeof dialog.close === 'function' && dialog.open) dialog.close();
+      else dialog.removeAttribute('open');
+    } catch {
+      dialog.removeAttribute('open');
+    }
+    return true;
+  }
+
+  function runSearchRender() {
+    const container = document.querySelector('#searchResults');
+    try {
+      if (typeof globalThis.renderSearch === 'function') globalThis.renderSearch();
+    } catch (error) {
+      if (container) container.innerHTML = '<div class="empty-state"><strong>Поиск временно сбросился.</strong><br>Повторите запрос короче или нажмите обновить.</div>';
+      return;
+    }
+    const cards = [...document.querySelectorAll('#searchResults .event-card')];
+    if (cards.length > 80) {
+      cards.slice(80).forEach(card => card.remove());
+      container?.insertAdjacentHTML('beforeend', '<div class="empty-state"><strong>Показаны первые 80 результатов.</strong><br>Уточните имя, телефон, улицу или номер договора.</div>');
+    }
+  }
+
+  function installSearchFreezeGuard() {
+    if (searchGuardBound) return;
+    searchGuardBound = true;
+
+    document.addEventListener('input', event => {
+      if (event.target?.id !== 'globalSearch') return;
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      clearTimeout(searchRenderTimer);
+      searchRenderTimer = setTimeout(runSearchRender, 180);
+    }, true);
+
+    document.addEventListener('keydown', event => {
+      if (event.target?.id === 'globalSearch' && event.key === 'Enter') {
+        event.preventDefault();
+        clearTimeout(searchRenderTimer);
+        runSearchRender();
+      }
+      if (event.key === 'Escape') closeDetailsDialog();
+    }, true);
+
+    document.addEventListener('click', event => {
+      const closeButton = event.target.closest('[data-details-close],.details-close');
+      if (closeButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        closeDetailsDialog();
+        return;
+      }
+      const dialog = document.querySelector('#eventDetailsDialog');
+      if (dialog?.open && event.target === dialog) closeDetailsDialog();
+    }, true);
   }
 
   function clean() {
@@ -182,13 +274,16 @@
     ensureDoneFixStyles();
     installDoneFix();
     installAddRugFocusFix();
+    installSearchFreezeGuard();
     installCompactAddressLayout();
+    installAddressFieldHelp();
     installAddressAutofillLabel();
     document.documentElement.dataset.pmkWorkflowCleanup = '82.19.2';
     document.documentElement.dataset.pmkFullFormDoneFix = '82.20';
     document.documentElement.dataset.pmkAddRugFocusFix = '82.20';
     document.documentElement.dataset.pmkCompactAddressFields = '82.20';
     document.documentElement.dataset.pmkAddressAutofillLabel = '82.20';
+    document.documentElement.dataset.pmkSearchFreezeGuard = '82.20';
 
     document.querySelectorAll('#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19')
       .forEach(node => node.remove());
@@ -238,8 +333,8 @@
             || element === document.body;
         }
         return [...mutation.addedNodes].some(node => node.nodeType === 1 && (
-          node.matches?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field,[data-v50-action="address"]')
-          || node.querySelector?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field,[data-v50-action="address"]')
+          node.matches?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field,[data-v50-action="address"],#eventDetailsDialog')
+          || node.querySelector?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field,[data-v50-action="address"],#eventDetailsDialog')
         ));
       });
       if (relevant) scheduleClean();
