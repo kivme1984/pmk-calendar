@@ -1,7 +1,7 @@
-const VERSION='82.20.0';
+const VERSION='82.21.0';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-20-0.js';
-const BUNDLE_CSS='./__pmk-styles-v82-20-0.css';
+const BUNDLE_JS='./__pmk-app-v82-21-0.js';
+const BUNDLE_CSS='./__pmk-styles-v82-21-0.css';
 
 const JS=`
 ./app.js
