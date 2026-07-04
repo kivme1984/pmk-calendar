@@ -70,6 +70,7 @@ const JS=`
 ./smart-parser-feature-gate.js
 ./workflow-ui-cleanup-v82-19-2.js
 ./persistent-google-auth-v82-20.js
+./mobile-keyboard-form-v82-20.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -115,6 +116,7 @@ const CSS=`
 ./event-cloud-indicators-v82-19.css
 ./workflow-ui-cleanup-v82-19-2.css
 ./persistent-google-auth-v82-20.css
+./mobile-keyboard-form-v82-20.css
 `.trim().split(/\s+/);
 
 const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./pmk-google-auth-config.json','./icons/icon-192.png','./icons/icon-512.png'];
@@ -133,6 +135,7 @@ async function textAsset(url){
   if(url.includes('event-cloud-indicators-v82-19.js')&&!text.includes('PMK_EVENT_CLOUD_INDICATORS_V82_19'))throw new Error('Не получены облачные индикаторы v82.20.0');
   if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_WORKFLOW_UI_CLEANUP_V82_19_2'))throw new Error('Не получено исправление интерфейса v82.20.0');
   if(url.includes('persistent-google-auth-v82-20.js')&&!text.includes('PMK_PERSISTENT_GOOGLE_AUTH_V82_20'))throw new Error('Не получен модуль постоянного входа Google v82.20.0');
+  if(url.includes('mobile-keyboard-form-v82-20.js')&&!text.includes('PMK_MOBILE_KEYBOARD_FORM_V82_20'))throw new Error('Не получен фикс мобильной клавиатуры v82.20.0');
   return text;
 }
 
