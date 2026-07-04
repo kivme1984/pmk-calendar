@@ -1,12 +1,12 @@
 {
-  "version": "82.39.0",
-  "release": "disable-left-status-column",
+  "version": "82.40.0",
+  "release": "card-visual-rollback-save-guard",
   "date": "2026-07-05",
   "features": [
-    "disable-broken-left-status-column",
-    "restore-status-buttons-to-actions-row",
-    "remove-v82-2-test-badge",
-    "keep-restored-compact-day-card",
+    "rollback-day-card-visuals-to-pre-compact-state",
+    "remove-v82-37-v82-38-card-style-modules-from-bundle",
+    "save-guard-without-card-css",
+    "left-status-column-remains-disabled",
     "update-loop-current-version-fixed"
   ]
 }
