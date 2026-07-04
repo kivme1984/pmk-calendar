@@ -1,11 +1,12 @@
 {
-  "version": "82.34.0",
-  "release": "classic-month-calendar-counters",
+  "version": "82.35.0",
+  "release": "compact-month-no-loop",
   "date": "2026-07-05",
   "features": [
-    "classic-month-calendar-grid",
-    "large-daily-request-counters",
-    "compact-district-point-counters",
-    "v82-cache-bump"
+    "compact-month-summary-cards",
+    "smaller-month-calendar-cells",
+    "no-horizontal-month-scroll-lock",
+    "update-loop-fixed",
+    "update-overlay-cleanup"
   ]
 }
