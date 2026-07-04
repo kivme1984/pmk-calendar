@@ -6,6 +6,7 @@
   globalThis.PMK_FULL_FORM_DONE_FIX_V82_20 = true;
   globalThis.PMK_ADD_RUG_FOCUS_FIX_V82_20 = true;
   globalThis.PMK_COMPACT_ADDRESS_FIELDS_V82_20 = true;
+  globalThis.PMK_ADDRESS_AUTOFILL_LABEL_V82_20 = true;
 
   let scheduled = false;
   let observer = null;
@@ -43,11 +44,14 @@
       body.v50-manager-preview .pmk-address-entrance-v82-20{order:2}
       body.v50-manager-preview .pmk-address-floor-v82-20{order:3}
       body.v50-manager-preview .pmk-address-apartment-v82-20{order:4}
+      body.v50-manager-preview [data-v50-action="address"].pmk-address-autofill-label-v82-20 b{line-height:1.08!important}
+      body.v50-manager-preview [data-v50-action="address"].pmk-address-autofill-label-v82-20 small{display:block;margin-top:2px;font-size:10px;line-height:1.05;font-weight:800;opacity:.82}
       @media(max-width:420px){
         body.v50-manager-preview .pmk-address-compact-grid-v82-20{grid-template-columns:1fr 1fr!important;gap:6px!important}
         body.v50-manager-preview .pmk-client-address-card-v82-20 .field-grid{gap:6px!important}
         body.v50-manager-preview .pmk-client-address-card-v82-20 input,
         body.v50-manager-preview .pmk-client-address-card-v82-20 select{font-size:16px!important;min-height:42px!important}
+        body.v50-manager-preview [data-v50-action="address"].pmk-address-autofill-label-v82-20 small{font-size:9px}
       }
     `;
     document.head.appendChild(style);
@@ -161,16 +165,30 @@
     card?.classList.add('pmk-client-address-card-v82-20');
   }
 
+  function installAddressAutofillLabel() {
+    document.querySelectorAll('[data-v50-action="address"]').forEach(button => {
+      if (button.dataset.pmkAddressAutofillLabel === '1') return;
+      button.dataset.pmkAddressAutofillLabel = '1';
+      button.classList.add('pmk-address-autofill-label-v82-20');
+      button.title = 'Автопоиск адреса и вставка улицы, дома, подъезда, этажа и квартиры по полям';
+      button.setAttribute('aria-label', 'Адрес: автопоиск и вставка во все поля адреса');
+      const icon = button.querySelector('span')?.outerHTML || '<span>📍</span>';
+      button.innerHTML = `${icon}<b>Адрес<small>(автопоиск<br>и вставка)</small></b>`;
+    });
+  }
+
   function clean() {
     scheduled = false;
     ensureDoneFixStyles();
     installDoneFix();
     installAddRugFocusFix();
     installCompactAddressLayout();
+    installAddressAutofillLabel();
     document.documentElement.dataset.pmkWorkflowCleanup = '82.19.2';
     document.documentElement.dataset.pmkFullFormDoneFix = '82.20';
     document.documentElement.dataset.pmkAddRugFocusFix = '82.20';
     document.documentElement.dataset.pmkCompactAddressFields = '82.20';
+    document.documentElement.dataset.pmkAddressAutofillLabel = '82.20';
 
     document.querySelectorAll('#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19')
       .forEach(node => node.remove());
@@ -220,8 +238,8 @@
             || element === document.body;
         }
         return [...mutation.addedNodes].some(node => node.nodeType === 1 && (
-          node.matches?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field')
-          || node.querySelector?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field')
+          node.matches?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field,[data-v50-action="address"]')
+          || node.querySelector?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field,[data-v50-action="address"]')
         ));
       });
       if (relevant) scheduleClean();
