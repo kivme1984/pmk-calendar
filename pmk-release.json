@@ -1,6 +1,6 @@
 {
-  "version": "82.41.0",
-  "label": "Основная v82.41.0 — статусы в ряд под датой карточки",
-  "publishedAt": "2026-07-05T21:00:00Z",
-  "buildToken": "status-row-under-date-v82-41"
+  "version": "82.42.0",
+  "label": "Основная v82.42.0 — статусы внутри левой колонки даты",
+  "publishedAt": "2026-07-05T21:20:00Z",
+  "buildToken": "status-buttons-in-date-column-v82-42"
 }
