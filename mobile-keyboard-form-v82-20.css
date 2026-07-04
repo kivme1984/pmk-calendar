@@ -13,6 +13,14 @@ body.pmk-keyboard-active {
 }
 
 @media (max-width: 760px) {
+  body.v50-manager-preview .v50-source-section.v50-editor-open {
+    padding-bottom: calc(28px + var(--pmk-keyboard-spacer, 360px)) !important;
+  }
+
+  body.v50-manager-preview .v50-source-section.v50-editor-open > .v50-editor-save {
+    display: none !important;
+  }
+
   #requestForm .form-actions,
   .pmk-keyboard-active #requestForm .form-actions {
     position: static !important;
