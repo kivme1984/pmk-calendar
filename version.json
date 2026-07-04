@@ -1,12 +1,12 @@
 {
-  "version": "82.41.0",
-  "release": "status-row-under-date",
+  "version": "82.42.0",
+  "release": "status-buttons-in-date-column",
   "date": "2026-07-05",
   "features": [
-    "status-buttons-moved-to-horizontal-row-under-date",
+    "status-buttons-inside-left-date-column",
+    "compact-status-stack-under-date-time-visit-type",
     "card-visual-rollback-preserved",
     "save-guard-without-card-css",
-    "left-status-column-disabled",
     "update-loop-current-version-fixed"
   ]
 }
