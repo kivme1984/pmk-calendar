@@ -1,14 +1,15 @@
 'use strict';
 
 (() => {
-  if (window.PMK_UPDATE_MANAGER_V82_38) return;
+  if (window.PMK_UPDATE_MANAGER_V82_39) return;
   window.PMK_UPDATE_MANAGER_V82_20 = true;
   window.PMK_UPDATE_MANAGER_V82_35 = true;
   window.PMK_UPDATE_MANAGER_V82_37 = true;
   window.PMK_UPDATE_MANAGER_V82_38 = true;
+  window.PMK_UPDATE_MANAGER_V82_39 = true;
 
-  const CURRENT = '82.38.0';
-  const CURRENT_TOKEN = 'restore-day-card-layout-v82-38';
+  const CURRENT = '82.39.0';
+  const CURRENT_TOKEN = 'disable-left-status-column-v82-39';
   const CHECK_EVERY = 1000 * 60 * 20;
   const STYLE_ID = 'pmkUpdateManagerStyle';
   const INSTALLED_VERSION_KEY = 'pmk-installed-version';
