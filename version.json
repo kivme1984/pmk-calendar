@@ -1,10 +1,10 @@
 {
-  "version": "82.45.0",
-  "release": "thin-status-buttons-not-narrow",
+  "version": "82.46.0",
+  "release": "status-thicker-bottom-actions-thinner",
   "date": "2026-07-05",
   "features": [
-    "status-buttons-full-width-in-date-column",
-    "status-buttons-thinner-height",
+    "status-buttons-left-column-1-5x-taller",
+    "bottom-actions-call-open-menu-thinner",
     "reduced-card-empty-spacing",
     "save-guard-without-card-css",
     "update-loop-current-version-fixed"
