@@ -1,6 +1,6 @@
 {
-  "version": "82.43.0",
-  "label": "Основная v82.43.0 — компактная карточка и узкие статусы",
-  "publishedAt": "2026-07-05T21:40:00Z",
-  "buildToken": "tight-card-narrow-status-buttons-v82-43"
+  "version": "82.44.0",
+  "label": "Основная v82.44.0 — тонкие статусные кнопки",
+  "publishedAt": "2026-07-05T22:00:00Z",
+  "buildToken": "thin-status-buttons-not-narrow-v82-44"
 }
