@@ -5,6 +5,7 @@
   globalThis.PMK_WORKFLOW_UI_CLEANUP_V82_19_2 = true;
   globalThis.PMK_FULL_FORM_DONE_FIX_V82_20 = true;
   globalThis.PMK_ADD_RUG_FOCUS_FIX_V82_20 = true;
+  globalThis.PMK_COMPACT_ADDRESS_FIELDS_V82_20 = true;
 
   let scheduled = false;
   let observer = null;
@@ -33,6 +34,21 @@
       body.v50-manager-preview.v50-full-form #v50StickyActions{display:none!important}
       body.v50-manager-preview.v50-full-form #addRugBtn{margin-bottom:18px}
       body.v50-manager-preview #rugsContainer .rug-card.pmk-new-rug-focus-v82-20{outline:2px solid #ffc400;outline-offset:4px}
+      body.v50-manager-preview .pmk-client-address-card-v82-20 .field-grid{gap:7px 8px!important}
+      body.v50-manager-preview .pmk-client-address-card-v82-20 .field{gap:4px!important;min-width:0!important}
+      body.v50-manager-preview .pmk-client-address-card-v82-20 input,
+      body.v50-manager-preview .pmk-client-address-card-v82-20 select{min-height:44px!important;padding-top:8px!important;padding-bottom:8px!important}
+      body.v50-manager-preview .pmk-address-compact-grid-v82-20{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px 8px!important}
+      body.v50-manager-preview .pmk-address-house-v82-20{order:1}
+      body.v50-manager-preview .pmk-address-entrance-v82-20{order:2}
+      body.v50-manager-preview .pmk-address-floor-v82-20{order:3}
+      body.v50-manager-preview .pmk-address-apartment-v82-20{order:4}
+      @media(max-width:420px){
+        body.v50-manager-preview .pmk-address-compact-grid-v82-20{grid-template-columns:1fr 1fr!important;gap:6px!important}
+        body.v50-manager-preview .pmk-client-address-card-v82-20 .field-grid{gap:6px!important}
+        body.v50-manager-preview .pmk-client-address-card-v82-20 input,
+        body.v50-manager-preview .pmk-client-address-card-v82-20 select{font-size:16px!important;min-height:42px!important}
+      }
     `;
     document.head.appendChild(style);
   }
@@ -126,14 +142,35 @@
     }, true);
   }
 
+  function addClassForField(selector, className) {
+    const field = document.querySelector(selector)?.closest('.field');
+    field?.classList.add(className);
+    return field;
+  }
+
+  function installCompactAddressLayout() {
+    const house = addClassForField('#houseNumber', 'pmk-address-house-v82-20');
+    const entrance = addClassForField('#entrance', 'pmk-address-entrance-v82-20');
+    const floor = addClassForField('#floor', 'pmk-address-floor-v82-20');
+    const apartment = addClassForField('#apartmentNumber', 'pmk-address-apartment-v82-20');
+    const addressGrid = house?.parentElement;
+    if (addressGrid && entrance?.parentElement === addressGrid && floor?.parentElement === addressGrid && apartment?.parentElement === addressGrid) {
+      addressGrid.classList.add('pmk-address-compact-grid-v82-20');
+    }
+    const card = document.querySelector('#customerName')?.closest('.form-card');
+    card?.classList.add('pmk-client-address-card-v82-20');
+  }
+
   function clean() {
     scheduled = false;
     ensureDoneFixStyles();
     installDoneFix();
     installAddRugFocusFix();
+    installCompactAddressLayout();
     document.documentElement.dataset.pmkWorkflowCleanup = '82.19.2';
     document.documentElement.dataset.pmkFullFormDoneFix = '82.20';
     document.documentElement.dataset.pmkAddRugFocusFix = '82.20';
+    document.documentElement.dataset.pmkCompactAddressFields = '82.20';
 
     document.querySelectorAll('#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19')
       .forEach(node => node.remove());
@@ -183,8 +220,8 @@
             || element === document.body;
         }
         return [...mutation.addedNodes].some(node => node.nodeType === 1 && (
-          node.matches?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card')
-          || node.querySelector?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card')
+          node.matches?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field')
+          || node.querySelector?.('#pmkVersionIndicator,#pmkStableBuildBadgeV8219,.pmk-stable-build-badge-v82-19,#v50StickyActions,#requestForm .form-actions,.v50-editor-bar,.v50-editor-save,#rugsContainer .rug-card,.field-grid,.field')
         ));
       });
       if (relevant) scheduleClean();
