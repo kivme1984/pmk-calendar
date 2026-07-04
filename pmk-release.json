@@ -1,6 +1,6 @@
 {
-  "version": "82.40.0",
-  "label": "Основная v82.40.0 — откат карточки дня без compact-стилей",
-  "publishedAt": "2026-07-05T20:40:00Z",
-  "buildToken": "card-visual-rollback-save-guard-v82-40"
+  "version": "82.41.0",
+  "label": "Основная v82.41.0 — статусы в ряд под датой карточки",
+  "publishedAt": "2026-07-05T21:00:00Z",
+  "buildToken": "status-row-under-date-v82-41"
 }
