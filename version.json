@@ -1,11 +1,11 @@
 {
-  "version": "82.42.0",
-  "release": "status-buttons-in-date-column",
+  "version": "82.43.0",
+  "release": "tight-card-narrow-status-buttons",
   "date": "2026-07-05",
   "features": [
-    "status-buttons-inside-left-date-column",
-    "compact-status-stack-under-date-time-visit-type",
-    "card-visual-rollback-preserved",
+    "narrow-status-buttons-inside-date-column",
+    "reduced-card-empty-spacing",
+    "compact-order-card-without-style-change",
     "save-guard-without-card-css",
     "update-loop-current-version-fixed"
   ]
