@@ -1,7 +1,7 @@
-const VERSION='82.24.0';
+const VERSION='82.25.0';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-24-0.js';
-const BUNDLE_CSS='./__pmk-styles-v82-24-0.css';
+const BUNDLE_JS='./__pmk-app-v82-25-0.js';
+const BUNDLE_CSS='./__pmk-styles-v82-25-0.css';
 
 const JS=`
 ./app.js
@@ -134,11 +134,11 @@ async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
   const text=await response.text();
+  if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_ORDER_SOURCE_PRICING_SECTION_V82_25'))throw new Error('Не получен перенос источника заказа v82.25.0');
   if(url.includes('android-autofill-off-v53.js')&&!text.includes('PMK_GOOGLE_AUTOFILL_SAVE_OFF_V82_24'))throw new Error('Не получен фикс отключения Google Autofill v82.24.0');
   if(url.includes('address-autocomplete.js')&&!text.includes('PMK_ADDRESS_INSTANT_SELECT_V82_23'))throw new Error('Не получен мгновенный выбор адреса v82.23.0');
   if(url.includes('version-guard-v82.js')&&(!text.includes("const VERSION = '82'")||!text.includes("const RELEASE = '82.20.0'")))throw new Error('Неверный контрольный файл v82.20.0');
   if(url.includes('event-cloud-indicators-v82-19.js')&&!text.includes('PMK_EVENT_CLOUD_INDICATORS_V82_19'))throw new Error('Не получены облачные индикаторы v82.20.0');
-  if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_WORKFLOW_UI_CLEANUP_V82_19_2'))throw new Error('Не получено исправление интерфейса v82.20.0');
   if(url.includes('persistent-google-auth-v82-20.js')&&!text.includes('PMK_PERSISTENT_GOOGLE_AUTH_V82_20'))throw new Error('Не получен модуль постоянного входа Google v82.20.0');
   if(url.includes('mobile-keyboard-form-v82-20.js')&&!text.includes('PMK_MOBILE_KEYBOARD_FORM_V82_20'))throw new Error('Не получен фикс мобильной клавиатуры v82.20.0');
   if(url.includes('keyboard-submit-safe-v82-20.js')&&!text.includes('PMK_KEYBOARD_SUBMIT_SAFE_V82_20'))throw new Error('Не получен фикс кнопки клавиатуры v82.20.0');
