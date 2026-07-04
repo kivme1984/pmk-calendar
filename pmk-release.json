@@ -1,6 +1,6 @@
 {
-  "version": "82.34.0",
-  "label": "Основная v82.34.0 — классический месяц",
-  "publishedAt": "2026-07-05T18:00:00Z",
-  "buildToken": "classic-month-calendar-counters"
+  "version": "82.35.0",
+  "label": "Основная v82.35.0 — компактный месяц без цикла обновления",
+  "publishedAt": "2026-07-05T18:30:00Z",
+  "buildToken": "compact-month-no-loop-v82-35"
 }
