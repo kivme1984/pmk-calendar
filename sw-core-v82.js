@@ -170,7 +170,7 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
     Promise.all(CSS.map(textAsset)),
   ]);
   await put(cache,BUNDLE_JS,new Response(js.join('\n\n'),{headers:{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION}}));
-  await put(cache,BUNDLE_CSS=new Response(css.join('\n\n'),{headers:{'Content-Type':'text/css; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION}}));
+  await put(cache,BUNDLE_CSS,new Response(css.join('\n\n'),{headers:{'Content-Type':'text/css; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION}}));
   await Promise.allSettled(OPTIONAL.map(async url=>{
     const response=await fetchWithTimeout(`${url}?install=${encodeURIComponent(VERSION)}`,5000);
     if(response.ok)await put(cache,url,response);
