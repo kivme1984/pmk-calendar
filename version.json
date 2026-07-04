@@ -1,12 +1,12 @@
 {
-  "version": "82.46.0",
-  "release": "status-thicker-bottom-actions-thinner",
+  "version": "82.47.0",
+  "release": "final-card-compact-override",
   "date": "2026-07-05",
   "features": [
-    "status-buttons-left-column-1-5x-taller",
-    "bottom-actions-call-open-menu-thinner",
-    "reduced-card-empty-spacing",
-    "save-guard-without-card-css",
-    "update-loop-current-version-fixed"
+    "final-css-loaded-last-for-day-card",
+    "bottom-actions-forced-compact-height",
+    "day-card-vertical-spacing-reduced",
+    "status-buttons-kept-inside-left-column",
+    "reset-clears-old-service-workers-and-caches"
   ]
 }
