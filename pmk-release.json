@@ -1,6 +1,6 @@
 {
   "version": "82.47.0",
-  "label": "Основная v82.47.0 — компактные и ровные карточки событий внутри дня",
-  "publishedAt": "2026-07-05T23:15:00Z",
-  "buildToken": "day-card-compact-even-elements-v82-47"
+  "label": "Основная v82.47.0 — ровные статусы и нижний блок карточки",
+  "publishedAt": "2026-07-05T23:35:00Z",
+  "buildToken": "day-card-even-status-and-footer-v82-47"
 }
