@@ -14,9 +14,10 @@
   window.PMK_UPDATE_MANAGER_V82_44 = true;
   window.PMK_UPDATE_MANAGER_V82_45 = true;
   window.PMK_UPDATE_MANAGER_V82_46 = true;
+  window.PMK_UPDATE_MANAGER_V82_47 = true;
 
-  const CURRENT = '82.46.0';
-  const CURRENT_TOKEN = 'status-action-buttons-15x-taller-v82-46';
+  const CURRENT = '82.47.0';
+  const CURRENT_TOKEN = 'day-card-even-status-and-footer-v82-47';
   const CHECK_EVERY = 1000 * 60 * 20;
   const STYLE_ID = 'pmkUpdateManagerStyle';
   const INSTALLED_VERSION_KEY = 'pmk-installed-version';
