@@ -14,7 +14,7 @@
 <body>
   <main>
     <h1>Устанавливаем v82.48.3</h1>
-    <p>Возвращаем рабочую загрузку событий через стандартное подключение Google Calendar. Нерабочий Google Worker временно отключён как основной источник событий.</p>
+    <p>Ставим рабочую загрузку событий через Google OAuth и отключаем автоматические цикличные запросы обновления.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -45,7 +45,7 @@
       const text=await response.text();
       if(!text.includes(marker))throw new Error(path+': файл не обновился');
     }
-    function reloadClean(){location.replace('./reset.html?stage=2&release=82-48-3-reset-'+Date.now());}
+    function reloadClean(){location.replace('./reset.html?stage=2&release=82-48-3-no-loop-'+Date.now());}
     async function run(){
       button.disabled=true;
       status.className='status';
@@ -63,6 +63,7 @@
         await check('./sw.js','PMK Calendar v82.48.3');
         await check('./sw-core-v82-48-3.js',"const VERSION='82.48.3'");
         await check('./pmk-google-auth-config.json','oauth-fallback');
+        await check('./update-manager-v82-20.js','PMK_UPDATE_MANAGER_V82_48_3_NO_LOOP');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
         status.textContent='Ставим свежий service worker...';
         const reg=await navigator.serviceWorker.register('./sw.js?v='+VERSION+'-'+Date.now(),{updateViaCache:'none'});
