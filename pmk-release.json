@@ -1,6 +1,6 @@
 {
-  "version": "82.48.0",
-  "label": "Основная v82.48.0 — Google Calendar через Worker без постоянного входа",
-  "publishedAt": "2026-07-05T23:55:00Z",
-  "buildToken": "google-worker-no-repeat-login-v82-48"
+  "version": "82.48.1",
+  "label": "Основная v82.48.1 — исправление ключа Google Worker",
+  "publishedAt": "2026-07-05T24:25:00Z",
+  "buildToken": "google-worker-key-hotfix-v82-48-1"
 }
