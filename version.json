@@ -1,12 +1,14 @@
 {
-  "version": "82.47.1",
+  "version": "82.47.0",
   "release": "final-card-compact-even-elements",
   "date": "2026-07-05",
   "features": [
+    "final-css-loaded-last-for-day-card",
     "day-card-height-reduced-again",
     "day-card-elements-aligned-evenly",
     "time-column-narrower-and-cleaner",
     "address-comment-badges-made-compact",
-    "bottom-actions-even-height-and-grid"
+    "bottom-actions-even-height-and-grid",
+    "reset-clears-old-service-workers-and-caches"
   ]
 }
