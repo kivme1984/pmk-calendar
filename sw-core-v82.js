@@ -1,7 +1,7 @@
-const VERSION='82.47.0';
+const VERSION='82.48.0';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-47-0.js';
-const BUNDLE_CSS='./__pmk-styles-v82-47-0.css';
+const BUNDLE_JS='./__pmk-app-v82-48-0.js';
+const BUNDLE_CSS='./__pmk-styles-v82-48-0.css';
 
 const JS=`
 ./app.js
@@ -139,7 +139,7 @@ function fetchWithTimeout(url,timeout=12000){
 async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
-  const text=await response.text();
+  const text=response instanceof Response ? await response.text() : '';
   if(url.includes('card-final-override-v82-47.css')&&!text.includes('final day-card compact override'))throw new Error('Не получен финальный override карточки v82.47.0');
   if(url.includes('day-card-even-actions-v82-47.css')&&!text.includes('even status buttons and even bottom card footer'))throw new Error('Не получено выравнивание кнопок карточки v82.47.0');
   if(url.includes('status-left-column-v82-2.js')&&(!text.includes('PMK_DAY_CARD_1_5X_BUTTONS_V82_46')||!text.includes('PMK_BOTTOM_ACTIONS_THINNER_V82_46')))throw new Error('Не получены правильные кнопки v82.46.0');
