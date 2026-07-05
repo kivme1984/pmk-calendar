@@ -28,6 +28,14 @@
     }
   }
 
+  function normalizeApiKeyText(value) {
+    return String(value || '')
+      .trim()
+      .replace(/^Bearer\s+/i, '')
+      .replace(/^['"]|['"]$/g, '')
+      .trim();
+  }
+
   async function loadConfig(force = false) {
     if (config && !force) return config;
     if (configPromise && !force) return configPromise;
@@ -62,10 +70,16 @@
     let key = '';
     try { key = localStorage.getItem(keyName) || ''; } catch {}
     if (!key) {
-      key = prompt('Введите ключ подключения ПМК. Ключ сохранится только на этом устройстве.');
+      key = prompt('Введите ключ подключения ПМК. Можно вставить PMK_API_KEY или BRIDGE_KEY. Ключ сохранится только на этом устройстве.');
       if (!key) throw new Error('Ключ подключения не введён. Заявка не отправлена в Google Calendar.');
-      key = String(key).trim();
+      key = normalizeApiKeyText(key);
       try { localStorage.setItem(keyName, key); } catch {}
+    } else {
+      const normalized = normalizeApiKeyText(key);
+      if (normalized !== key) {
+        key = normalized;
+        try { localStorage.setItem(keyName, key); } catch {}
+      }
     }
     return key;
   }
@@ -111,6 +125,8 @@
       headers: {
         'Content-Type': 'application/json',
         'X-PMK-KEY': apiKey,
+        'X-Bridge-Key': apiKey,
+        'Authorization': `Bearer ${apiKey}`,
         ...(options.headers || {}),
       },
     });
@@ -119,7 +135,7 @@
     if (response.status === 401 || payload.error === 'unauthorized') {
       try { localStorage.removeItem(active.apiKeyStorageKey); } catch {}
       updatePersistentUi();
-      throw new Error('Ключ подключения не принят. Введите актуальный ключ.');
+      throw new Error('Ключ подключения не принят. Введите актуальный PMK_API_KEY или BRIDGE_KEY.');
     }
     if (!response.ok || payload.ok === false) {
       const detail = payload.error || payload.message || `HTTP ${response.status}`;
