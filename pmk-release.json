@@ -1,6 +1,6 @@
 {
-  "version": "82.46.0",
-  "label": "Основная v82.47.0 — финальный override карточки через reset",
-  "publishedAt": "2026-07-05T22:40:00Z",
-  "buildToken": "status-action-buttons-15x-taller-v82-46"
+  "version": "82.47.1",
+  "label": "v82.47.1 — компактные и ровные карточки событий внутри дня",
+  "publishedAt": "2026-07-05T23:15:00Z",
+  "buildToken": "day-card-compact-even-elements-v82-47-1"
 }
