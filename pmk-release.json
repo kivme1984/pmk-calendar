@@ -1,6 +1,6 @@
 {
-  "version": "82.47.0",
-  "label": "Основная v82.47.0 — ровные статусы и нижний блок карточки",
-  "publishedAt": "2026-07-05T23:35:00Z",
-  "buildToken": "day-card-even-status-and-footer-v82-47"
+  "version": "82.48.0",
+  "label": "Основная v82.48.0 — Google Calendar через Worker без постоянного входа",
+  "publishedAt": "2026-07-05T23:55:00Z",
+  "buildToken": "google-worker-no-repeat-login-v82-48"
 }
