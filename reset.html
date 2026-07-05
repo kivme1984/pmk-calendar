@@ -14,7 +14,7 @@
 <body>
   <main>
     <h1>Устанавливаем v82.47.0</h1>
-    <p>Финальный слой стилей подключается последним: нижние кнопки реально ниже, карточка подтянута по вертикали.</p>
+    <p>Обновляем финальный слой: ровные статусы слева и ровный нижний блок карточки без повторного цикла обновления.</p>
     <p id="status" class="status">Проверяем файлы обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -47,7 +47,10 @@
         }
         await check('./sw.js','PMK Calendar v82.47.0');
         await check('./sw-core-v82.js',"const VERSION='82.47.0'");
+        await check('./sw-core-v82.js','day-card-even-actions-v82-47.css');
+        await check('./update-manager-v82-20.js',"const CURRENT = '82.47.0'");
         await check('./card-final-override-v82-47.css','final day-card compact override');
+        await check('./day-card-even-actions-v82-47.css','even status buttons and even bottom card footer');
         await check('./status-left-column-v82-2.js','PMK_BOTTOM_ACTIONS_THINNER_V82_46');
         await check('./day-save-guard-v82-40.js','PMK_SAVE_GUARD_V82_40');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
