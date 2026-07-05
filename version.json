@@ -1,11 +1,11 @@
 {
-  "version": "82.48.0",
-  "release": "google-worker-no-repeat-login",
+  "version": "82.48.1",
+  "release": "google-worker-key-hotfix",
   "date": "2026-07-05",
   "features": [
-    "google-calendar-through-cloudflare-worker",
-    "no-repeated-google-login-on-manager-device",
-    "pmk-api-key-stored-only-in-manager-browser",
-    "old-google-oauth-login-bypassed"
+    "google-worker-key-sent-as-x-pmk-key-x-bridge-key-and-bearer",
+    "pmk-api-key-or-bridge-key-accepted-by-client",
+    "google-worker-key-not-deleted-on-first-unauthorized-response",
+    "service-worker-bundle-forced-to-rebuild"
   ]
 }
