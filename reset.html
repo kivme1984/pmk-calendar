@@ -13,17 +13,17 @@
 </head>
 <body>
   <main>
-    <h1>Устанавливаем v82.48.2</h1>
-    <p>Ставим финальную сборку с жёсткой проверкой Google Worker: статус «подключён» появляется только после успешного ответа Worker.</p>
+    <h1>Устанавливаем v82.48.3</h1>
+    <p>Возвращаем рабочую загрузку событий через стандартное подключение Google Calendar. Нерабочий Google Worker временно отключён как основной источник событий.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
-      <a href="./?v=82.48.2">Открыть приложение</a>
+      <a href="./?v=82.48.3">Открыть приложение</a>
       <a href="./recovery.html?manual=1">Восстановление</a>
     </div>
   </main>
   <script>
-    const VERSION='82.48.2';
+    const VERSION='82.48.3';
     const params=new URLSearchParams(location.search);
     const stage=params.get('stage')||'1';
     const status=document.getElementById('status');
@@ -45,7 +45,7 @@
       const text=await response.text();
       if(!text.includes(marker))throw new Error(path+': файл не обновился');
     }
-    function reloadClean(){location.replace('./reset.html?stage=2&release=82-48-2-reset-'+Date.now());}
+    function reloadClean(){location.replace('./reset.html?stage=2&release=82-48-3-reset-'+Date.now());}
     async function run(){
       button.disabled=true;
       status.className='status';
@@ -58,12 +58,11 @@
           reloadClean();
           return;
         }
-        status.textContent='Проверяем свежие файлы v82.48.2...';
+        status.textContent='Проверяем свежие файлы v82.48.3...';
         await clearWorkersAndCaches();
-        await check('./sw.js','PMK Calendar v82.48.2');
-        await check('./sw-core-v82-48-2.js',"const VERSION='82.48.2'");
-        await check('./google-worker-final-v82-48-2.js','PMK_GOOGLE_WORKER_FINAL_V82_48_2');
-        await check('./persistent-google-auth-v82-20.js','PMK_PERSISTENT_GOOGLE_AUTH_V82_20_STUB');
+        await check('./sw.js','PMK Calendar v82.48.3');
+        await check('./sw-core-v82-48-3.js',"const VERSION='82.48.3'");
+        await check('./pmk-google-auth-config.json','oauth-fallback');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
         status.textContent='Ставим свежий service worker...';
         const reg=await navigator.serviceWorker.register('./sw.js?v='+VERSION+'-'+Date.now(),{updateViaCache:'none'});
