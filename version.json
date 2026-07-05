@@ -1,14 +1,11 @@
 {
-  "version": "82.47.0",
-  "release": "final-card-compact-even-elements",
+  "version": "82.48.0",
+  "release": "google-worker-no-repeat-login",
   "date": "2026-07-05",
   "features": [
-    "final-css-loaded-last-for-day-card",
-    "day-card-height-reduced-again",
-    "day-card-elements-aligned-evenly",
-    "time-column-narrower-and-cleaner",
-    "address-comment-badges-made-compact",
-    "bottom-actions-even-height-and-grid",
-    "reset-clears-old-service-workers-and-caches"
+    "google-calendar-through-cloudflare-worker",
+    "no-repeated-google-login-on-manager-device",
+    "pmk-api-key-stored-only-in-manager-browser",
+    "old-google-oauth-login-bypassed"
   ]
 }
