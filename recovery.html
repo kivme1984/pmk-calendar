@@ -14,8 +14,8 @@ h1{margin:0 0 10px;font-size:25px;line-height:1.15}p{margin:0 0 10px;color:#c9c9
 </head>
 <body>
 <main>
-<h1>Восстановление приложения</h1>
-<p>Сначала чистим старые кэши, затем заново устанавливаем service worker, чтобы приложение открылось не в базовой старой версии, а с полной сборкой.</p>
+<h1>Восстановление v82.48.0</h1>
+<p>Сначала чистим старые кэши, затем заново устанавливаем service worker и ждём, пока он начнёт управлять страницей.</p>
 <p class="small">Данные заявок и настройки календаря не удаляются.</p>
 <p id="status" class="status">Подготовка…</p>
 <div class="progress"><span id="bar"></span></div>
@@ -66,6 +66,14 @@ h1{margin:0 0 10px;font-size:25px;line-height:1.15}p{margin:0 0 10px;color:#c9c9
     });
   }
 
+  function waitForController(){
+    if(navigator.serviceWorker.controller)return Promise.resolve();
+    return new Promise(resolve=>{
+      const timeout=setTimeout(resolve,1800);
+      navigator.serviceWorker.addEventListener('controllerchange',()=>resolve(),{once:true});
+    });
+  }
+
   async function installFreshWorker(){
     if(!('serviceWorker' in navigator))throw new Error('Chrome не поддерживает service worker');
     const stamp=Date.now();
@@ -73,6 +81,7 @@ h1{margin:0 0 10px;font-size:25px;line-height:1.15}p{margin:0 0 10px;color:#c9c9
     await registration.update().catch(()=>null);
     await waitForActivation(registration);
     await navigator.serviceWorker.ready;
+    await waitForController();
   }
 
   async function recover(){
@@ -87,11 +96,11 @@ h1{margin:0 0 10px;font-size:25px;line-height:1.15}p{margin:0 0 10px;color:#c9c9
       set('Сбрасываем метки обновления…',50);
       clearFlags();
       await sleep(350);
-      set('Ставим свежий service worker и полную сборку…',70);
+      set('Ставим свежий service worker v82.48.0…',70);
       await installFreshWorker();
       set('Готово. Открываем календарь с полной сборкой…',100);
       open.hidden=false;
-      location.replace('./?recovery=installed&t='+Date.now());
+      location.replace('./?recovery=installed&v=82.48.0&t='+Date.now());
     }catch(error){
       status.className='status error';
       status.textContent='Восстановление остановилось: '+error.message;
