@@ -5,42 +5,18 @@
   globalThis.PMK_PERSISTENT_GOOGLE_AUTH_V82_20 = true;
 
   const CONFIG_URL = './pmk-google-auth-config.json';
-  const SESSION_KEY = 'pmk-google-persistent-session-v1';
-  const SESSION_EXP_KEY = 'pmk-google-persistent-session-exp-v1';
-  const DEVICE_KEY = 'pmk-google-device-id-v1';
-  const PREVIOUS_VIEW_KEY = 'pmk-google-return-view-v1';
-  const GOOGLE_CONNECTED_KEY_LOCAL = 'pmk-google-connected';
+  const WORKER_TOKEN = 'pmk-google-worker-backend';
+  const GOOGLE_CONNECTED_KEY = 'pmk-google-connected';
   let config = null;
   let configPromise = null;
-  let refreshTimer = 0;
-  let refreshing = null;
+  let nativeGoogleRequest = typeof googleRequest === 'function' ? googleRequest : null;
   let nativeConnectGoogle = typeof connectGoogle === 'function' ? connectGoogle : null;
+  let nativeScheduleGoogleAutoReconnect = typeof scheduleGoogleAutoReconnect === 'function' ? scheduleGoogleAutoReconnect : null;
+  let nativeUpdateConnectionUI = typeof updateConnectionUI === 'function' ? updateConnectionUI : null;
 
-  function readSession() {
-    try { return localStorage.getItem(SESSION_KEY) || ''; }
-    catch { return ''; }
-  }
-
-  function writeSession(token, expiresAt = 0) {
-    try {
-      if (token) localStorage.setItem(SESSION_KEY, token);
-      else localStorage.removeItem(SESSION_KEY);
-      if (expiresAt) localStorage.setItem(SESSION_EXP_KEY, String(expiresAt));
-      else localStorage.removeItem(SESSION_EXP_KEY);
-    } catch {}
-  }
-
-  function deviceId() {
-    try {
-      let value = localStorage.getItem(DEVICE_KEY) || '';
-      if (!value) {
-        value = globalThis.crypto?.randomUUID?.() || `pmk-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-        localStorage.setItem(DEVICE_KEY, value);
-      }
-      return value;
-    } catch {
-      return `pmk-${Date.now()}`;
-    }
+  function showMessage(message, type = '') {
+    if (typeof showToast === 'function') showToast(message, type);
+    else console[type === 'error' ? 'error' : 'log'](message);
   }
 
   function normalizeApiUrl(value) {
@@ -61,8 +37,10 @@
       .then(value => {
         config = {
           enabled: value?.enabled === true,
+          mode: String(value?.mode || '').toLowerCase(),
           apiUrl: normalizeApiUrl(value?.apiUrl),
-          label: String(value?.label || 'Постоянный вход Google'),
+          apiKeyStorageKey: String(value?.apiKeyStorageKey || 'pmk_google_api_key'),
+          label: String(value?.label || 'Google Calendar через Worker'),
         };
         return config;
       })
@@ -70,227 +48,235 @@
     return configPromise;
   }
 
-  function parseAuthReturn() {
-    const raw = String(location.hash || '').replace(/^#/, '');
-    if (!raw.startsWith('pmk-google-')) return false;
-    const params = new URLSearchParams(raw);
-    const token = params.get('pmk-google-auth') || '';
-    const expiresAt = Number(params.get('pmk-google-auth-exp') || 0);
-    const error = params.get('pmk-google-error') || '';
-    if (token) writeSession(token, expiresAt);
-    let previous = 'day';
-    try { previous = localStorage.getItem(PREVIOUS_VIEW_KEY) || 'day'; } catch {}
-    const safeView = /^[a-z-]+$/i.test(previous) ? previous : 'day';
-    history.replaceState(history.state || {}, '', `${location.pathname}${location.search}#${safeView}`);
-    if (error) setTimeout(() => showMessage(`Google не подключён: ${error}`, 'error'), 0);
-    return Boolean(token);
+  function isWorkerConfig(active = config) {
+    return Boolean(active?.enabled && active?.apiUrl && (!active.mode || active.mode === 'worker'));
   }
 
-  const returnedWithSession = parseAuthReturn();
-
-  function showMessage(message, type = '') {
-    if (typeof showToast === 'function') showToast(message, type);
-    else console[type === 'error' ? 'error' : 'log'](message);
+  function hasApiKey(active = config) {
+    try { return Boolean(localStorage.getItem(active?.apiKeyStorageKey || 'pmk_google_api_key')); }
+    catch { return false; }
   }
 
-  function currentReturnUrl() {
-    const url = new URL('./', location.href);
-    url.search = '';
-    url.hash = '';
-    return url.toString();
-  }
-
-  function rememberView() {
-    try {
-      const value = typeof state !== 'undefined' && state.currentView ? state.currentView : 'day';
-      localStorage.setItem(PREVIOUS_VIEW_KEY, value);
-    } catch {}
-  }
-
-  async function startPersistentAuthorization() {
-    const active = await loadConfig(true);
-    if (!active.enabled || !active.apiUrl) {
-      if (nativeConnectGoogle) return nativeConnectGoogle();
-      return showMessage('Сервер постоянного входа Google ещё не настроен.', 'error');
+  function getApiKey(active = config) {
+    const keyName = active?.apiKeyStorageKey || 'pmk_google_api_key';
+    let key = '';
+    try { key = localStorage.getItem(keyName) || ''; } catch {}
+    if (!key) {
+      key = prompt('Введите ключ подключения ПМК. Ключ сохранится только на этом устройстве.');
+      if (!key) throw new Error('Ключ подключения не введён. Заявка не отправлена в Google Calendar.');
+      key = String(key).trim();
+      try { localStorage.setItem(keyName, key); } catch {}
     }
-    rememberView();
-    const url = new URL(`${active.apiUrl}/auth/start`);
-    url.searchParams.set('return_to', currentReturnUrl());
-    url.searchParams.set('device_id', deviceId());
-    location.assign(url.toString());
+    return key;
   }
 
-  function scheduleRefresh(expiresIn = 3600) {
-    clearTimeout(refreshTimer);
-    const seconds = Math.max(300, Number(expiresIn || 3600) - 300);
-    refreshTimer = setTimeout(() => refreshAccessToken({ quiet: true }), seconds * 1000);
-  }
-
-  async function refreshAccessToken(options = {}) {
-    if (refreshing) return refreshing;
-    const session = readSession();
-    if (!session) return false;
-
-    refreshing = (async () => {
-      const active = await loadConfig(options.forceConfig === true);
-      if (!active.enabled || !active.apiUrl) return false;
-      try {
-        if (typeof state !== 'undefined') state.autoReconnectTried = true;
-        const response = await fetch(`${active.apiUrl}/token`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${session}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ device_id: deviceId() }),
-          cache: 'no-store',
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload.access_token) {
-          if (response.status === 401 || payload.reconnect) {
-            writeSession('', 0);
-            if (typeof clearSavedToken === 'function') clearSavedToken();
-            try { localStorage.removeItem(GOOGLE_CONNECTED_KEY_LOCAL); } catch {}
-            updatePersistentUi();
-            if (!options.quiet) showMessage('Нужно один раз заново подключить Google.', 'error');
-          }
-          return false;
-        }
-
-        if (typeof state !== 'undefined') {
-          state.token = payload.access_token;
-          state.autoReconnectTried = true;
-          state.silentReconnect = false;
-        }
-        if (typeof saveToken === 'function') saveToken(payload);
-        try { localStorage.setItem(GOOGLE_CONNECTED_KEY_LOCAL, '1'); } catch {}
-        if (typeof updateConnectionUI === 'function') updateConnectionUI();
-        updatePersistentUi();
-        scheduleRefresh(payload.expires_in);
-        if (typeof refreshEvents === 'function') await refreshEvents();
-        if (!options.quiet) showMessage('Google подключён постоянно.', 'success');
-        return true;
-      } catch (error) {
-        if (!options.quiet) showMessage('Не удалось восстановить Google автоматически.', 'error');
-        console.warn('Persistent Google auth refresh failed', error);
-        return false;
-      }
-    })().finally(() => { refreshing = null; });
-
-    return refreshing;
-  }
-
-  async function disconnectPersistentGoogle() {
-    const session = readSession();
-    const active = await loadConfig();
-    if (session && active.enabled && active.apiUrl) {
-      await fetch(`${active.apiUrl}/revoke`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session}` },
-        cache: 'no-store',
-      }).catch(() => null);
-    }
-    clearTimeout(refreshTimer);
-    writeSession('', 0);
-    if (typeof clearSavedToken === 'function') clearSavedToken();
-    try { localStorage.removeItem(GOOGLE_CONNECTED_KEY_LOCAL); } catch {}
-    if (typeof updateConnectionUI === 'function') updateConnectionUI();
+  function resetApiKey() {
+    const keyName = config?.apiKeyStorageKey || 'pmk_google_api_key';
+    try { localStorage.removeItem(keyName); } catch {}
+    showMessage('Ключ подключения удалён с этого устройства. При следующей отправке приложение попросит ключ заново.', 'success');
     updatePersistentUi();
-    showMessage('Постоянное подключение Google отключено.', 'success');
   }
 
-  function statusText() {
-    if (readSession()) {
-      return typeof state !== 'undefined' && state.token
-        ? 'Подключено постоянно. Повторный вход после закрытия приложения не нужен.'
-        : 'Подключение сохранено. Восстанавливаем доступ автоматически.';
+  function parseGoogleCalendarPath(path) {
+    const raw = String(path || '');
+    const [pathname, search = ''] = raw.split('?');
+    const params = new URLSearchParams(search);
+    const decodedPath = pathname.replace(/^https:\/\/www\.googleapis\.com\/calendar\/v3/i, '');
+    const listMatch = decodedPath.match(/^\/calendars\/([^/]+)\/events$/);
+    const eventMatch = decodedPath.match(/^\/calendars\/([^/]+)\/events\/([^/]+)$/);
+    if (listMatch) {
+      params.set('calendarId', decodeURIComponent(listMatch[1]));
+      return { endpoint: `/api/events?${params.toString()}`, eventId: '', action: 'list' };
     }
-    return 'Подключите аккаунт один раз — дальше доступ будет восстанавливаться автоматически.';
+    if (eventMatch) {
+      params.set('calendarId', decodeURIComponent(eventMatch[1]));
+      return { endpoint: `/api/events/${encodeURIComponent(decodeURIComponent(eventMatch[2]))}?${params.toString()}`, eventId: decodeURIComponent(eventMatch[2]), action: 'event' };
+    }
+    throw new Error(`Worker Google path не поддержан: ${raw}`);
+  }
+
+  async function workerGoogleRequest(path, options = {}) {
+    const active = await loadConfig();
+    if (!isWorkerConfig(active)) {
+      if (nativeGoogleRequest) return nativeGoogleRequest(path, options);
+      throw new Error('Google Worker не настроен.');
+    }
+
+    const { endpoint } = parseGoogleCalendarPath(path);
+    const apiKey = getApiKey(active);
+    const response = await fetch(`${active.apiUrl.replace(/\/$/, '')}${endpoint}`, {
+      method: options.method || 'GET',
+      body: options.body,
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-PMK-KEY': apiKey,
+        ...(options.headers || {}),
+      },
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (response.status === 401 || payload.error === 'unauthorized') {
+      try { localStorage.removeItem(active.apiKeyStorageKey); } catch {}
+      updatePersistentUi();
+      throw new Error('Ключ подключения не принят. Введите актуальный ключ.');
+    }
+    if (!response.ok || payload.ok === false) {
+      const detail = payload.error || payload.message || `HTTP ${response.status}`;
+      throw new Error(`Google Worker: ${detail}`);
+    }
+
+    if ((options.method || 'GET').toUpperCase() === 'DELETE') return null;
+    if (payload.raw) return payload.raw;
+    if (payload.items) return { items: payload.items };
+    if (payload.event) return payload.event;
+    return payload;
+  }
+
+  async function connectWorkerGoogle() {
+    const active = await loadConfig(true);
+    if (!isWorkerConfig(active)) {
+      if (nativeConnectGoogle) return nativeConnectGoogle();
+      return showMessage('Google Worker ещё не настроен.', 'error');
+    }
+    try {
+      getApiKey(active);
+      if (typeof state !== 'undefined') state.token = WORKER_TOKEN;
+      try { localStorage.setItem(GOOGLE_CONNECTED_KEY, '1'); } catch {}
+      updatePersistentUi();
+      await refreshEvents?.();
+      showMessage('Google Calendar подключён через Worker. Повторный вход Google не нужен.', 'success');
+    } catch (error) {
+      showMessage(error.message || 'Не удалось подключить Google Worker.', 'error');
+    }
+  }
+
+  function scheduleWorkerReconnect() {
+    if (!isWorkerConfig()) {
+      return nativeScheduleGoogleAutoReconnect?.();
+    }
+    if (typeof state !== 'undefined') {
+      state.token = WORKER_TOKEN;
+      state.autoReconnectTried = true;
+      state.silentReconnect = false;
+    }
+    try { localStorage.setItem(GOOGLE_CONNECTED_KEY, '1'); } catch {}
+    updatePersistentUi();
+    if (hasApiKey()) {
+      refreshEvents?.();
+    }
+  }
+
+  function workerStatusText() {
+    if (!isWorkerConfig()) return '';
+    return hasApiKey()
+      ? 'Google подключён через Worker. Повторный вход в Google не нужен.'
+      : 'Сервер Google готов. Введите ключ ПМК один раз на этом устройстве.';
+  }
+
+  function updatePersistentUi() {
+    if (!isWorkerConfig()) {
+      nativeUpdateConnectionUI?.();
+      document.querySelector('#pmkPersistentGoogleCard')?.remove();
+      return;
+    }
+
+    if (typeof state !== 'undefined') state.token = WORKER_TOKEN;
+
+    const badge = document.querySelector('#connectionBadge');
+    if (badge) {
+      badge.textContent = hasApiKey() ? 'Google Worker подключён' : 'Нужен ключ ПМК';
+      badge.className = `status-badge ${hasApiKey() ? 'online' : 'offline'}`;
+    }
+    const connectButton = document.querySelector('#connectGoogleBtn');
+    if (connectButton) connectButton.textContent = hasApiKey() ? 'Сменить ключ ПМК' : 'Ввести ключ ПМК';
+    const submitButton = document.querySelector('#submitBtn');
+    const eventId = document.querySelector('#eventId')?.value || '';
+    if (submitButton) submitButton.textContent = eventId ? 'Обновить в Google Calendar' : 'Создать в Google Calendar';
+
+    ensureSettingsCard();
   }
 
   function ensureSettingsCard() {
-    if (!config?.enabled || !config?.apiUrl) {
-      document.querySelector('#pmkPersistentGoogleCard')?.remove();
-      return null;
-    }
     const grid = document.querySelector('#view-settings .settings-grid');
-    if (!grid) return null;
+    if (!grid || !isWorkerConfig()) return null;
     let card = document.querySelector('#pmkPersistentGoogleCard');
     if (!card) {
       card = document.createElement('section');
       card.id = 'pmkPersistentGoogleCard';
-      card.className = 'form-card pmk-persistent-google-card';
+      card.className = 'form-card pmk-persistent-google-card is-worker';
       card.innerHTML = `
-        <h2>Google без повторного входа</h2>
+        <h2>Google без постоянного входа</h2>
         <p id="pmkPersistentGoogleStatus"></p>
         <div class="pmk-persistent-google-actions">
-          <button type="button" id="pmkPersistentGoogleConnect" class="button button-primary">Подключить один раз</button>
-          <button type="button" id="pmkPersistentGoogleDisconnect" class="button button-secondary">Отключить</button>
-        </div>`;
+          <button type="button" id="pmkPersistentGoogleConnect" class="button button-primary">Ввести ключ ПМК</button>
+          <button type="button" id="pmkPersistentGoogleReset" class="button button-secondary">Сменить ключ</button>
+        </div>
+        <p class="helper-text">Ключ хранится только в браузере менеджера. Серверная авторизация находится в Cloudflare Worker.</p>`;
       grid.prepend(card);
-      card.querySelector('#pmkPersistentGoogleConnect')?.addEventListener('click', startPersistentAuthorization);
-      card.querySelector('#pmkPersistentGoogleDisconnect')?.addEventListener('click', disconnectPersistentGoogle);
+      card.querySelector('#pmkPersistentGoogleConnect')?.addEventListener('click', connectWorkerGoogle);
+      card.querySelector('#pmkPersistentGoogleReset')?.addEventListener('click', resetApiKey);
     }
+    const status = card.querySelector('#pmkPersistentGoogleStatus');
+    const connect = card.querySelector('#pmkPersistentGoogleConnect');
+    const reset = card.querySelector('#pmkPersistentGoogleReset');
+    if (status) status.textContent = workerStatusText();
+    if (connect) connect.textContent = hasApiKey() ? 'Проверить подключение' : 'Ввести ключ ПМК';
+    if (reset) reset.hidden = !hasApiKey();
+    card.classList.toggle('is-connected', hasApiKey());
     return card;
   }
 
-  function updatePersistentUi() {
-    const card = ensureSettingsCard();
-    if (!card) return;
-    const connected = Boolean(readSession());
-    const status = card.querySelector('#pmkPersistentGoogleStatus');
-    const connect = card.querySelector('#pmkPersistentGoogleConnect');
-    const disconnect = card.querySelector('#pmkPersistentGoogleDisconnect');
-    if (status) status.textContent = statusText();
-    if (connect) connect.textContent = connected ? 'Переподключить аккаунт' : 'Подключить один раз';
-    if (disconnect) disconnect.hidden = !connected;
-    card.classList.toggle('is-connected', connected);
-  }
-
   function installOverrides() {
-    if (typeof connectGoogle === 'function' && !connectGoogle.__pmkPersistentAuth) {
-      nativeConnectGoogle = connectGoogle;
-      const wrapped = function connectGooglePersistentV8220() {
-        return loadConfig().then(active => {
-          if (active.enabled && active.apiUrl) return startPersistentAuthorization();
-          return nativeConnectGoogle?.();
-        });
-      };
-      wrapped.__pmkPersistentAuth = true;
-      globalThis.connectGoogle = wrapped;
+    if (typeof googleRequest === 'function' && !googleRequest.__pmkWorkerBackend) {
+      nativeGoogleRequest = googleRequest;
+      workerGoogleRequest.__pmkWorkerBackend = true;
+      googleRequest = workerGoogleRequest;
     }
 
-    if (readSession() && typeof scheduleGoogleAutoReconnect === 'function' && !scheduleGoogleAutoReconnect.__pmkPersistentAuth) {
-      const wrapped = function scheduleGoogleAutoReconnectPersistentV8220() {
-        refreshAccessToken({ quiet: true });
+    if (typeof connectGoogle === 'function' && !connectGoogle.__pmkWorkerBackend) {
+      nativeConnectGoogle = connectGoogle;
+      connectWorkerGoogle.__pmkWorkerBackend = true;
+      connectGoogle = connectWorkerGoogle;
+    }
+
+    if (typeof scheduleGoogleAutoReconnect === 'function' && !scheduleGoogleAutoReconnect.__pmkWorkerBackend) {
+      nativeScheduleGoogleAutoReconnect = scheduleGoogleAutoReconnect;
+      scheduleWorkerReconnect.__pmkWorkerBackend = true;
+      scheduleGoogleAutoReconnect = scheduleWorkerReconnect;
+    }
+
+    if (typeof updateConnectionUI === 'function' && !updateConnectionUI.__pmkWorkerBackend) {
+      nativeUpdateConnectionUI = updateConnectionUI;
+      const wrappedUpdate = function updateConnectionUiWorkerV8220() {
+        if (isWorkerConfig()) return updatePersistentUi();
+        return nativeUpdateConnectionUI?.();
       };
-      wrapped.__pmkPersistentAuth = true;
-      globalThis.scheduleGoogleAutoReconnect = wrapped;
+      wrappedUpdate.__pmkWorkerBackend = true;
+      updateConnectionUI = wrappedUpdate;
     }
   }
-
-  document.addEventListener('click', event => {
-    const button = event.target.closest('#connectGoogleBtn,#pmkPersistentGoogleConnect');
-    if (!button || !config?.enabled || !config?.apiUrl) return;
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    startPersistentAuthorization();
-  }, true);
 
   function boot() {
     installOverrides();
-    loadConfig().then(active => {
+    loadConfig(true).then(active => {
+      if (isWorkerConfig(active)) {
+        if (typeof state !== 'undefined') state.token = WORKER_TOKEN;
+        try { localStorage.setItem(GOOGLE_CONNECTED_KEY, '1'); } catch {}
+      }
       updatePersistentUi();
-      if (active.enabled && active.apiUrl && readSession()) refreshAccessToken({ quiet: !returnedWithSession });
+      if (isWorkerConfig(active) && hasApiKey(active)) refreshEvents?.();
     });
 
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && readSession()) refreshAccessToken({ quiet: true });
-    });
-    globalThis.addEventListener('online', () => {
-      if (readSession()) refreshAccessToken({ quiet: true });
-    });
+    document.addEventListener('click', event => {
+      const button = event.target.closest('#connectGoogleBtn,#pmkPersistentGoogleConnect');
+      if (!button || !isWorkerConfig()) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      connectWorkerGoogle();
+    }, true);
+
     document.addEventListener('click', event => {
       if (event.target.closest('[data-view="settings"],.nav-settings')) setTimeout(updatePersistentUi, 0);
     }, true);
@@ -303,9 +289,10 @@
     : boot();
 
   globalThis.PMK_PERSISTENT_GOOGLE_AUTH = {
-    connect: startPersistentAuthorization,
-    refresh: refreshAccessToken,
-    disconnect: disconnectPersistentGoogle,
-    hasSession: () => Boolean(readSession()),
+    connect: connectWorkerGoogle,
+    refresh: () => refreshEvents?.(),
+    disconnect: resetApiKey,
+    hasSession: () => isWorkerConfig() && hasApiKey(),
+    resetApiKey,
   };
 })();
