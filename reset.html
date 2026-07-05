@@ -13,24 +13,22 @@
 </head>
 <body>
   <main>
-    <h1>Устанавливаем v82.48.1</h1>
-    <p>Сначала отключаем старый service worker, затем ставим свежую сборку с исправлением ключа Google Worker.</p>
+    <h1>Устанавливаем v82.48.2</h1>
+    <p>Ставим финальную сборку с жёсткой проверкой Google Worker: статус «подключён» появляется только после успешного ответа Worker.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
-      <a href="./?v=82.48.1">Открыть приложение</a>
+      <a href="./?v=82.48.2">Открыть приложение</a>
       <a href="./recovery.html?manual=1">Восстановление</a>
     </div>
   </main>
   <script>
-    const VERSION='82.48.1';
+    const VERSION='82.48.2';
     const params=new URLSearchParams(location.search);
     const stage=params.get('stage')||'1';
     const status=document.getElementById('status');
     const button=document.getElementById('install');
-
     function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
-
     async function clearWorkersAndCaches(){
       if('serviceWorker' in navigator){
         const regs=await navigator.serviceWorker.getRegistrations();
@@ -41,19 +39,13 @@
         await Promise.all(keys.filter(key=>key.startsWith('pmk-calendar-v')).map(key=>caches.delete(key)));
       }
     }
-
     async function check(path,marker){
       const response=await fetch(path+'?verify='+Date.now(),{cache:'reload'});
       if(!response.ok)throw new Error(path+': HTTP '+response.status);
       const text=await response.text();
       if(!text.includes(marker))throw new Error(path+': файл не обновился');
-      return text;
     }
-
-    function reloadClean(){
-      location.replace('./reset.html?stage=2&release=82-48-1-reset-'+Date.now());
-    }
-
+    function reloadClean(){location.replace('./reset.html?stage=2&release=82-48-2-reset-'+Date.now());}
     async function run(){
       button.disabled=true;
       status.className='status';
@@ -66,15 +58,12 @@
           reloadClean();
           return;
         }
-
-        status.textContent='Проверяем свежие файлы v82.48.1...';
+        status.textContent='Проверяем свежие файлы v82.48.2...';
         await clearWorkersAndCaches();
-        await check('./sw.js','PMK Calendar v82.48.1');
-        await check('./sw-core-v82.js',"const VERSION='82.48.1'");
-        await check('./sw-core-v82.js','google-worker-key-hotfix-v82-48-1.js');
-        await check('./google-worker-key-hotfix-v82-48-1.js','PMK_GOOGLE_WORKER_KEY_HOTFIX_V82_48_1');
-        await check('./update-manager-v82-20.js',"const CURRENT = '82.48.1'");
-        await check('./day-card-even-actions-v82-47.css','even status buttons and even bottom card footer');
+        await check('./sw.js','PMK Calendar v82.48.2');
+        await check('./sw-core-v82-48-2.js',"const VERSION='82.48.2'");
+        await check('./google-worker-final-v82-48-2.js','PMK_GOOGLE_WORKER_FINAL_V82_48_2');
+        await check('./persistent-google-auth-v82-20.js','PMK_PERSISTENT_GOOGLE_AUTH_V82_20_STUB');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
         status.textContent='Ставим свежий service worker...';
         const reg=await navigator.serviceWorker.register('./sw.js?v='+VERSION+'-'+Date.now(),{updateViaCache:'none'});
