@@ -125,6 +125,7 @@ const CSS=`
 ./mobile-keyboard-form-v82-20.css
 ./keyboard-submit-safe-v82-20.css
 ./card-final-override-v82-47.css
+./day-card-even-actions-v82-47.css
 `.trim().split(/\s+/);
 
 const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./pmk-release.json','./pmk-google-auth-config.json','./icons/icon-192.png','./icons/icon-512.png'];
@@ -140,6 +141,7 @@ async function textAsset(url){
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
   const text=await response.text();
   if(url.includes('card-final-override-v82-47.css')&&!text.includes('final day-card compact override'))throw new Error('Не получен финальный override карточки v82.47.0');
+  if(url.includes('day-card-even-actions-v82-47.css')&&!text.includes('even status buttons and even bottom card footer'))throw new Error('Не получено выравнивание кнопок карточки v82.47.0');
   if(url.includes('status-left-column-v82-2.js')&&(!text.includes('PMK_DAY_CARD_1_5X_BUTTONS_V82_46')||!text.includes('PMK_BOTTOM_ACTIONS_THINNER_V82_46')))throw new Error('Не получены правильные кнопки v82.46.0');
   if(url.includes('day-save-guard-v82-40.js')&&!text.includes('PMK_SAVE_GUARD_V82_40'))throw new Error('Не получена защита сохранения без стилей карточки v82.40.0');
   if(url.includes('update-manager-v82-20.js')&&!text.includes('PMK_UPDATE_MANAGER_V82_46'))throw new Error('Не получен менеджер обновлений v82.46.0');
