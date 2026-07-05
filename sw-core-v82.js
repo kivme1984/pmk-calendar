@@ -1,7 +1,7 @@
-const VERSION='82.48.0';
+const VERSION='82.48.1';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-48-0.js';
-const BUNDLE_CSS='./__pmk-styles-v82-48-0.css';
+const BUNDLE_JS='./__pmk-app-v82-48-1.js';
+const BUNDLE_CSS='./__pmk-styles-v82-48-1.css';
 
 const JS=`
 ./app.js
@@ -73,6 +73,7 @@ const JS=`
 ./month-summary-v82-28.js
 ./quick-insert-compact-v82-29.js
 ./persistent-google-auth-v82-20.js
+./google-worker-key-hotfix-v82-48-1.js
 ./mobile-keyboard-form-v82-20.js
 ./keyboard-submit-safe-v82-20.js
 ./update-manager-v82-20.js
@@ -139,12 +140,13 @@ function fetchWithTimeout(url,timeout=12000){
 async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
-  const text=response instanceof Response ? await response.text() : '';
+  const text=await response.text();
+  if(url.includes('google-worker-key-hotfix-v82-48-1.js')&&!text.includes('PMK_GOOGLE_WORKER_KEY_HOTFIX_V82_48_1'))throw new Error('Не получен hotfix ключа Google Worker v82.48.1');
   if(url.includes('card-final-override-v82-47.css')&&!text.includes('final day-card compact override'))throw new Error('Не получен финальный override карточки v82.47.0');
   if(url.includes('day-card-even-actions-v82-47.css')&&!text.includes('even status buttons and even bottom card footer'))throw new Error('Не получено выравнивание кнопок карточки v82.47.0');
   if(url.includes('status-left-column-v82-2.js')&&(!text.includes('PMK_DAY_CARD_1_5X_BUTTONS_V82_46')||!text.includes('PMK_BOTTOM_ACTIONS_THINNER_V82_46')))throw new Error('Не получены правильные кнопки v82.46.0');
   if(url.includes('day-save-guard-v82-40.js')&&!text.includes('PMK_SAVE_GUARD_V82_40'))throw new Error('Не получена защита сохранения без стилей карточки v82.40.0');
-  if(url.includes('update-manager-v82-20.js')&&!text.includes('PMK_UPDATE_MANAGER_V82_46'))throw new Error('Не получен менеджер обновлений v82.46.0');
+  if(url.includes('update-manager-v82-20.js')&&!text.includes('PMK_UPDATE_MANAGER_V82_48'))throw new Error('Не получен менеджер обновлений v82.48.0');
   if(url.includes('month-summary-v82-28.js')&&!text.includes('PMK_MONTH_CLEAN_GRID_V82_36'))throw new Error('Не получена чистая месячная таблица v82.36.0');
   if(url.includes('period-direct-v82-19.js')&&!text.includes('PMK_PERIOD_DIRECT_V82_36'))throw new Error('Не получено отключение старых дублей месяца v82.36.0');
   if(url.includes('quick-insert-compact-v82-29.js')&&!text.includes('PMK_QUICK_INSERT_COMPACT_V82_29'))throw new Error('Не получена компактная быстрая вставка v82.29.0');
