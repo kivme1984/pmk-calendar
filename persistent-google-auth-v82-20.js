@@ -7,6 +7,7 @@
   const CONFIG_URL = './pmk-google-auth-config.json';
   const WORKER_TOKEN = 'pmk-google-worker-backend';
   const GOOGLE_CONNECTED_KEY = 'pmk-google-connected';
+  const LAST_ERROR_KEY = 'pmk_google_worker_last_error';
   let config = null;
   let configPromise = null;
   let nativeGoogleRequest = typeof googleRequest === 'function' ? googleRequest : null;
@@ -34,6 +35,18 @@
       .replace(/^Bearer\s+/i, '')
       .replace(/^['"]|['"]$/g, '')
       .trim();
+  }
+
+  function setLastWorkerError(message = '') {
+    try {
+      if (message) localStorage.setItem(LAST_ERROR_KEY, message);
+      else localStorage.removeItem(LAST_ERROR_KEY);
+    } catch {}
+  }
+
+  function getLastWorkerError() {
+    try { return localStorage.getItem(LAST_ERROR_KEY) || ''; }
+    catch { return ''; }
   }
 
   async function loadConfig(force = false) {
@@ -65,15 +78,16 @@
     catch { return false; }
   }
 
-  function getApiKey(active = config) {
+  function getApiKey(active = config, forcePrompt = false) {
     const keyName = active?.apiKeyStorageKey || 'pmk_google_api_key';
     let key = '';
     try { key = localStorage.getItem(keyName) || ''; } catch {}
-    if (!key) {
-      key = prompt('Введите ключ подключения ПМК. Можно вставить PMK_API_KEY или BRIDGE_KEY. Ключ сохранится только на этом устройстве.');
+    if (!key || forcePrompt) {
+      key = prompt('Введите ключ подключения ПМК. Можно вставить PMK_API_KEY или BRIDGE_KEY. Ключ сохранится только на этом устройстве.', forcePrompt ? key : '');
       if (!key) throw new Error('Ключ подключения не введён. Заявка не отправлена в Google Calendar.');
       key = normalizeApiKeyText(key);
       try { localStorage.setItem(keyName, key); } catch {}
+      setLastWorkerError('');
     } else {
       const normalized = normalizeApiKeyText(key);
       if (normalized !== key) {
@@ -87,8 +101,22 @@
   function resetApiKey() {
     const keyName = config?.apiKeyStorageKey || 'pmk_google_api_key';
     try { localStorage.removeItem(keyName); } catch {}
+    setLastWorkerError('');
     showMessage('Ключ подключения удалён с этого устройства. При следующей отправке приложение попросит ключ заново.', 'success');
     updatePersistentUi();
+  }
+
+  function replaceApiKey() {
+    const active = config || { apiKeyStorageKey: 'pmk_google_api_key' };
+    try {
+      getApiKey(active, true);
+      if (typeof state !== 'undefined') state.token = WORKER_TOKEN;
+      try { localStorage.setItem(GOOGLE_CONNECTED_KEY, '1'); } catch {}
+      updatePersistentUi();
+      showMessage('Ключ ПМК сохранён. Теперь нажмите синхронизацию Google для проверки.', 'success');
+    } catch (error) {
+      showMessage(error.message || 'Ключ не сохранён.', 'error');
+    }
   }
 
   function parseGoogleCalendarPath(path) {
@@ -133,15 +161,20 @@
     const payload = await response.json().catch(() => ({}));
 
     if (response.status === 401 || payload.error === 'unauthorized') {
-      try { localStorage.removeItem(active.apiKeyStorageKey); } catch {}
+      const message = 'Ключ сохранён, но Worker его не принял. Проверьте, что это именно PMK_API_KEY/BRIDGE_KEY для этого Worker.';
+      setLastWorkerError(message);
       updatePersistentUi();
-      throw new Error('Ключ подключения не принят. Введите актуальный PMK_API_KEY или BRIDGE_KEY.');
+      throw new Error(message);
     }
     if (!response.ok || payload.ok === false) {
       const detail = payload.error || payload.message || `HTTP ${response.status}`;
-      throw new Error(`Google Worker: ${detail}`);
+      const message = `Google Worker: ${detail}`;
+      setLastWorkerError(message);
+      updatePersistentUi();
+      throw new Error(message);
     }
 
+    setLastWorkerError('');
     if ((options.method || 'GET').toUpperCase() === 'DELETE') return null;
     if (payload.raw) return payload.raw;
     if (payload.items) return { items: payload.items };
@@ -156,7 +189,7 @@
       return showMessage('Google Worker ещё не настроен.', 'error');
     }
     try {
-      getApiKey(active);
+      getApiKey(active, hasApiKey(active) ? false : false);
       if (typeof state !== 'undefined') state.token = WORKER_TOKEN;
       try { localStorage.setItem(GOOGLE_CONNECTED_KEY, '1'); } catch {}
       updatePersistentUi();
@@ -185,8 +218,10 @@
 
   function workerStatusText() {
     if (!isWorkerConfig()) return '';
+    const error = getLastWorkerError();
+    if (error) return error;
     return hasApiKey()
-      ? 'Google подключён через Worker. Повторный вход в Google не нужен.'
+      ? 'Ключ ПМК сохранён. Если Google не синхронизируется, проверьте Worker-адрес и секрет в Cloudflare.'
       : 'Сервер Google готов. Введите ключ ПМК один раз на этом устройстве.';
   }
 
@@ -199,13 +234,15 @@
 
     if (typeof state !== 'undefined') state.token = WORKER_TOKEN;
 
+    const hasKey = hasApiKey();
+    const hasError = Boolean(getLastWorkerError());
     const badge = document.querySelector('#connectionBadge');
     if (badge) {
-      badge.textContent = hasApiKey() ? 'Google Worker подключён' : 'Нужен ключ ПМК';
-      badge.className = `status-badge ${hasApiKey() ? 'online' : 'offline'}`;
+      badge.textContent = hasKey ? (hasError ? 'Google Worker: ошибка' : 'Google Worker ключ сохранён') : 'Нужен ключ ПМК';
+      badge.className = `status-badge ${hasKey && !hasError ? 'online' : 'offline'}`;
     }
     const connectButton = document.querySelector('#connectGoogleBtn');
-    if (connectButton) connectButton.textContent = hasApiKey() ? 'Сменить ключ ПМК' : 'Ввести ключ ПМК';
+    if (connectButton) connectButton.textContent = hasKey ? 'Проверить Google Worker' : 'Ввести ключ ПМК';
     const submitButton = document.querySelector('#submitBtn');
     const eventId = document.querySelector('#eventId')?.value || '';
     if (submitButton) submitButton.textContent = eventId ? 'Обновить в Google Calendar' : 'Создать в Google Calendar';
@@ -225,21 +262,28 @@
         <h2>Google без постоянного входа</h2>
         <p id="pmkPersistentGoogleStatus"></p>
         <div class="pmk-persistent-google-actions">
-          <button type="button" id="pmkPersistentGoogleConnect" class="button button-primary">Ввести ключ ПМК</button>
-          <button type="button" id="pmkPersistentGoogleReset" class="button button-secondary">Сменить ключ</button>
+          <button type="button" id="pmkPersistentGoogleConnect" class="button button-primary">Проверить Google Worker</button>
+          <button type="button" id="pmkPersistentGoogleReplace" class="button button-secondary">Ввести / сменить ключ</button>
+          <button type="button" id="pmkPersistentGoogleReset" class="button button-secondary">Удалить ключ</button>
         </div>
         <p class="helper-text">Ключ хранится только в браузере менеджера. Серверная авторизация находится в Cloudflare Worker.</p>`;
       grid.prepend(card);
       card.querySelector('#pmkPersistentGoogleConnect')?.addEventListener('click', connectWorkerGoogle);
+      card.querySelector('#pmkPersistentGoogleReplace')?.addEventListener('click', replaceApiKey);
       card.querySelector('#pmkPersistentGoogleReset')?.addEventListener('click', resetApiKey);
     }
     const status = card.querySelector('#pmkPersistentGoogleStatus');
     const connect = card.querySelector('#pmkPersistentGoogleConnect');
+    const replace = card.querySelector('#pmkPersistentGoogleReplace');
     const reset = card.querySelector('#pmkPersistentGoogleReset');
+    const hasKey = hasApiKey();
+    const hasError = Boolean(getLastWorkerError());
     if (status) status.textContent = workerStatusText();
-    if (connect) connect.textContent = hasApiKey() ? 'Проверить подключение' : 'Ввести ключ ПМК';
-    if (reset) reset.hidden = !hasApiKey();
-    card.classList.toggle('is-connected', hasApiKey());
+    if (connect) connect.textContent = hasKey ? 'Проверить Google Worker' : 'Ввести ключ ПМК';
+    if (replace) replace.textContent = hasKey ? 'Ввести / сменить ключ' : 'Ввести ключ ПМК';
+    if (reset) reset.hidden = !hasKey;
+    card.classList.toggle('is-connected', hasKey && !hasError);
+    card.classList.toggle('is-error', hasError);
     return card;
   }
 
@@ -310,5 +354,6 @@
     disconnect: resetApiKey,
     hasSession: () => isWorkerConfig() && hasApiKey(),
     resetApiKey,
+    replaceApiKey,
   };
 })();
