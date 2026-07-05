@@ -1,6 +1,6 @@
 {
-  "version": "82.48.1",
-  "label": "Основная v82.48.1 — исправление ключа Google Worker",
-  "publishedAt": "2026-07-05T24:25:00Z",
-  "buildToken": "google-worker-key-hotfix-v82-48-1"
+  "version": "82.48.3",
+  "label": "Основная v82.48.3 — рабочая загрузка событий через Google OAuth",
+  "publishedAt": "2026-07-05T25:10:00Z",
+  "buildToken": "google-oauth-fallback-working-events-v82-48-3"
 }
