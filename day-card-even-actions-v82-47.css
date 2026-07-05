@@ -1,0 +1,163 @@
+/* PMK v82.47 — even status buttons and even bottom card footer. Loaded after card-final-override. */
+
+#view-today #todayEvents .event-card,
+#view-day #todayEvents .event-card,
+.event-card.pmk-card-tight-v82-43{
+  overflow:hidden!important;
+}
+
+#view-today #todayEvents .event-card .event-time>.status-row,
+#view-day #todayEvents .event-card .event-time>.status-row,
+.event-card.pmk-card-tight-v82-43 .event-time>.status-row,
+.event-card.pmk-card-tight-v82-43 .pmk-status-in-date-row-v82-46{
+  gap:8px!important;
+  margin-top:14px!important;
+}
+
+#view-today #todayEvents .event-card .event-time>.status-row .status-action,
+#view-day #todayEvents .event-card .event-time>.status-row .status-action,
+.event-card.pmk-card-tight-v82-43 .event-time>.status-row .status-action,
+.event-card.pmk-card-tight-v82-43 .pmk-status-in-date-row-v82-46 .status-action{
+  min-height:42px!important;
+  height:42px!important;
+  padding:0 8px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:12px!important;
+  font-size:10.5px!important;
+  line-height:1.08!important;
+  text-align:center!important;
+  white-space:normal!important;
+}
+
+#view-today #todayEvents .event-card>.event-actions,
+#view-day #todayEvents .event-card>.event-actions,
+.event-card.pmk-card-tight-v82-43>.event-actions{
+  padding:11px 12px!important;
+  border-top:1px solid var(--line)!important;
+  background:rgba(0,0,0,.018)!important;
+  gap:9px!important;
+}
+
+#view-today #todayEvents .event-card .manage-row,
+#view-day #todayEvents .event-card .manage-row,
+.event-card.pmk-card-tight-v82-43 .manage-row{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) 50px!important;
+  gap:9px!important;
+  align-items:stretch!important;
+}
+
+#view-today #todayEvents .event-card .manage-row .mini-button,
+#view-day #todayEvents .event-card .manage-row .mini-button,
+#view-today #todayEvents .event-card .manage-row .call-button,
+#view-day #todayEvents .event-card .manage-row .call-button,
+#view-today #todayEvents .event-card .manage-row .open-button,
+#view-day #todayEvents .event-card .manage-row .open-button,
+#view-today #todayEvents .event-card .manage-row .menu-button,
+#view-day #todayEvents .event-card .manage-row .menu-button,
+#view-today #todayEvents .event-card .card-menu>summary,
+#view-day #todayEvents .event-card .card-menu>summary,
+.event-card.pmk-card-tight-v82-43 .manage-row .mini-button,
+.event-card.pmk-card-tight-v82-43 .manage-row .call-button,
+.event-card.pmk-card-tight-v82-43 .manage-row .open-button,
+.event-card.pmk-card-tight-v82-43 .manage-row .menu-button,
+.event-card.pmk-card-tight-v82-43 .card-menu>summary{
+  min-height:46px!important;
+  height:46px!important;
+  max-height:46px!important;
+  padding:0 12px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:14px!important;
+  font-size:13px!important;
+  line-height:1!important;
+  font-weight:800!important;
+}
+
+#view-today #todayEvents .event-card .card-menu,
+#view-day #todayEvents .event-card .card-menu,
+.event-card.pmk-card-tight-v82-43 .card-menu{
+  min-height:46px!important;
+  height:46px!important;
+}
+
+#view-today #todayEvents .event-card .menu-button,
+#view-day #todayEvents .event-card .menu-button,
+.event-card.pmk-card-tight-v82-43 .menu-button{
+  width:50px!important;
+  padding:0!important;
+  font-size:22px!important;
+}
+
+@media(max-width:760px){
+  #view-today #todayEvents .event-card .event-time>.status-row,
+  #view-day #todayEvents .event-card .event-time>.status-row,
+  .event-card.pmk-card-tight-v82-43 .event-time>.status-row,
+  .event-card.pmk-card-tight-v82-43 .pmk-status-in-date-row-v82-46{
+    gap:7px!important;
+    margin-top:12px!important;
+  }
+
+  #view-today #todayEvents .event-card .event-time>.status-row .status-action,
+  #view-day #todayEvents .event-card .event-time>.status-row .status-action,
+  .event-card.pmk-card-tight-v82-43 .event-time>.status-row .status-action,
+  .event-card.pmk-card-tight-v82-43 .pmk-status-in-date-row-v82-46 .status-action{
+    min-height:40px!important;
+    height:40px!important;
+    padding:0 6px!important;
+    font-size:10px!important;
+    border-radius:11px!important;
+  }
+
+  #view-today #todayEvents .event-card>.event-actions,
+  #view-day #todayEvents .event-card>.event-actions,
+  .event-card.pmk-card-tight-v82-43>.event-actions{
+    padding:10px!important;
+    gap:8px!important;
+  }
+
+  #view-today #todayEvents .event-card .manage-row,
+  #view-day #todayEvents .event-card .manage-row,
+  .event-card.pmk-card-tight-v82-43 .manage-row{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) 46px!important;
+    gap:8px!important;
+  }
+
+  #view-today #todayEvents .event-card .manage-row .mini-button,
+  #view-day #todayEvents .event-card .manage-row .mini-button,
+  #view-today #todayEvents .event-card .manage-row .call-button,
+  #view-day #todayEvents .event-card .manage-row .call-button,
+  #view-today #todayEvents .event-card .manage-row .open-button,
+  #view-day #todayEvents .event-card .manage-row .open-button,
+  #view-today #todayEvents .event-card .manage-row .menu-button,
+  #view-day #todayEvents .event-card .manage-row .menu-button,
+  #view-today #todayEvents .event-card .card-menu>summary,
+  #view-day #todayEvents .event-card .card-menu>summary,
+  .event-card.pmk-card-tight-v82-43 .manage-row .mini-button,
+  .event-card.pmk-card-tight-v82-43 .manage-row .call-button,
+  .event-card.pmk-card-tight-v82-43 .manage-row .open-button,
+  .event-card.pmk-card-tight-v82-43 .manage-row .menu-button,
+  .event-card.pmk-card-tight-v82-43 .card-menu>summary{
+    min-height:44px!important;
+    height:44px!important;
+    max-height:44px!important;
+    border-radius:12px!important;
+    font-size:12px!important;
+  }
+
+  #view-today #todayEvents .event-card .card-menu,
+  #view-day #todayEvents .event-card .card-menu,
+  .event-card.pmk-card-tight-v82-43 .card-menu{
+    min-height:44px!important;
+    height:44px!important;
+  }
+
+  #view-today #todayEvents .event-card .menu-button,
+  #view-day #todayEvents .event-card .menu-button,
+  .event-card.pmk-card-tight-v82-43 .menu-button{
+    width:46px!important;
+    font-size:20px!important;
+  }
+}
