@@ -13,8 +13,8 @@
 </head>
 <body>
   <main>
-    <h1>Устанавливаем v82.48.3</h1>
-    <p>Ставим рабочую загрузку событий через Google OAuth и отключаем автоматические цикличные запросы обновления.</p>
+    <h1 id="title">Устанавливаем v82.48.3</h1>
+    <p id="description">Ставим рабочую загрузку событий через Google OAuth и отключаем автоматические цикличные запросы обновления.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -25,59 +25,89 @@
   <script>
     const VERSION='82.48.3';
     const params=new URLSearchParams(location.search);
+    const title=document.getElementById('title');
+    const description=document.getElementById('description');
     const stage=params.get('stage')||'1';
     const status=document.getElementById('status');
     const button=document.getElementById('install');
-    function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
-    async function clearWorkersAndCaches(){
-      if('serviceWorker' in navigator){
-        const regs=await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(reg=>reg.unregister().catch(()=>null)));
-      }
-      if(window.caches){
-        const keys=await caches.keys();
-        await Promise.all(keys.filter(key=>key.startsWith('pmk-calendar-v')).map(key=>caches.delete(key)));
-      }
-    }
-    async function check(path,marker){
-      const response=await fetch(path+'?verify='+Date.now(),{cache:'reload'});
-      if(!response.ok)throw new Error(path+': HTTP '+response.status);
-      const text=await response.text();
-      if(!text.includes(marker))throw new Error(path+': файл не обновился');
-    }
-    function reloadClean(){location.replace('./reset.html?stage=2&release=82-48-3-no-loop-'+Date.now());}
-    async function run(){
-      button.disabled=true;
+
+    async function openPreview(){
+      title.textContent='Тест карточек дня';
+      description.textContent='Открываем отдельную HTML-страницу без обновления календаря и без установки service worker.';
+      button.hidden=true;
       status.className='status';
+      status.textContent='Загружаем тестовую страницу напрямую с сервера...';
       try{
-        if(stage!=='2'){
-          status.textContent='Отключаем старый service worker и чистим кэш...';
-          await clearWorkersAndCaches();
-          await sleep(350);
-          status.textContent='Перезапускаем reset без старого кэша...';
-          reloadClean();
-          return;
-        }
-        status.textContent='Проверяем свежие файлы v82.48.3...';
-        await clearWorkersAndCaches();
-        await check('./sw.js','PMK Calendar v82.48.3');
-        await check('./sw-core-v82-48-3.js',"const VERSION='82.48.3'");
-        await check('./pmk-google-auth-config.json','oauth-fallback');
-        await check('./update-manager-v82-20.js','PMK_UPDATE_MANAGER_V82_48_3_NO_LOOP');
-        if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
-        status.textContent='Ставим свежий service worker...';
-        const reg=await navigator.serviceWorker.register('./sw.js?v='+VERSION+'-'+Date.now(),{updateViaCache:'none'});
-        await reg.update();
-        status.textContent='Готово. Открываем приложение...';
-        location.href='./?v='+VERSION+'&verified='+Date.now();
+        const response=await fetch('./day-card-compact-test-v1.html?preview='+Date.now(),{cache:'no-store'});
+        if(!response.ok)throw new Error('day-card-compact-test-v1.html: HTTP '+response.status);
+        const html=await response.text();
+        if(!html.includes('LOCKED DESIGN TOKENS'))throw new Error('получена не та тестовая страница');
+        document.open();
+        document.write(html);
+        document.close();
       }catch(e){
         status.className='status error';
-        status.textContent='Обновление не завершено: '+e.message;
-        button.disabled=false;
+        status.textContent='Тест не открылся: '+e.message;
+        button.hidden=false;
+        button.textContent='Повторить открытие теста';
+        button.onclick=openPreview;
       }
     }
-    button.addEventListener('click',run);
-    run();
+
+    if(params.get('preview')==='day-card-compact-v1'){
+      openPreview();
+    }else{
+      function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+      async function clearWorkersAndCaches(){
+        if('serviceWorker' in navigator){
+          const regs=await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(reg=>reg.unregister().catch(()=>null)));
+        }
+        if(window.caches){
+          const keys=await caches.keys();
+          await Promise.all(keys.filter(key=>key.startsWith('pmk-calendar-v')).map(key=>caches.delete(key)));
+        }
+      }
+      async function check(path,marker){
+        const response=await fetch(path+'?verify='+Date.now(),{cache:'reload'});
+        if(!response.ok)throw new Error(path+': HTTP '+response.status);
+        const text=await response.text();
+        if(!text.includes(marker))throw new Error(path+': файл не обновился');
+      }
+      function reloadClean(){location.replace('./reset.html?stage=2&release=82-48-3-no-loop-'+Date.now());}
+      async function run(){
+        button.disabled=true;
+        status.className='status';
+        try{
+          if(stage!=='2'){
+            status.textContent='Отключаем старый service worker и чистим кэш...';
+            await clearWorkersAndCaches();
+            await sleep(350);
+            status.textContent='Перезапускаем reset без старого кэша...';
+            reloadClean();
+            return;
+          }
+          status.textContent='Проверяем свежие файлы v82.48.3...';
+          await clearWorkersAndCaches();
+          await check('./sw.js','PMK Calendar v82.48.3');
+          await check('./sw-core-v82-48-3.js',"const VERSION='82.48.3'");
+          await check('./pmk-google-auth-config.json','oauth-fallback');
+          await check('./update-manager-v82-20.js','PMK_UPDATE_MANAGER_V82_48_3_NO_LOOP');
+          if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
+          status.textContent='Ставим свежий service worker...';
+          const reg=await navigator.serviceWorker.register('./sw.js?v='+VERSION+'-'+Date.now(),{updateViaCache:'none'});
+          await reg.update();
+          status.textContent='Готово. Открываем приложение...';
+          location.href='./?v='+VERSION+'&verified='+Date.now();
+        }catch(e){
+          status.className='status error';
+          status.textContent='Обновление не завершено: '+e.message;
+          button.disabled=false;
+        }
+      }
+      button.addEventListener('click',run);
+      run();
+    }
   </script>
 </body>
 </html>
