@@ -1,6 +1,8 @@
 {
-  "version": "82.48.4",
-  "label": "Основная v82.48.4 — Google Worker Ready + правки карточки события",
-  "publishedAt": "2026-07-05T23:20:00Z",
-  "buildToken": "google-worker-ready-event-card-approved-v82-48-4"
+  "version": "82.20.0",
+  "label": "Основная v82.20.0 — постоянный вход Google и исправление формы",
+  "testUrl": "./test-v82-20.html",
+  "updateUrl": "./reset.html?v=82.20.0",
+  "publishedAt": "2026-07-03T05:00:00Z",
+  "buildToken": "persistent-google-auth-ready-v82-20-cardfix1"
 }
