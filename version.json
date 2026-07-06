@@ -1,11 +1,15 @@
 {
-  "version": "82.48.3",
-  "release": "google-oauth-fallback-working-events",
+  "version": "82.48.4",
+  "release": "google-worker-ready-event-card-approved",
   "date": "2026-07-05",
+  "base": "20260705-google-worker-ready",
   "features": [
-    "disabled-unavailable-google-worker-as-main-calendar-source",
-    "restored-standard-google-oauth-event-loading",
-    "removed-google-worker-overrides-from-active-service-worker-bundle",
-    "kept-compact-day-cards-and-even-actions"
+    "restored-google-worker-ready-config",
+    "kept-no-loop-update-manager",
+    "rug-summary-inline-next-to-contract-number",
+    "clickable-rug-summary-popup",
+    "share-added-to-existing-card-menu-without-replacing-edit-delete",
+    "stronger-card-shadows-and-compact-card-spacing",
+    "status-button-gap-reduced"
   ]
 }
