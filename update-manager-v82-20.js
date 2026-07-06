@@ -1,7 +1,7 @@
 'use strict';
 
 (() => {
-  if (window.PMK_UPDATE_MANAGER_V82_48_3_NO_LOOP) return;
+  if (window.PMK_UPDATE_MANAGER_V82_48_4_NO_LOOP) return;
   window.PMK_UPDATE_MANAGER_V82_20 = true;
   window.PMK_UPDATE_MANAGER_V82_35 = true;
   window.PMK_UPDATE_MANAGER_V82_37 = true;
@@ -18,9 +18,10 @@
   window.PMK_UPDATE_MANAGER_V82_48 = true;
   window.PMK_UPDATE_MANAGER_V82_48_1 = true;
   window.PMK_UPDATE_MANAGER_V82_48_3_NO_LOOP = true;
+  window.PMK_UPDATE_MANAGER_V82_48_4_NO_LOOP = true;
 
-  const CURRENT = '82.48.3';
-  const CURRENT_TOKEN = 'google-oauth-fallback-working-events-v82-48-3';
+  const CURRENT = '82.48.4';
+  const CURRENT_TOKEN = 'google-worker-ready-event-card-approved-v82-48-4';
   const INSTALLED_VERSION_KEY = 'pmk-installed-version';
   const INSTALLED_TOKEN_KEY = 'pmk-installed-build-token';
 
