@@ -4,13 +4,13 @@
   if (globalThis.PMK_EVENT_CARD_APPROVED_V82_48_4) return;
   globalThis.PMK_EVENT_CARD_APPROVED_V82_48_4 = true;
 
-  function text(value = '') { return String(value || '').trim(); }
   function html(value = '') { return typeof escapeHtml === 'function' ? escapeHtml(value) : String(value || '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch])); }
   function eventById(id) { try { return getAllEvents().find(item => String(item.id) === String(id)); } catch { return null; } }
   function metaFor(event) { try { return eventMeta(event); } catch { return {}; } }
+  function cardById(id) { return [...document.querySelectorAll('.event-card')].find(card => String(card.dataset.eventCard) === String(id)) || null; }
   function rugTextFor(data, card) {
     try { return rugSummary(data); } catch {}
-    return card.querySelector('.event-quick-badges .rug-badge')?.textContent?.replace(/^▦\s*/, '').trim() || 'Ковры не указаны';
+    return card?.querySelector?.('.event-quick-badges .rug-badge')?.textContent?.replace(/^▦\s*/, '').trim() || 'Ковры не указаны';
   }
 
   function ensureDialog(id, className) {
@@ -42,7 +42,7 @@
     if (!event) return showToast?.('Заявка не найдена.', 'error');
     const data = metaFor(event);
     const dialog = ensureDialog('pmkRugQuickDialog', 'pmk-rug-dialog');
-    const summary = rugTextFor(data, document.querySelector(`[data-event-card="${CSS.escape(eventId)}"]`) || document);
+    const summary = rugTextFor(data, cardById(eventId));
     let details = '<div class="details-empty">Информация о коврах не указана.</div>';
     try { details = renderRugDetails(data); } catch {}
     dialog.innerHTML = `<div class="pmk-rug-dialog-card">
@@ -62,7 +62,7 @@
     const address = (typeof displayAddress === 'function' ? displayAddress(data, event) : event.location) || '';
     const addressLine = address ? `\nАдрес: ${address}` : '';
     const contract = data.contractNumber ? `\nДоговор: № ${data.contractNumber}` : '';
-    const rugs = `\nКовры: ${rugTextFor(data, document)}`;
+    const rugs = `\nКовры: ${rugTextFor(data, cardById(event.id))}`;
     const time = `${typeof formatTime === 'function' ? formatTime(event.start?.dateTime || event.start) : ''}–${typeof formatTime === 'function' ? formatTime(event.end?.dateTime || event.end) : ''}`;
     const timeLine = time.replace('–', '').trim() ? `\nВремя: ${time}` : '';
     return `ПМК Календарь\n${title}${phone}${addressLine}${contract}${rugs}${timeLine}`.trim();
@@ -127,9 +127,7 @@
     addShareToMenu(card);
   }
 
-  function applyAll() {
-    document.querySelectorAll('.event-card').forEach(applyCard);
-  }
+  function applyAll() { document.querySelectorAll('.event-card').forEach(applyCard); }
 
   document.addEventListener('click', event => {
     const rug = event.target.closest('[data-rug-event]');
