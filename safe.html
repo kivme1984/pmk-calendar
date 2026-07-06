@@ -22,6 +22,18 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box
 (() => {
   const params=new URLSearchParams(location.search);
   const testName=params.get('test')||'';
+
+  if(testName==='day-card-compact-v1'){
+    const status=document.querySelector('#status');
+    status.textContent='Открываем тестовую страницу карточек дня…';
+    fetch('./day-card-compact-test-v1.html?preview='+Date.now(),{cache:'no-store'})
+      .then(response=>{if(!response.ok)throw new Error('day-card-compact-test-v1.html: '+response.status);return response.text();})
+      .then(html=>{document.open();document.write(html);document.close();})
+      .catch(error=>{status.className='status error';status.textContent='Тестовая страница не открылась: '+error.message;document.querySelector('#retry').hidden=false;});
+    document.querySelector('#retry').addEventListener('click',()=>location.reload());
+    return;
+  }
+
   const workflowTest=testName==='ui-workflow-v4';
   const statusTest=testName==='ui-swipe-note-status-v3'||workflowTest;
   const noteTest=testName==='ui-swipe-note-v2'||statusTest;
