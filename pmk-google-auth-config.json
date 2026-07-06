@@ -1,8 +1,8 @@
 {
-  "enabled": false,
-  "mode": "oauth-fallback",
+  "enabled": true,
+  "mode": "worker",
   "apiUrl": "https://pmk-google-auth-worker.standart-media.workers.dev",
   "apiKeyStorageKey": "pmk_google_api_key",
-  "label": "Google Calendar через обычное подключение Google",
-  "note": "Google Worker временно выключен как основной путь, потому что он не отдаёт события. Приложение должно использовать штатное OAuth-подключение Google Calendar."
+  "label": "Google Calendar через Cloudflare Worker",
+  "note": "PMK API KEY не хранится в публичном коде. Введите его один раз на устройстве менеджера из файла PMK_API_KEY.txt."
 }
