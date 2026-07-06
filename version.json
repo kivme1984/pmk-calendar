@@ -1,15 +1,14 @@
 {
-  "version": "82.48.4",
-  "release": "google-worker-ready-event-card-approved",
-  "date": "2026-07-05",
-  "base": "20260705-google-worker-ready",
+  "version": "82.20.0",
+  "release": "persistent-google-auth-ready",
+  "date": "2026-07-03",
   "features": [
-    "restored-google-worker-ready-config",
-    "kept-no-loop-update-manager",
-    "rug-summary-inline-next-to-contract-number",
-    "clickable-rug-summary-popup",
-    "share-added-to-existing-card-menu-without-replacing-edit-delete",
-    "stronger-card-shadows-and-compact-card-spacing",
-    "status-button-gap-reduced"
+    "all-v82-19-2-functions-preserved",
+    "persistent-google-auth-client-module",
+    "cloudflare-oauth-worker-source",
+    "automatic-access-token-refresh",
+    "one-time-google-account-connection",
+    "feature-hidden-until-backend-enabled",
+    "event-card-approved-cardfix-added"
   ]
 }
