@@ -1,7 +1,7 @@
-const VERSION='82.48.3';
+const VERSION='82.48.4';
 const CACHE=`pmk-calendar-v${VERSION}`;
-const BUNDLE_JS='./__pmk-app-v82-48-3.js';
-const BUNDLE_CSS='./__pmk-styles-v82-48-3.css';
+const BUNDLE_JS='./__pmk-app-v82-48-4.js';
+const BUNDLE_CSS='./__pmk-styles-v82-48-4.css';
 
 const JS=`
 ./app.js
@@ -72,10 +72,13 @@ const JS=`
 ./weekly-minimal-v82-26.js
 ./month-summary-v82-28.js
 ./quick-insert-compact-v82-29.js
+./persistent-google-auth-v82-20.js
 ./mobile-keyboard-form-v82-20.js
 ./keyboard-submit-safe-v82-20.js
 ./update-manager-v82-20.js
 ./day-save-guard-v82-40.js
+./google-worker-ready-restore-v82-48-4.js
+./event-card-approved-v82-48-4.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -125,23 +128,47 @@ const CSS=`
 ./keyboard-submit-safe-v82-20.css
 ./card-final-override-v82-47.css
 ./day-card-even-actions-v82-47.css
+./event-card-approved-v82-48-4.css
 `.trim().split(/\s+/);
 
 const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./pmk-release.json','./pmk-google-auth-config.json','./icons/icon-192.png','./icons/icon-512.png'];
 
-function fetchWithTimeout(url,timeout=15000){
+function fetchWithTimeout(url,timeout=12000){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),timeout);
   return fetch(url,{cache:'no-store',signal:controller.signal}).finally(()=>clearTimeout(timer));
 }
+
 async function textAsset(url){
   const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
-  const text=await response.text();
-  if(url.includes('app.js')&&!text.includes('function connectGoogle'))throw new Error('Не получен основной app.js с Google OAuth');
+  const text=response instanceof Response ? await response.text() : '';
+  if(url.includes('google-worker-ready-restore-v82-48-4.js')&&!text.includes('PMK_GOOGLE_WORKER_READY_RESTORE_V82_48_4'))throw new Error('Не получено восстановление Google Worker Ready v82.48.4');
+  if(url.includes('event-card-approved-v82-48-4.js')&&!text.includes('PMK_EVENT_CARD_APPROVED_V82_48_4'))throw new Error('Не получены утверждённые действия карточки v82.48.4');
+  if(url.includes('event-card-approved-v82-48-4.css')&&!text.includes('approved event-card compact fixes'))throw new Error('Не получены утверждённые стили карточки v82.48.4');
+  if(url.includes('card-final-override-v82-47.css')&&!text.includes('final day-card compact override'))throw new Error('Не получен финальный override карточки v82.47.0');
+  if(url.includes('day-card-even-actions-v82-47.css')&&!text.includes('even status buttons and even bottom card footer'))throw new Error('Не получено выравнивание кнопок карточки v82.47.0');
+  if(url.includes('status-left-column-v82-2.js')&&(!text.includes('PMK_DAY_CARD_1_5X_BUTTONS_V82_46')||!text.includes('PMK_BOTTOM_ACTIONS_THINNER_V82_46')))throw new Error('Не получены правильные кнопки v82.46.0');
+  if(url.includes('day-save-guard-v82-40.js')&&!text.includes('PMK_SAVE_GUARD_V82_40'))throw new Error('Не получена защита сохранения без стилей карточки v82.40.0');
+  if(url.includes('update-manager-v82-20.js')&&!text.includes('PMK_UPDATE_MANAGER_V82_48_4_NO_LOOP'))throw new Error('Не получен менеджер обновлений v82.48.4');
+  if(url.includes('month-summary-v82-28.js')&&!text.includes('PMK_MONTH_CLEAN_GRID_V82_36'))throw new Error('Не получена чистая месячная таблица v82.36.0');
+  if(url.includes('period-direct-v82-19.js')&&!text.includes('PMK_PERIOD_DIRECT_V82_36'))throw new Error('Не получено отключение старых дублей месяца v82.36.0');
+  if(url.includes('quick-insert-compact-v82-29.js')&&!text.includes('PMK_QUICK_INSERT_COMPACT_V82_29'))throw new Error('Не получена компактная быстрая вставка v82.29.0');
+  if(url.includes('weekly-minimal-v82-26.js')&&!text.includes('PMK_WEEKLY_WORK_INFO_V82_27'))throw new Error('Не получены недельные карточки со статусом временем и районом v82.27.0');
+  if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_ORDER_SOURCE_PRICING_SECTION_V82_25'))throw new Error('Не получен перенос источника заказа v82.25.0');
+  if(url.includes('android-autofill-off-v53.js')&&!text.includes('PMK_GOOGLE_AUTOFILL_SAVE_OFF_V82_24'))throw new Error('Не получен фикс отключения Google Autofill v82.24.0');
+  if(url.includes('address-autocomplete.js')&&!text.includes('PMK_ADDRESS_INSTANT_SELECT_V82_23'))throw new Error('Не получен мгновенный выбор адреса v82.23.0');
+  if(url.includes('version-guard-v82.js')&&(!text.includes("const VERSION = '82'")||!text.includes("const RELEASE = '82.20.0'")))throw new Error('Неверный контрольный файл v82.20.0');
+  if(url.includes('event-cloud-indicators-v82-19.js')&&!text.includes('PMK_EVENT_CLOUD_INDICATORS_V82_19'))throw new Error('Не получены облачные индикаторы v82.20.0');
+  if(url.includes('persistent-google-auth-v82-20.js')&&!text.includes('PMK_PERSISTENT_GOOGLE_AUTH_V82_20'))throw new Error('Не получен модуль постоянного входа Google v82.20.0');
+  if(url.includes('mobile-keyboard-form-v82-20.js')&&!text.includes('PMK_MOBILE_KEYBOARD_FORM_V82_20'))throw new Error('Не получен фикс мобильной клавиатуры v82.20.0');
+  if(url.includes('keyboard-submit-safe-v82-20.js')&&!text.includes('PMK_KEYBOARD_SUBMIT_SAFE_V82_20'))throw new Error('Не получен фикс кнопки клавиатуры v82.20.0');
   return text;
 }
-async function put(cache,key,response){await cache.put(new Request(key,{cache:'reload'}),response);}
+
+async function put(cache,key,response){
+  await cache.put(new Request(key,{cache:'reload'}),response);
+}
 
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   const cache=await caches.open(CACHE);
@@ -149,11 +176,14 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
   if(!index.ok)throw new Error(`index.html: ${index.status}`);
   await put(cache,'./index.html',index.clone());
   await put(cache,'./',index.clone());
-  const [js,css]=await Promise.all([Promise.all(JS.map(textAsset)),Promise.all(CSS.map(textAsset))]);
+  const [js,css]=await Promise.all([
+    Promise.all(JS.map(textAsset)),
+    Promise.all(CSS.map(textAsset)),
+  ]);
   await put(cache,BUNDLE_JS,new Response(js.join('\n\n'),{headers:{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION}}));
   await put(cache,BUNDLE_CSS,new Response(css.join('\n\n'),{headers:{'Content-Type':'text/css; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION}}));
   await Promise.allSettled(OPTIONAL.map(async url=>{
-    const response=await fetchWithTimeout(`${url}?install=${encodeURIComponent(VERSION)}`,6000);
+    const response=await fetchWithTimeout(`${url}?install=${encodeURIComponent(VERSION)}`,5000);
     if(response.ok)await put(cache,url,response);
   }));
   await self.skipWaiting();
@@ -166,6 +196,7 @@ self.addEventListener('activate',event=>event.waitUntil((async()=>{
 })()));
 
 async function cached(key){return (await caches.open(CACHE)).match(key);}
+
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET'||!event.request.url.startsWith(self.location.origin))return;
   const url=new URL(event.request.url);
