@@ -1,6 +1,6 @@
-// PMK Calendar v82.20.0 - cardfix28 scroll restored permanent service worker
+// PMK Calendar v82.20.0 - cardfix29 address rebuilt and scroll ok permanent service worker
 const VERSION='82.20.0';
-const BUILD='cardfix28-editor-scroll-restored';
+const BUILD='cardfix29-address-rebuilt-scroll-ok';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
 const BUNDLE_JS=`./__pmk-app-v82-20-0-${BUILD}.js`;
 const BUNDLE_CSS=`./__pmk-styles-v82-20-0-${BUILD}.css`;
@@ -161,7 +161,7 @@ async function textAsset(url){
   if(url.includes('v50-editor-nav-bottom-v82-20-21.js')&&!text.includes('PMK_V50_EDITOR_NAV_BOTTOM_COMPACT_V82_20_21'))throw new Error('Не получена нижняя компактная навигация разделов');
   if(url.includes('form-title-cancel-row-v82-20-22.js')&&!text.includes('PMK_FORM_TITLE_CANCEL_ROW_V82_20_22'))throw new Error('Не получена строка заголовок + отмена');
   if(url.includes('address-search-clean-v82-20-23.js')&&!text.includes('PMK_ADDRESS_SEARCH_CLEAN_DISABLED_V82_20_27'))throw new Error('Не отключён старый адресный цикл');
-  if(url.includes('form-placeholders-address-strict-v82-20-25.js')&&!text.includes('PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_27'))throw new Error('Не получен быстрый фикс адреса без таймера');
+  if(url.includes('form-placeholders-address-strict-v82-20-25.js')&&!text.includes('PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_29'))throw new Error('Не получен пересобранный адресный блок');
   if(url.includes('turbo-interactions-v82-20-27.js')&&!text.includes('PMK_TURBO_INTERACTIONS_V82_20_28'))throw new Error('Не получен фикс скролла редакторов');
   if(url.includes('v50-editor-nav-safe-v82-20-20.js'))throw new Error('Верхняя навигация отключена');
   if(url.includes('v50-editor-nav-v82-20-18.js'))throw new Error('Проблемный слой навигации отключён');
