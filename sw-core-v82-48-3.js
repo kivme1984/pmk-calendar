@@ -1,5 +1,5 @@
 const VERSION='82.20.0';
-const BUILD='cardfix15-rug-number-no-circle';
+const BUILD='cardfix16-v50-preview-rug-cost';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
 const BUNDLE_JS=`./__pmk-app-v82-20-0-${BUILD}.js`;
 const BUNDLE_CSS=`./__pmk-styles-v82-20-0-${BUILD}.css`;
@@ -77,6 +77,7 @@ const JS=`
 ./smart-paste-compact-v82-20-13.js
 ./form-compact-v82-20-14.js
 ./form-rug-number-fix-v82-20-15.js
+./v50-preview-compact-fix-v82-20-16.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -148,6 +149,7 @@ async function textAsset(url){
   if(url.includes('smart-paste-compact-v82-20-13.js')&&!text.includes('PMK_SMART_PASTE_COMPACT_V82_20_13'))throw new Error('Не получен компактный блок быстрой вставки');
   if(url.includes('form-compact-v82-20-14.js')&&!text.includes('PMK_FORM_COMPACT_V82_20_14'))throw new Error('Не получен компактный слой формы заявки');
   if(url.includes('form-rug-number-fix-v82-20-15.js')&&!text.includes('PMK_FORM_RUG_NUMBER_FIX_V82_20_15'))throw new Error('Не получено исправление номера ковра без кружка');
+  if(url.includes('v50-preview-compact-fix-v82-20-16.js')&&!text.includes('PMK_V50_PREVIEW_COMPACT_FIX_V82_20_16'))throw new Error('Не получено исправление предпросмотра v50');
   if(url.includes('event-card-approved-v82-20-1.css')&&!text.includes('event-card fixes on v82.20.0 base'))throw new Error('Не получены стили карточки v82.20.0');
   return text;
 }
