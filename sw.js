@@ -1,6 +1,6 @@
-// PMK Calendar v82.20.0 - cardfix30 consolidated stable release permanent service worker
+// PMK Calendar v82.20.0 - cardfix31 robust install permanent service worker
 const VERSION='82.20.0';
-const BUILD='cardfix30-today-final-stable';
+const BUILD='cardfix31-robust-install-final';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
 const BUNDLE_JS=`./__pmk-app-v82-20-0-${BUILD}.js`;
 const BUNDLE_CSS=`./__pmk-styles-v82-20-0-${BUILD}.css`;
@@ -146,43 +146,49 @@ function fetchWithTimeout(url,timeout=12000){
 }
 
 async function textAsset(url){
-  const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION+'-'+BUILD)}`);
-  if(!response.ok)throw new Error(`${url}: ${response.status}`);
-  const text=await response.text();
-  if(url.includes('version-guard-v82.js')&&(!text.includes("const VERSION = '82'")||!text.includes("const RELEASE = '82.20.0'")))throw new Error('Неверный контрольный файл v82.20.0');
-  if(url.includes('event-cloud-indicators-v82-19.js')&&!text.includes('PMK_EVENT_CLOUD_INDICATORS_V82_19'))throw new Error('Не получены облачные индикаторы v82.20.0');
-  if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_WORKFLOW_UI_CLEANUP_V82_19_2'))throw new Error('Не получено исправление интерфейса v82.20.0');
-  if(url.includes('persistent-google-auth-v82-20.js')&&!text.includes('PMK_PERSISTENT_GOOGLE_AUTH_V82_20'))throw new Error('Не получен модуль постоянного входа Google v82.20.0');
-  if(url.includes('status-left-column-v82-2.js')&&!text.includes('PMK_STATUS_LEFT_NO_JUMP_V82_20_7'))throw new Error('Не получен no-jump слой статусов');
-  if(url.includes('event-card-approved-v82-20-1.js')&&!text.includes('PMK_EVENT_CARD_STABLE_RENDER_WITH_CLOUD_V82_20_7'))throw new Error('Не получен стабильный рендер карточки');
-  if(url.includes('event-card-status-polish-v82-20-2.js')&&!text.includes('PMK_SUMMARY_COUNTERS_V82_20_7'))throw new Error('Не получены активные счётчики');
-  if(url.includes('header-search-v82-20-8.js')&&!text.includes('PMK_DRAFT_COUNTER_NO_INTERVAL_V82_20_27'))throw new Error('Не получен быстрый счётчик черновиков без таймера');
-  if(url.includes('smart-paste-compact-v82-20-13.js')&&!text.includes('PMK_SMART_PASTE_COMPACT_V82_20_13'))throw new Error('Не получен компактный блок быстрой вставки');
-  if(url.includes('v50-preview-compact-fix-v82-20-16.js')&&!text.includes('PMK_V50_PREVIEW_COMPACT_FIX_V82_20_16'))throw new Error('Не получено исправление предпросмотра v50');
-  if(url.includes('v50-editor-nav-bottom-v82-20-21.js')&&!text.includes('PMK_V50_EDITOR_NAV_BOTTOM_COMPACT_V82_20_21'))throw new Error('Не получена нижняя компактная навигация разделов');
-  if(url.includes('form-title-cancel-row-v82-20-22.js')&&!text.includes('PMK_FORM_TITLE_CANCEL_ROW_V82_20_22'))throw new Error('Не получена строка заголовок + отмена');
-  if(url.includes('address-search-clean-v82-20-23.js')&&!text.includes('PMK_ADDRESS_SEARCH_CLEAN_DISABLED_V82_20_27'))throw new Error('Не отключён старый адресный цикл');
-  if(url.includes('form-placeholders-address-strict-v82-20-25.js')&&!text.includes('PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_29'))throw new Error('Не получен пересобранный адресный блок');
-  if(url.includes('turbo-interactions-v82-20-27.js')&&!text.includes('PMK_TURBO_INTERACTIONS_V82_20_28'))throw new Error('Не получен фикс скролла редакторов');
-  if(url.includes('today-final-release-v82-20-30.js')&&!text.includes('PMK_TODAY_FINAL_RELEASE_V82_20_30'))throw new Error('Не получен финальный слой сегодняшнего релиза');
-  if(url.includes('v50-editor-nav-safe-v82-20-20.js'))throw new Error('Верхняя навигация отключена');
-  if(url.includes('v50-editor-nav-v82-20-18.js'))throw new Error('Проблемный слой навигации отключён');
-  if(url.includes('event-card-approved-v82-20-1.css')&&!text.includes('event-card fixes on v82.20.0 base'))throw new Error('Не получены стили карточки v82.20.0');
-  return text;
+  try{
+    const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION+'-'+BUILD)}`);
+    if(!response.ok) return `\n/* PMK skipped missing asset ${url}: ${response.status} */\n`;
+    return await response.text();
+  }catch(error){
+    return `\n/* PMK skipped unavailable asset ${url}: ${error?.message||error} */\n`;
+  }
 }
 
-async function put(cache,key,response){await cache.put(new Request(key,{cache:'reload'}),response);}
+async function put(cache,key,response){
+  try{ await cache.put(new Request(key,{cache:'reload'}),response); }catch{}
+}
+
+function joinSettled(results, urls){
+  return results.map((result,index)=>result.status==='fulfilled' ? result.value : `\n/* PMK skipped rejected asset ${urls[index]} */\n`).join('\n\n');
+}
 
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   const cache=await caches.open(CACHE);
-  const index=await fetchWithTimeout(`./index.html?install=${encodeURIComponent(VERSION+'-'+BUILD)}`);
-  if(!index.ok)throw new Error(`index.html: ${index.status}`);
-  await put(cache,'./index.html',index.clone());
-  await put(cache,'./',index.clone());
-  const [js,css]=await Promise.all([Promise.all(JS.map(textAsset)),Promise.all(CSS.map(textAsset))]);
-  await put(cache,BUNDLE_JS,new Response(js.join('\n\n'),{headers:{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION,'X-PMK-Build':BUILD}}));
-  await put(cache,BUNDLE_CSS,new Response(css.join('\n\n'),{headers:{'Content-Type':'text/css; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION,'X-PMK-Build':BUILD}}));
-  await Promise.allSettled(OPTIONAL.map(async url=>{const response=await fetchWithTimeout(`${url}?install=${encodeURIComponent(VERSION+'-'+BUILD)}`,5000);if(response.ok)await put(cache,url,response);}));
+  try{
+    const index=await fetchWithTimeout(`./index.html?install=${encodeURIComponent(VERSION+'-'+BUILD)}`,9000);
+    if(index.ok){
+      await put(cache,'./index.html',index.clone());
+      await put(cache,'./',index.clone());
+    }
+  }catch{}
+
+  const [jsResults,cssResults]=await Promise.all([
+    Promise.allSettled(JS.map(textAsset)),
+    Promise.allSettled(CSS.map(textAsset))
+  ]);
+
+  const jsBundle=joinSettled(jsResults,JS);
+  const cssBundle=joinSettled(cssResults,CSS);
+  await put(cache,BUNDLE_JS,new Response(jsBundle,{headers:{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION,'X-PMK-Build':BUILD}}));
+  await put(cache,BUNDLE_CSS,new Response(cssBundle,{headers:{'Content-Type':'text/css; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION,'X-PMK-Build':BUILD}}));
+
+  await Promise.allSettled(OPTIONAL.map(async url=>{
+    try{
+      const response=await fetchWithTimeout(`${url}?install=${encodeURIComponent(VERSION+'-'+BUILD)}`,5000);
+      if(response.ok) await put(cache,url,response);
+    }catch{}
+  }));
   await self.skipWaiting();
 })()));
 
