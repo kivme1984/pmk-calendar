@@ -1,3 +1,3 @@
-// PMK Calendar v82.20.0 - cardfix18 editor next previous navigation
+// PMK Calendar v82.20.0 - cardfix19
 self.importScripts('./sw-special-router-v82.js');
-self.importScripts('./sw-core-v82-48-3.js?v=82.20.0-cardfix18-editor-next-prev');
+self.importScripts('./sw-core-v82-48-3.js?v=82.20.0-cardfix19');
