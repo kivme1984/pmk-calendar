@@ -1,6 +1,6 @@
-// PMK Calendar v82.20.0 - cardfix29 address rebuilt and scroll ok permanent service worker
+// PMK Calendar v82.20.0 - cardfix30 consolidated stable release permanent service worker
 const VERSION='82.20.0';
-const BUILD='cardfix29-address-rebuilt-scroll-ok';
+const BUILD='cardfix30-today-final-stable';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
 const BUNDLE_JS=`./__pmk-app-v82-20-0-${BUILD}.js`;
 const BUNDLE_CSS=`./__pmk-styles-v82-20-0-${BUILD}.css`;
@@ -82,6 +82,7 @@ const JS=`
 ./address-search-clean-v82-20-23.js
 ./form-placeholders-address-strict-v82-20-25.js
 ./turbo-interactions-v82-20-27.js
+./today-final-release-v82-20-30.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -130,7 +131,7 @@ const CSS=`
 ./event-card-approved-v82-20-1.css
 `.trim().split(/\s+/);
 
-const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./pmk-google-auth-config.json','./icons/icon-192.png','./icons/icon-512.png'];
+const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./pmk-google-auth-config.json','./pmk-release.json','./icons/icon-192.png','./icons/icon-512.png'];
 
 function isSpecialNavigate(request){
   if(request.method!=='GET'||request.mode!=='navigate')return false;
@@ -163,6 +164,7 @@ async function textAsset(url){
   if(url.includes('address-search-clean-v82-20-23.js')&&!text.includes('PMK_ADDRESS_SEARCH_CLEAN_DISABLED_V82_20_27'))throw new Error('Не отключён старый адресный цикл');
   if(url.includes('form-placeholders-address-strict-v82-20-25.js')&&!text.includes('PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_29'))throw new Error('Не получен пересобранный адресный блок');
   if(url.includes('turbo-interactions-v82-20-27.js')&&!text.includes('PMK_TURBO_INTERACTIONS_V82_20_28'))throw new Error('Не получен фикс скролла редакторов');
+  if(url.includes('today-final-release-v82-20-30.js')&&!text.includes('PMK_TODAY_FINAL_RELEASE_V82_20_30'))throw new Error('Не получен финальный слой сегодняшнего релиза');
   if(url.includes('v50-editor-nav-safe-v82-20-20.js'))throw new Error('Верхняя навигация отключена');
   if(url.includes('v50-editor-nav-v82-20-18.js'))throw new Error('Проблемный слой навигации отключён');
   if(url.includes('event-card-approved-v82-20-1.css')&&!text.includes('event-card fixes on v82.20.0 base'))throw new Error('Не получены стили карточки v82.20.0');
