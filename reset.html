@@ -14,7 +14,7 @@
 <body>
   <main>
     <h1 id="title">Устанавливаем v82.20.0</h1>
-    <p id="description">Cardfix27: ускорение интерфейса — убраны постоянные таймеры, клики быстрее.</p>
+    <p id="description">Cardfix27: ускорение интерфейса через постоянный рабочий sw.js.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -25,7 +25,7 @@
   <script>
     const VERSION='82.20.0';
     const BUILD='cardfix27-turbo-no-intervals';
-    const SW_FILE='./sw-cardfix27.js';
+    const SW_FILE='./sw.js';
     const params=new URLSearchParams(location.search);
     const stage=params.get('stage')||'1';
     const status=document.getElementById('status');
