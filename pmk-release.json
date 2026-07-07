@@ -1,8 +1,8 @@
 {
   "version": "82.20.0",
-  "label": "Рабочая v82.20.0 — финальный релиз 07.07: форма, адрес, черновики, меню, скорость и скролл",
+  "label": "Рабочая v82.20.0 — финальный релиз 07.07: форма, адрес, черновики, меню, скорость, скролл и устойчивое обновление",
   "testUrl": "./test-v82-20.html",
-  "updateUrl": "./reset.html?release=82-20-0-cardfix30-today-final-stable",
-  "publishedAt": "2026-07-07T12:20:00Z",
-  "buildToken": "cardfix30-today-final-stable-20260707"
+  "updateUrl": "./reset.html?release=82-20-0-cardfix31-robust-install-final",
+  "publishedAt": "2026-07-07T13:55:00Z",
+  "buildToken": "cardfix31-robust-install-final-20260707"
 }
