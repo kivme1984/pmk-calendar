@@ -1,10 +1,12 @@
 'use strict';
 
 (() => {
-  if (globalThis.PMK_HEADER_SEARCH_V82_20_10) return;
+  if (globalThis.PMK_HEADER_SEARCH_V82_20_11) return;
   globalThis.PMK_HEADER_SEARCH_V82_20_8 = true;
   globalThis.PMK_HEADER_SEARCH_V82_20_9 = true;
   globalThis.PMK_HEADER_SEARCH_V82_20_10 = true;
+  globalThis.PMK_HEADER_SEARCH_V82_20_11 = true;
+  globalThis.PMK_BOTTOM_ACTIONS_HEIGHT_LOCK_V82_20_11 = true;
 
   const DRAFT_KEY = 'pmk-form-autodraft-v1';
 
@@ -17,11 +19,12 @@
   }
 
   function injectStyle() {
-    if (document.getElementById('pmkHeaderSearchV82210Styles')) return;
+    if (document.getElementById('pmkHeaderSearchV82211Styles')) return;
     document.getElementById('pmkHeaderSearchV82208Styles')?.remove();
     document.getElementById('pmkHeaderSearchV82209Styles')?.remove();
+    document.getElementById('pmkHeaderSearchV82210Styles')?.remove();
     const style = document.createElement('style');
-    style.id = 'pmkHeaderSearchV82210Styles';
+    style.id = 'pmkHeaderSearchV82211Styles';
     style.textContent = `
       .nav-list .nav-item[data-view="search"]{display:none!important;}
       .nav-list .nav-item[data-view="draft"],
@@ -51,6 +54,66 @@
       .pmk-day-draft-btn-v82-20-9.has-draft{border-color:#f5b800!important;box-shadow:0 0 0 2px rgba(245,184,0,.16),0 8px 20px rgba(0,0,0,.08)!important;}
       .pmk-day-draft-btn-v82-20-9:active{transform:scale(.985)!important;}
       #view-today .page-heading>[data-open-form]{flex:1 1 auto!important;}
+
+      #todayEvents .event-card .event-actions .manage-row,
+      #view-today #todayEvents .event-card .event-actions .manage-row,
+      #view-day #todayEvents .event-card .event-actions .manage-row,
+      .event-card.pmk-approved-card-v82-20-1 .event-actions .manage-row,
+      .event-card.pmk-card-tight-v82-43 .event-actions .manage-row{
+        align-items:stretch!important;
+      }
+      #todayEvents .event-card .event-actions .manage-row > a,
+      #todayEvents .event-card .event-actions .manage-row > button,
+      #todayEvents .event-card .event-actions .manage-row > details,
+      #todayEvents .event-card .event-actions .mini-button,
+      #todayEvents .event-card .event-actions .call-button,
+      #todayEvents .event-card .event-actions .open-button,
+      #todayEvents .event-card .event-actions .menu-button,
+      #todayEvents .event-card .event-actions .card-menu > summary,
+      #view-today #todayEvents .event-card .event-actions .manage-row > a,
+      #view-today #todayEvents .event-card .event-actions .manage-row > button,
+      #view-today #todayEvents .event-card .event-actions .manage-row > details,
+      #view-today #todayEvents .event-card .event-actions .mini-button,
+      #view-today #todayEvents .event-card .event-actions .call-button,
+      #view-today #todayEvents .event-card .event-actions .open-button,
+      #view-today #todayEvents .event-card .event-actions .menu-button,
+      #view-today #todayEvents .event-card .event-actions .card-menu > summary,
+      #view-day #todayEvents .event-card .event-actions .manage-row > a,
+      #view-day #todayEvents .event-card .event-actions .manage-row > button,
+      #view-day #todayEvents .event-card .event-actions .manage-row > details,
+      #view-day #todayEvents .event-card .event-actions .mini-button,
+      #view-day #todayEvents .event-card .event-actions .call-button,
+      #view-day #todayEvents .event-card .event-actions .open-button,
+      #view-day #todayEvents .event-card .event-actions .menu-button,
+      #view-day #todayEvents .event-card .event-actions .card-menu > summary,
+      .event-card.pmk-approved-card-v82-20-1 .event-actions .manage-row > a,
+      .event-card.pmk-approved-card-v82-20-1 .event-actions .manage-row > button,
+      .event-card.pmk-approved-card-v82-20-1 .event-actions .manage-row > details,
+      .event-card.pmk-approved-card-v82-20-1 .event-actions .mini-button,
+      .event-card.pmk-approved-card-v82-20-1 .event-actions .call-button,
+      .event-card.pmk-approved-card-v82-20-1 .event-actions .open-button,
+      .event-card.pmk-approved-card-v82-20-1 .event-actions .menu-button,
+      .event-card.pmk-approved-card-v82-20-1 .event-actions .card-menu > summary,
+      .event-card.pmk-card-tight-v82-43 .event-actions .manage-row > a,
+      .event-card.pmk-card-tight-v82-43 .event-actions .manage-row > button,
+      .event-card.pmk-card-tight-v82-43 .event-actions .manage-row > details,
+      .event-card.pmk-card-tight-v82-43 .event-actions .mini-button,
+      .event-card.pmk-card-tight-v82-43 .event-actions .call-button,
+      .event-card.pmk-card-tight-v82-43 .event-actions .open-button,
+      .event-card.pmk-card-tight-v82-43 .event-actions .menu-button,
+      .event-card.pmk-card-tight-v82-43 .event-actions .card-menu > summary{
+        min-height:36px!important;
+        height:36px!important;
+        max-height:36px!important;
+        padding-top:0!important;
+        padding-bottom:0!important;
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        line-height:1!important;
+        box-sizing:border-box!important;
+      }
+
       @media(max-width:760px){
         .pmk-header-search-v82-20-8{width:30px!important;height:30px!important;min-width:30px!important;margin-left:0!important;font-size:24px!important;}
         .app-header .brand{gap:6px!important;}
