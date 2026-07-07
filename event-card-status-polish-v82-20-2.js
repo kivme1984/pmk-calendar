@@ -17,9 +17,8 @@
     style.id = 'pmkEventCardStatusPolishV82202';
     style.textContent = `
       .event-card.pmk-approved-card-v82-20-1,
-      .event-card.pmk-card-tight-v82-43{
-        position:relative!important;
-      }
+      .event-card.pmk-card-tight-v82-43{position:relative!important;}
+
       .event-card.pmk-status-edge-v82-20-2::before{
         content:""!important;
         position:absolute!important;
@@ -34,7 +33,7 @@
       }
       .event-card.pmk-state-pending-pickup{--pmk-card-status-color:#2d9cdb!important;}
       .event-card.pmk-state-picked-up{--pmk-card-status-color:#f4c430!important;}
-      .event-card.pmk-state-pending-delivery{--pmk-card-status-color:#7b55c7!important;}
+      .event-card.pmk-state-pending-delivery{--pmk-card-status-color:#9b7ae6!important;}
       .event-card.pmk-state-completed{--pmk-card-status-color:#168a4a!important;}
 
       .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46,
@@ -58,41 +57,28 @@
       .event-card.pmk-card-tight-v82-43 .pmk-status-in-date-row-v82-46 .status-action{
         margin:0!important;
         font-weight:900!important;
-        color:#3d4248!important;
+        background:#f1f3f2!important;
+        color:#555b60!important;
+        border-color:#e3e6e4!important;
+        box-shadow:none!important;
       }
-      .event-card .status-action.pmk-status-pending-pickup{background:#dff1ff!important;color:#096aa8!important;border-color:#9fd3fb!important;}
-      .event-card .status-action.pmk-status-picked-up{background:#fff1b8!important;color:#7a5200!important;border-color:#f1ce4f!important;}
-      .event-card .status-action.pmk-status-pending-delivery{background:#e7ddff!important;color:#5b31a8!important;border-color:#bda4f2!important;}
-      .event-card .status-action.pmk-status-completed{background:#dff4e9!important;color:#08733d!important;border-color:#9ad5b2!important;}
-      .event-card .status-action.pmk-current-status{color:#fff!important;box-shadow:0 2px 7px rgba(0,0,0,.12)!important;}
-      .event-card .status-action.pmk-current-status.pmk-status-pending-pickup{background:#2d9cdb!important;border-color:#2d9cdb!important;}
-      .event-card .status-action.pmk-current-status.pmk-status-picked-up{background:#f4c430!important;color:#2b2100!important;border-color:#f4c430!important;}
-      .event-card .status-action.pmk-current-status.pmk-status-pending-delivery{background:#7b55c7!important;border-color:#7b55c7!important;}
-      .event-card .status-action.pmk-current-status.pmk-status-completed{background:#168a4a!important;border-color:#168a4a!important;}
+
+      .event-card .status-action.pmk-current-status{box-shadow:0 2px 7px rgba(0,0,0,.10)!important;}
+      .event-card .status-action.pmk-current-status.pmk-status-pending-pickup{background:#bfe6ff!important;color:#064b78!important;border-color:#7fc8f4!important;}
+      .event-card .status-action.pmk-current-status.pmk-status-picked-up{background:#ffe58a!important;color:#5f4300!important;border-color:#f4c430!important;}
+      .event-card .status-action.pmk-current-status.pmk-status-pending-delivery{background:#cbbcff!important;color:#4b2a86!important;border-color:#a990ee!important;}
+      .event-card .status-action.pmk-current-status.pmk-status-completed{background:#168a4a!important;color:#fff!important;border-color:#168a4a!important;}
 
       .event-card.pmk-approved-card-v82-20-1 .event-time,
-      .event-card.pmk-card-tight-v82-43>.event-time{
-        gap:1px!important;
-      }
+      .event-card.pmk-card-tight-v82-43>.event-time{gap:1px!important;}
       .event-card.pmk-approved-card-v82-20-1 .event-date,
-      .event-card.pmk-card-tight-v82-43 .event-date{
-        margin:0!important;
-        line-height:1.04!important;
-      }
+      .event-card.pmk-card-tight-v82-43 .event-date{margin:0!important;line-height:1.04!important;}
       .event-card.pmk-approved-card-v82-20-1 .event-weekday,
-      .event-card.pmk-card-tight-v82-43 .event-weekday{
-        margin:0 0 -3px!important;
-        line-height:1.02!important;
-      }
+      .event-card.pmk-card-tight-v82-43 .event-weekday{margin:0 0 -3px!important;line-height:1.02!important;}
       .event-card.pmk-approved-card-v82-20-1 .event-time>strong,
-      .event-card.pmk-card-tight-v82-43>.event-time>strong{
-        margin-top:0!important;
-        line-height:1.05!important;
-      }
+      .event-card.pmk-card-tight-v82-43>.event-time>strong{margin-top:0!important;line-height:1.05!important;}
       .event-card.pmk-approved-card-v82-20-1 .event-time>span,
-      .event-card.pmk-card-tight-v82-43>.event-time>span{
-        font-weight:850!important;
-      }
+      .event-card.pmk-card-tight-v82-43>.event-time>span{font-weight:850!important;}
 
       .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
       .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
@@ -104,43 +90,24 @@
       .event-card.pmk-card-tight-v82-43 .primary-card-action,
       .event-card.pmk-card-tight-v82-43 .secondary-card-action,
       .event-card.pmk-card-tight-v82-43 .card-menu summary{
-        min-height:30px!important;
-        height:30px!important;
-        max-height:30px!important;
-      }
-      @media(min-width:761px){
-        .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
-        .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
-        .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
-        .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
-        .event-card.pmk-approved-card-v82-20-1 .card-menu>summary,
-        .event-card.pmk-card-tight-v82-43 .mini-button,
-        .event-card.pmk-card-tight-v82-43 .menu-button,
-        .event-card.pmk-card-tight-v82-43 .primary-card-action,
-        .event-card.pmk-card-tight-v82-43 .secondary-card-action,
-        .event-card.pmk-card-tight-v82-43 .card-menu summary{
-          min-height:32px!important;
-          height:32px!important;
-          max-height:32px!important;
-        }
+        min-height:34px!important;
+        height:34px!important;
+        max-height:34px!important;
       }
     `;
     document.head.appendChild(style);
   }
 
   function cardStatus(card) {
-    const classes = [...card.classList];
-    const fromClass = classes.find(name => name.startsWith('status-'));
+    const fromClass = [...card.classList].find(name => name.startsWith('status-'));
     if (fromClass) return fromClass.replace(/^status-/, '');
     const current = card.querySelector('.status-action.active,.status-action.is-active,.status-action[aria-pressed="true"]');
-    const text = current?.textContent || '';
-    const found = STATUS_BY_TEXT.find(([, rx]) => rx.test(text));
+    const found = STATUS_BY_TEXT.find(([, rx]) => rx.test(current?.textContent || ''));
     return found?.[0] || '';
   }
 
   function buttonStatus(button) {
-    const value = button.textContent || '';
-    return STATUS_BY_TEXT.find(([, rx]) => rx.test(value))?.[0] || '';
+    return STATUS_BY_TEXT.find(([, rx]) => rx.test(button.textContent || ''))?.[0] || '';
   }
 
   function applyCard(card) {
@@ -158,23 +125,31 @@
     });
   }
 
+  let scheduled = false;
   function applyAll() {
+    scheduled = false;
     injectStyle();
     document.querySelectorAll('.event-card').forEach(applyCard);
   }
+  function scheduleApply(delay = 80) {
+    if (scheduled) return;
+    scheduled = true;
+    setTimeout(applyAll, delay);
+  }
 
   document.addEventListener('click', event => {
-    if (event.target.closest('.status-action')) setTimeout(applyAll, 120);
+    if (event.target.closest('.status-action')) scheduleApply(140);
   }, true);
 
   function boot() {
-    applyAll();
+    injectStyle();
+    scheduleApply(0);
     const root = document.querySelector('#todayEvents') || document.querySelector('.main-content') || document.body;
     new MutationObserver(mutations => {
       if (!mutations.some(mutation => [...mutation.addedNodes].some(node => node.nodeType === 1 && (node.matches?.('.event-card') || node.querySelector?.('.event-card'))))) return;
-      requestAnimationFrame(applyAll);
+      scheduleApply(120);
     }).observe(root, { childList: true, subtree: true });
-    ['pmk-calendar-sync-done', 'pmk-calendar-sync-error', 'popstate'].forEach(name => window.addEventListener(name, applyAll));
+    ['pmk-calendar-sync-done', 'pmk-calendar-sync-error', 'popstate'].forEach(name => window.addEventListener(name, () => scheduleApply(120)));
   }
 
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot, { once: true }) : boot();
