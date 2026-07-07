@@ -1,7 +1,8 @@
 const VERSION='82.20.0';
-const CACHE=`pmk-calendar-v${VERSION}-cardfix1`;
-const BUNDLE_JS='./__pmk-app-v82-20-0-cardfix1.js';
-const BUNDLE_CSS='./__pmk-styles-v82-20-0-cardfix1.css';
+const BUILD='cardfix2-real-status-gap';
+const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
+const BUNDLE_JS=`./__pmk-app-v82-20-0-${BUILD}.js`;
+const BUNDLE_CSS=`./__pmk-styles-v82-20-0-${BUILD}.css`;
 
 const JS=`
 ./app.js
@@ -128,14 +129,15 @@ function fetchWithTimeout(url,timeout=12000){
 }
 
 async function textAsset(url){
-  const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION)}`);
+  const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION+'-'+BUILD)}`);
   if(!response.ok)throw new Error(`${url}: ${response.status}`);
   const text=await response.text();
   if(url.includes('version-guard-v82.js')&&(!text.includes("const VERSION = '82'")||!text.includes("const RELEASE = '82.20.0'")))throw new Error('Неверный контрольный файл v82.20.0');
   if(url.includes('event-cloud-indicators-v82-19.js')&&!text.includes('PMK_EVENT_CLOUD_INDICATORS_V82_19'))throw new Error('Не получены облачные индикаторы v82.20.0');
   if(url.includes('workflow-ui-cleanup-v82-19-2.js')&&!text.includes('PMK_WORKFLOW_UI_CLEANUP_V82_19_2'))throw new Error('Не получено исправление интерфейса v82.20.0');
   if(url.includes('persistent-google-auth-v82-20.js')&&!text.includes('PMK_PERSISTENT_GOOGLE_AUTH_V82_20'))throw new Error('Не получен модуль постоянного входа Google v82.20.0');
-  if(url.includes('event-card-approved-v82-20-1.js')&&!text.includes('PMK_EVENT_CARD_APPROVED_V82_20_1'))throw new Error('Не получены правки карточки v82.20.0');
+  if(url.includes('status-left-column-v82-2.js')&&!text.includes('gap:2px!important;row-gap:2px'))throw new Error('Не получен настоящий gap 2px для статусов');
+  if(url.includes('event-card-approved-v82-20-1.js')&&!text.includes('pmkEventCardFinalCompactV82201'))throw new Error('Не получен финальный слой кнопок карточки');
   if(url.includes('event-card-approved-v82-20-1.css')&&!text.includes('event-card fixes on v82.20.0 base'))throw new Error('Не получены стили карточки v82.20.0');
   return text;
 }
@@ -146,7 +148,7 @@ async function put(cache,key,response){
 
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   const cache=await caches.open(CACHE);
-  const index=await fetchWithTimeout(`./index.html?install=${encodeURIComponent(VERSION)}`);
+  const index=await fetchWithTimeout(`./index.html?install=${encodeURIComponent(VERSION+'-'+BUILD)}`);
   if(!index.ok)throw new Error(`index.html: ${index.status}`);
   await put(cache,'./index.html',index.clone());
   await put(cache,'./',index.clone());
@@ -154,10 +156,10 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
     Promise.all(JS.map(textAsset)),
     Promise.all(CSS.map(textAsset)),
   ]);
-  await put(cache,BUNDLE_JS,new Response(js.join('\n\n'),{headers:{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION}}));
-  await put(cache,BUNDLE_CSS,new Response(css.join('\n\n'),{headers:{'Content-Type':'text/css; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION}}));
+  await put(cache,BUNDLE_JS,new Response(js.join('\n\n'),{headers:{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION,'X-PMK-Build':BUILD}}));
+  await put(cache,BUNDLE_CSS,new Response(css.join('\n\n'),{headers:{'Content-Type':'text/css; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION,'X-PMK-Build':BUILD}}));
   await Promise.allSettled(OPTIONAL.map(async url=>{
-    const response=await fetchWithTimeout(`${url}?install=${encodeURIComponent(VERSION)}`,5000);
+    const response=await fetchWithTimeout(`${url}?install=${encodeURIComponent(VERSION+'-'+BUILD)}`,5000);
     if(response.ok)await put(cache,url,response);
   }));
   await self.skipWaiting();
