@@ -1,6 +1,6 @@
-// PMK Calendar v82.20.0 - cardfix24 address search single title standalone service worker
+// PMK Calendar v82.20.0 - cardfix25 address strict and empty placeholders standalone service worker
 const VERSION='82.20.0';
-const BUILD='cardfix24-address-search-single-title';
+const BUILD='cardfix25-address-placeholders-empty';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
 const BUNDLE_JS=`./__pmk-app-v82-20-0-${BUILD}.js`;
 const BUNDLE_CSS=`./__pmk-styles-v82-20-0-${BUILD}.css`;
@@ -80,6 +80,7 @@ const JS=`
 ./v50-editor-nav-bottom-v82-20-21.js
 ./form-title-cancel-row-v82-20-22.js
 ./address-search-clean-v82-20-23.js
+./form-placeholders-address-strict-v82-20-25.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -159,6 +160,7 @@ async function textAsset(url){
   if(url.includes('v50-editor-nav-bottom-v82-20-21.js')&&!text.includes('PMK_V50_EDITOR_NAV_BOTTOM_COMPACT_V82_20_21'))throw new Error('Не получена нижняя компактная навигация разделов');
   if(url.includes('form-title-cancel-row-v82-20-22.js')&&!text.includes('PMK_FORM_TITLE_CANCEL_ROW_V82_20_22'))throw new Error('Не получена строка заголовок + отмена');
   if(url.includes('address-search-clean-v82-20-23.js')&&!text.includes('PMK_ADDRESS_SEARCH_CLEAN_STRICT_V82_20_24'))throw new Error('Не получен адресный блок без дубля подписи');
+  if(url.includes('form-placeholders-address-strict-v82-20-25.js')&&!text.includes('PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_25'))throw new Error('Не получен строгий фикс адреса и placeholder');
   if(url.includes('v50-editor-nav-safe-v82-20-20.js'))throw new Error('Верхняя навигация отключена');
   if(url.includes('v50-editor-nav-v82-20-18.js'))throw new Error('Проблемный слой навигации отключён');
   if(url.includes('event-card-approved-v82-20-1.css')&&!text.includes('event-card fixes on v82.20.0 base'))throw new Error('Не получены стили карточки v82.20.0');
