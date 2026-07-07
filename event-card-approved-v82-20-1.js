@@ -13,6 +13,73 @@
     return card?.querySelector?.('.event-quick-badges .rug-badge')?.textContent?.replace(/^▦\s*/, '').trim() || 'Ковры не указаны';
   }
 
+  function patchRenderEventCardOnce() {
+    if (typeof renderEventCard !== 'function' || renderEventCard.__pmkStableV82206) return;
+    const originalRenderEventCard = renderEventCard;
+    renderEventCard = function renderEventCardStableV82206(event) {
+      const rendered = originalRenderEventCard(event);
+      try {
+        const template = document.createElement('template');
+        template.innerHTML = rendered.trim();
+        const card = template.content.querySelector('.event-card');
+        if (!card) return rendered;
+        const data = metaFor(event);
+        const status = typeof statusInfo === 'function' ? statusInfo(data.requestStatus, data.visitType) : { className: data.requestStatus || 'pending-pickup' };
+        const id = event?.id || card.dataset.eventCard || '';
+
+        card.classList.add('pmk-card-tight-v82-43', 'pmk-approved-card-v82-20-1', 'pmk-status-edge-v82-20-2');
+        ['pending-pickup','picked-up','pending-delivery','completed'].forEach(name => card.classList.remove(`pmk-state-${name}`));
+        if (status?.className) card.classList.add(`pmk-state-${status.className}`);
+
+        const header = card.querySelector('.event-card-header');
+        const contract = header?.querySelector('.contract-control');
+        if (header && contract && !header.querySelector('.pmk-rug-inline-badge')) {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'pmk-rug-inline-badge';
+          chip.dataset.rugEvent = id;
+          chip.title = 'Открыть информацию о коврах';
+          chip.textContent = rugTextFor(data, card);
+          contract.insertAdjacentElement('afterend', chip);
+        }
+
+        const time = card.querySelector('.event-time');
+        const actions = card.querySelector('.event-actions');
+        const statusRow = card.querySelector('.status-row');
+        if (time && statusRow && statusRow.parentElement !== time) {
+          statusRow.classList.add('pmk-status-in-date-row-v82-46');
+          time.appendChild(statusRow);
+        }
+        actions?.querySelector('.status-row')?.remove();
+
+        card.querySelectorAll('.status-action').forEach(button => {
+          const key = button.dataset.status || '';
+          if (key) button.classList.add(`pmk-status-${key}`);
+          button.classList.toggle('pmk-current-status', key && key === data.requestStatus);
+        });
+
+        const menu = card.querySelector('.card-menu-popover');
+        if (menu && !menu.querySelector('.pmk-share-event')) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'pmk-share-event';
+          button.dataset.shareEvent = id;
+          button.textContent = 'Поделиться';
+          const danger = menu.querySelector('.danger-menu-item');
+          if (danger) menu.insertBefore(button, danger);
+          else menu.appendChild(button);
+        }
+
+        return template.innerHTML;
+      } catch {
+        return rendered;
+      }
+    };
+    renderEventCard.__pmkStableV82206 = true;
+  }
+
+  patchRenderEventCardOnce();
+
   const decorated = new WeakSet();
   let scheduled = false;
 
@@ -27,7 +94,7 @@
       #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46,
       .event-card.pmk-approved-card-v82-20-1 .event-time>.status-row,
       .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46{
-        gap:2px!important;
+        gap:4px!important;
       }
       #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
       #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
@@ -44,30 +111,9 @@
       .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
       .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
       .event-card.pmk-approved-card-v82-20-1 .card-menu>summary{
-        min-height:28px!important;
-        height:28px!important;
-        max-height:28px!important;
-      }
-      @media(max-width:760px){
-        #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
-        #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
-        #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
-        #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
-        #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
-        #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
-        #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
-        #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
-        #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .card-menu>summary,
-        #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .card-menu>summary,
-        .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
-        .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
-        .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
-        .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
-        .event-card.pmk-approved-card-v82-20-1 .card-menu>summary{
-          min-height:26px!important;
-          height:26px!important;
-          max-height:26px!important;
-        }
+        min-height:34px!important;
+        height:34px!important;
+        max-height:34px!important;
       }
     `;
     document.head.appendChild(style);
@@ -152,18 +198,14 @@
     const data = event ? metaFor(event) : {};
     const header = card.querySelector('.event-card-header');
     const contract = header?.querySelector('.contract-control');
-    if (!header || !contract) return;
-    let chip = header.querySelector('.pmk-rug-inline-badge');
-    if (!chip) {
-      chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'pmk-rug-inline-badge';
-      chip.dataset.rugEvent = eventId;
-      contract.insertAdjacentElement('afterend', chip);
-    }
+    if (!header || !contract || header.querySelector('.pmk-rug-inline-badge')) return;
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'pmk-rug-inline-badge';
+    chip.dataset.rugEvent = eventId;
     chip.textContent = rugTextFor(data, card);
     chip.title = 'Открыть информацию о коврах';
-    chip.dataset.rugEvent = eventId;
+    contract.insertAdjacentElement('afterend', chip);
   }
 
   function addShareToMenu(card) {
@@ -217,6 +259,7 @@
   }, true);
 
   function boot() {
+    patchRenderEventCardOnce();
     injectFinalStyle();
     scheduleApply(0);
     const root = document.querySelector('#todayEvents') || document.querySelector('.main-content') || document.body;
