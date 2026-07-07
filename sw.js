@@ -1,6 +1,6 @@
-// PMK Calendar v82.20.0 - cardfix27 turbo permanent service worker
+// PMK Calendar v82.20.0 - cardfix28 scroll restored permanent service worker
 const VERSION='82.20.0';
-const BUILD='cardfix27-turbo-no-intervals';
+const BUILD='cardfix28-editor-scroll-restored';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
 const BUNDLE_JS=`./__pmk-app-v82-20-0-${BUILD}.js`;
 const BUNDLE_CSS=`./__pmk-styles-v82-20-0-${BUILD}.css`;
@@ -162,7 +162,7 @@ async function textAsset(url){
   if(url.includes('form-title-cancel-row-v82-20-22.js')&&!text.includes('PMK_FORM_TITLE_CANCEL_ROW_V82_20_22'))throw new Error('Не получена строка заголовок + отмена');
   if(url.includes('address-search-clean-v82-20-23.js')&&!text.includes('PMK_ADDRESS_SEARCH_CLEAN_DISABLED_V82_20_27'))throw new Error('Не отключён старый адресный цикл');
   if(url.includes('form-placeholders-address-strict-v82-20-25.js')&&!text.includes('PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_27'))throw new Error('Не получен быстрый фикс адреса без таймера');
-  if(url.includes('turbo-interactions-v82-20-27.js')&&!text.includes('PMK_TURBO_INTERACTIONS_V82_20_27'))throw new Error('Не получен turbo-слой интерфейса');
+  if(url.includes('turbo-interactions-v82-20-27.js')&&!text.includes('PMK_TURBO_INTERACTIONS_V82_20_28'))throw new Error('Не получен фикс скролла редакторов');
   if(url.includes('v50-editor-nav-safe-v82-20-20.js'))throw new Error('Верхняя навигация отключена');
   if(url.includes('v50-editor-nav-v82-20-18.js'))throw new Error('Проблемный слой навигации отключён');
   if(url.includes('event-card-approved-v82-20-1.css')&&!text.includes('event-card fixes on v82.20.0 base'))throw new Error('Не получены стили карточки v82.20.0');
