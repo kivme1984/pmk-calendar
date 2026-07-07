@@ -14,7 +14,7 @@
 <body>
   <main>
     <h1 id="title">Устанавливаем v82.20.0</h1>
-    <p id="description">Cardfix28: восстановлен скролл внутри разделов заявки, turbo оставлен без блокировки редактора.</p>
+    <p id="description">Cardfix29: адресный автопоиск пересобран без дублей, скролл разделов сохранён.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -24,7 +24,7 @@
   </main>
   <script>
     const VERSION='82.20.0';
-    const BUILD='cardfix28-editor-scroll-restored';
+    const BUILD='cardfix29-address-rebuilt-scroll-ok';
     const SW_FILE='./sw.js';
     const params=new URLSearchParams(location.search);
     const stage=params.get('stage')||'1';
@@ -62,7 +62,7 @@
         }
         status.textContent='Проверяем свежие файлы v82.20.0 / '+BUILD+'...';
         await clearWorkersAndCaches();
-        await check(SW_FILE,"const BUILD='cardfix28-editor-scroll-restored'");
+        await check(SW_FILE,"const BUILD='cardfix29-address-rebuilt-scroll-ok'");
         await check('./pmk-google-auth-config.json','Постоянный вход Google');
         await check('./version.json','cardfix12-draft-counter-working');
         await check('./status-left-column-v82-2.js','PMK_STATUS_LEFT_NO_JUMP_V82_20_7');
@@ -74,10 +74,10 @@
         await check('./v50-editor-nav-bottom-v82-20-21.js','PMK_V50_EDITOR_NAV_BOTTOM_COMPACT_V82_20_21');
         await check('./form-title-cancel-row-v82-20-22.js','PMK_FORM_TITLE_CANCEL_ROW_V82_20_22');
         await check('./address-search-clean-v82-20-23.js','PMK_ADDRESS_SEARCH_CLEAN_DISABLED_V82_20_27');
-        await check('./form-placeholders-address-strict-v82-20-25.js','PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_27');
+        await check('./form-placeholders-address-strict-v82-20-25.js','PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_29');
         await check('./turbo-interactions-v82-20-27.js','PMK_TURBO_INTERACTIONS_V82_20_28');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
-        status.textContent='Ставим свежий service worker cardfix28...';
+        status.textContent='Ставим свежий service worker cardfix29...';
         const reg=await navigator.serviceWorker.register(SW_FILE,{scope:'./',updateViaCache:'none'});
         await reg.update();
         status.textContent='Готово. Открываем приложение...';
