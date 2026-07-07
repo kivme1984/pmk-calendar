@@ -4,13 +4,6 @@
   if (globalThis.PMK_EVENT_CARD_STATUS_POLISH_V82_20_2) return;
   globalThis.PMK_EVENT_CARD_STATUS_POLISH_V82_20_2 = true;
 
-  const STATUS_BY_TEXT = [
-    ['pending-pickup', /ожидает\s*забора/i],
-    ['picked-up', /(забрали|в\s*работе)/i],
-    ['pending-delivery', /ожидает\s*доставки/i],
-    ['completed', /выполнено/i],
-  ];
-
   function injectStyle() {
     if (document.getElementById('pmkEventCardStatusPolishV82202')) return;
     const style = document.createElement('style');
@@ -19,7 +12,11 @@
       .event-card.pmk-approved-card-v82-20-1,
       .event-card.pmk-card-tight-v82-43{position:relative!important;}
 
-      .event-card.pmk-status-edge-v82-20-2::before{
+      .event-card.pmk-status-edge-v82-20-2::before,
+      .event-card.status-pending-pickup::before,
+      .event-card.status-picked-up::before,
+      .event-card.status-pending-delivery::before,
+      .event-card.status-completed::before{
         content:""!important;
         position:absolute!important;
         left:0!important;
@@ -31,10 +28,10 @@
         z-index:3!important;
         pointer-events:none!important;
       }
-      .event-card.pmk-state-pending-pickup{--pmk-card-status-color:#2d9cdb!important;}
-      .event-card.pmk-state-picked-up{--pmk-card-status-color:#f4c430!important;}
-      .event-card.pmk-state-pending-delivery{--pmk-card-status-color:#9b7ae6!important;}
-      .event-card.pmk-state-completed{--pmk-card-status-color:#168a4a!important;}
+      .event-card.status-pending-pickup,.event-card.pmk-state-pending-pickup{--pmk-card-status-color:#2d9cdb!important;}
+      .event-card.status-picked-up,.event-card.pmk-state-picked-up{--pmk-card-status-color:#f4c430!important;}
+      .event-card.status-pending-delivery,.event-card.pmk-state-pending-delivery{--pmk-card-status-color:#9b7ae6!important;}
+      .event-card.status-completed,.event-card.pmk-state-completed{--pmk-card-status-color:#168a4a!important;}
 
       .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46,
       .event-card.pmk-card-tight-v82-43 .pmk-status-in-date-row-v82-46,
@@ -62,11 +59,15 @@
         border-color:#e3e6e4!important;
         box-shadow:none!important;
       }
-
+      .event-card .status-action.active,
       .event-card .status-action.pmk-current-status{box-shadow:0 2px 7px rgba(0,0,0,.10)!important;}
+      .event-card .status-action.active.status-pending-pickup,
       .event-card .status-action.pmk-current-status.pmk-status-pending-pickup{background:#bfe6ff!important;color:#064b78!important;border-color:#7fc8f4!important;}
+      .event-card .status-action.active.status-picked-up,
       .event-card .status-action.pmk-current-status.pmk-status-picked-up{background:#ffe58a!important;color:#5f4300!important;border-color:#f4c430!important;}
+      .event-card .status-action.active.status-pending-delivery,
       .event-card .status-action.pmk-current-status.pmk-status-pending-delivery{background:#cbbcff!important;color:#4b2a86!important;border-color:#a990ee!important;}
+      .event-card .status-action.active.status-completed,
       .event-card .status-action.pmk-current-status.pmk-status-completed{background:#168a4a!important;color:#fff!important;border-color:#168a4a!important;}
 
       .event-card.pmk-approved-card-v82-20-1 .event-time,
@@ -98,59 +99,7 @@
     document.head.appendChild(style);
   }
 
-  function cardStatus(card) {
-    const fromClass = [...card.classList].find(name => name.startsWith('status-'));
-    if (fromClass) return fromClass.replace(/^status-/, '');
-    const current = card.querySelector('.status-action.active,.status-action.is-active,.status-action[aria-pressed="true"]');
-    const found = STATUS_BY_TEXT.find(([, rx]) => rx.test(current?.textContent || ''));
-    return found?.[0] || '';
-  }
-
-  function buttonStatus(button) {
-    return STATUS_BY_TEXT.find(([, rx]) => rx.test(button.textContent || ''))?.[0] || '';
-  }
-
-  function applyCard(card) {
-    if (!card || card.closest('#weekEvents')) return;
-    const current = cardStatus(card);
-    card.classList.add('pmk-status-edge-v82-20-2');
-    card.classList.remove('pmk-state-pending-pickup','pmk-state-picked-up','pmk-state-pending-delivery','pmk-state-completed');
-    if (current) card.classList.add(`pmk-state-${current}`);
-    card.querySelectorAll('.status-action').forEach(button => {
-      const key = buttonStatus(button);
-      button.classList.remove('pmk-status-pending-pickup','pmk-status-picked-up','pmk-status-pending-delivery','pmk-status-completed','pmk-current-status');
-      if (!key) return;
-      button.classList.add(`pmk-status-${key}`);
-      if (key === current) button.classList.add('pmk-current-status');
-    });
-  }
-
-  let scheduled = false;
-  function applyAll() {
-    scheduled = false;
-    injectStyle();
-    document.querySelectorAll('.event-card').forEach(applyCard);
-  }
-  function scheduleApply(delay = 80) {
-    if (scheduled) return;
-    scheduled = true;
-    setTimeout(applyAll, delay);
-  }
-
-  document.addEventListener('click', event => {
-    if (event.target.closest('.status-action')) scheduleApply(140);
-  }, true);
-
-  function boot() {
-    injectStyle();
-    scheduleApply(0);
-    const root = document.querySelector('#todayEvents') || document.querySelector('.main-content') || document.body;
-    new MutationObserver(mutations => {
-      if (!mutations.some(mutation => [...mutation.addedNodes].some(node => node.nodeType === 1 && (node.matches?.('.event-card') || node.querySelector?.('.event-card'))))) return;
-      scheduleApply(120);
-    }).observe(root, { childList: true, subtree: true });
-    ['pmk-calendar-sync-done', 'pmk-calendar-sync-error', 'popstate'].forEach(name => window.addEventListener(name, () => scheduleApply(120)));
-  }
-
-  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot, { once: true }) : boot();
+  document.readyState === 'loading'
+    ? document.addEventListener('DOMContentLoaded', injectStyle, { once: true })
+    : injectStyle();
 })();
