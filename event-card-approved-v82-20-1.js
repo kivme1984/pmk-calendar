@@ -16,6 +16,63 @@
   const decorated = new WeakSet();
   let scheduled = false;
 
+  function injectFinalStyle() {
+    if (document.getElementById('pmkEventCardFinalCompactV82201')) return;
+    const style = document.createElement('style');
+    style.id = 'pmkEventCardFinalCompactV82201';
+    style.textContent = `
+      #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .event-time>.status-row,
+      #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .event-time>.status-row,
+      #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46,
+      #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46,
+      .event-card.pmk-approved-card-v82-20-1 .event-time>.status-row,
+      .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46{
+        gap:2px!important;
+      }
+      #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
+      #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
+      #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
+      #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
+      #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
+      #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
+      #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
+      #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
+      #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .card-menu>summary,
+      #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .card-menu>summary,
+      .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
+      .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
+      .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
+      .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
+      .event-card.pmk-approved-card-v82-20-1 .card-menu>summary{
+        min-height:28px!important;
+        height:28px!important;
+        max-height:28px!important;
+      }
+      @media(max-width:760px){
+        #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
+        #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
+        #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
+        #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
+        #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
+        #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
+        #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
+        #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
+        #view-today #todayEvents .event-card.pmk-approved-card-v82-20-1 .card-menu>summary,
+        #view-day #todayEvents .event-card.pmk-approved-card-v82-20-1 .card-menu>summary,
+        .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
+        .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
+        .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
+        .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
+        .event-card.pmk-approved-card-v82-20-1 .card-menu>summary{
+          min-height:26px!important;
+          height:26px!important;
+          max-height:26px!important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function ensureDialog(id, className) {
     let dialog = document.getElementById(id);
     if (dialog) return dialog;
@@ -133,6 +190,7 @@
 
   function applyAll() {
     scheduled = false;
+    injectFinalStyle();
     document.querySelectorAll('.event-card:not(.pmk-approved-card-v82-20-1)').forEach(applyCard);
   }
 
@@ -159,6 +217,7 @@
   }, true);
 
   function boot() {
+    injectFinalStyle();
     scheduleApply(0);
     const root = document.querySelector('#todayEvents') || document.querySelector('.main-content') || document.body;
     new MutationObserver(mutations => {
