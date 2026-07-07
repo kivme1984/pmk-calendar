@@ -3,6 +3,7 @@
 (() => {
   if (globalThis.PMK_V50_EDITOR_NAV_BOTTOM_V82_20_21) return;
   globalThis.PMK_V50_EDITOR_NAV_BOTTOM_V82_20_21 = true;
+  globalThis.PMK_V50_EDITOR_NAV_BOTTOM_COMPACT_V82_20_21 = true;
 
   const ORDER = [
     { type: 'client', label: 'Адрес' },
@@ -26,26 +27,26 @@
         display:none!important;
       }
       body.v50-manager-preview .v50-source-section.v50-editor-open{
-        padding-bottom:calc(96px + env(safe-area-inset-bottom))!important;
+        padding-bottom:calc(74px + env(safe-area-inset-bottom))!important;
       }
       .v50-editor-bottom-nav-v82-20-21{
         position:fixed!important;
         left:10px!important;
         right:10px!important;
-        bottom:calc(10px + env(safe-area-inset-bottom))!important;
+        bottom:calc(8px + env(safe-area-inset-bottom))!important;
         z-index:230!important;
         display:grid!important;
-        grid-template-columns:minmax(78px,.75fr) minmax(122px,1.35fr) minmax(78px,.75fr)!important;
-        gap:7px!important;
+        grid-template-columns:minmax(70px,.75fr) minmax(108px,1.35fr) minmax(70px,.75fr)!important;
+        gap:6px!important;
         align-items:stretch!important;
         padding:0!important;
         pointer-events:auto!important;
       }
       .v50-editor-bottom-nav-v82-20-21.only-next{
-        grid-template-columns:minmax(122px,1.35fr) minmax(92px,.8fr)!important;
+        grid-template-columns:minmax(108px,1.35fr) minmax(78px,.8fr)!important;
       }
       .v50-editor-bottom-nav-v82-20-21.only-prev{
-        grid-template-columns:minmax(92px,.8fr) minmax(122px,1.35fr)!important;
+        grid-template-columns:minmax(78px,.8fr) minmax(108px,1.35fr)!important;
       }
       .v50-editor-bottom-nav-v82-20-21 .v50-editor-save{
         position:static!important;
@@ -53,30 +54,30 @@
         right:auto!important;
         bottom:auto!important;
         width:100%!important;
-        min-height:54px!important;
-        height:54px!important;
-        max-height:54px!important;
+        min-height:40px!important;
+        height:40px!important;
+        max-height:40px!important;
         margin:0!important;
-        border-radius:15px!important;
-        font-size:16px!important;
+        border-radius:12px!important;
+        font-size:14px!important;
         font-weight:950!important;
         background:#ffc400!important;
         color:#111!important;
-        box-shadow:0 10px 26px rgba(0,0,0,.18)!important;
+        box-shadow:0 8px 18px rgba(0,0,0,.16)!important;
       }
       .v50-editor-bottom-step-v82-20-21{
         width:100%!important;
-        min-height:54px!important;
-        height:54px!important;
-        max-height:54px!important;
-        padding:0 8px!important;
-        border-radius:15px!important;
+        min-height:40px!important;
+        height:40px!important;
+        max-height:40px!important;
+        padding:0 7px!important;
+        border-radius:12px!important;
         border:1px solid rgba(0,0,0,.13)!important;
         background:#fff!important;
         color:#111!important;
-        box-shadow:0 10px 26px rgba(0,0,0,.12)!important;
+        box-shadow:0 8px 18px rgba(0,0,0,.10)!important;
         font:inherit!important;
-        font-size:14px!important;
+        font-size:12px!important;
         font-weight:950!important;
         line-height:1!important;
         white-space:nowrap!important;
@@ -98,20 +99,20 @@
         .v50-editor-bottom-nav-v82-20-21{
           left:8px!important;
           right:8px!important;
-          bottom:calc(8px + env(safe-area-inset-bottom))!important;
-          gap:6px!important;
-          grid-template-columns:minmax(68px,.72fr) minmax(108px,1.35fr) minmax(68px,.72fr)!important;
+          bottom:calc(7px + env(safe-area-inset-bottom))!important;
+          gap:5px!important;
+          grid-template-columns:minmax(60px,.72fr) minmax(98px,1.35fr) minmax(60px,.72fr)!important;
         }
-        .v50-editor-bottom-nav-v82-20-21.only-next{grid-template-columns:minmax(118px,1.35fr) minmax(78px,.8fr)!important;}
-        .v50-editor-bottom-nav-v82-20-21.only-prev{grid-template-columns:minmax(78px,.8fr) minmax(118px,1.35fr)!important;}
+        .v50-editor-bottom-nav-v82-20-21.only-next{grid-template-columns:minmax(104px,1.35fr) minmax(68px,.8fr)!important;}
+        .v50-editor-bottom-nav-v82-20-21.only-prev{grid-template-columns:minmax(68px,.8fr) minmax(104px,1.35fr)!important;}
         .v50-editor-bottom-nav-v82-20-21 .v50-editor-save,
         .v50-editor-bottom-step-v82-20-21{
-          min-height:52px!important;
-          height:52px!important;
-          max-height:52px!important;
-          border-radius:14px!important;
-          font-size:12.5px!important;
-          padding:0 6px!important;
+          min-height:39px!important;
+          height:39px!important;
+          max-height:39px!important;
+          border-radius:11px!important;
+          font-size:11.2px!important;
+          padding:0 5px!important;
         }
       }
     `;
