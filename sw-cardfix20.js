@@ -1,6 +1,6 @@
-// PMK Calendar v82.20.0 - cardfix20 standalone service worker
+// PMK Calendar v82.20.0 - cardfix21 bottom compact navigation standalone service worker
 const VERSION='82.20.0';
-const BUILD='cardfix20-safe-editor-navigation';
+const BUILD='cardfix21-bottom-compact-navigation';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
 const BUNDLE_JS=`./__pmk-app-v82-20-0-${BUILD}.js`;
 const BUNDLE_CSS=`./__pmk-styles-v82-20-0-${BUILD}.css`;
@@ -77,7 +77,7 @@ const JS=`
 ./header-search-v82-20-8.js
 ./smart-paste-compact-v82-20-13.js
 ./v50-preview-compact-fix-v82-20-16.js
-./v50-editor-nav-safe-v82-20-20.js
+./v50-editor-nav-bottom-v82-20-21.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -154,7 +154,8 @@ async function textAsset(url){
   if(url.includes('header-search-v82-20-8.js')&&!text.includes('PMK_DRAFT_COUNTER_V82_20_12'))throw new Error('Не получен счётчик черновиков');
   if(url.includes('smart-paste-compact-v82-20-13.js')&&!text.includes('PMK_SMART_PASTE_COMPACT_V82_20_13'))throw new Error('Не получен компактный блок быстрой вставки');
   if(url.includes('v50-preview-compact-fix-v82-20-16.js')&&!text.includes('PMK_V50_PREVIEW_COMPACT_FIX_V82_20_16'))throw new Error('Не получено исправление предпросмотра v50');
-  if(url.includes('v50-editor-nav-safe-v82-20-20.js')&&!text.includes('PMK_V50_EDITOR_NAV_SAFE_V82_20_20'))throw new Error('Не получена безопасная навигация разделов');
+  if(url.includes('v50-editor-nav-bottom-v82-20-21.js')&&!text.includes('PMK_V50_EDITOR_NAV_BOTTOM_COMPACT_V82_20_21'))throw new Error('Не получена нижняя компактная навигация разделов');
+  if(url.includes('v50-editor-nav-safe-v82-20-20.js'))throw new Error('Верхняя навигация отключена');
   if(url.includes('v50-editor-nav-v82-20-18.js'))throw new Error('Проблемный слой навигации отключён');
   if(url.includes('event-card-approved-v82-20-1.css')&&!text.includes('event-card fixes on v82.20.0 base'))throw new Error('Не получены стили карточки v82.20.0');
   return text;
