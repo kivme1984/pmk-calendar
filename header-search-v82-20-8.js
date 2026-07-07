@@ -1,30 +1,35 @@
 'use strict';
 
 (() => {
-  if (globalThis.PMK_HEADER_SEARCH_V82_20_11) return;
+  if (globalThis.PMK_HEADER_SEARCH_V82_20_12) return;
   globalThis.PMK_HEADER_SEARCH_V82_20_8 = true;
   globalThis.PMK_HEADER_SEARCH_V82_20_9 = true;
   globalThis.PMK_HEADER_SEARCH_V82_20_10 = true;
   globalThis.PMK_HEADER_SEARCH_V82_20_11 = true;
+  globalThis.PMK_HEADER_SEARCH_V82_20_12 = true;
   globalThis.PMK_BOTTOM_ACTIONS_HEIGHT_LOCK_V82_20_11 = true;
+  globalThis.PMK_DRAFT_COUNTER_V82_20_12 = true;
 
   const DRAFT_KEY = 'pmk-form-autodraft-v1';
 
-  function hasDraft() {
+  function draftCount() {
     try {
-      if (typeof pmkDraftRead === 'function') return !!pmkDraftRead();
+      if (typeof pmkDraftRead === 'function') return pmkDraftRead() ? 1 : 0;
       const value = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-      return !!(value?.data && Date.now() - value.savedAt < 604800000);
-    } catch { return false; }
+      return value?.data && Date.now() - value.savedAt < 604800000 ? 1 : 0;
+    } catch { return 0; }
   }
 
+  function hasDraft() { return draftCount() > 0; }
+
   function injectStyle() {
-    if (document.getElementById('pmkHeaderSearchV82211Styles')) return;
+    if (document.getElementById('pmkHeaderSearchV82212Styles')) return;
     document.getElementById('pmkHeaderSearchV82208Styles')?.remove();
     document.getElementById('pmkHeaderSearchV82209Styles')?.remove();
     document.getElementById('pmkHeaderSearchV82210Styles')?.remove();
+    document.getElementById('pmkHeaderSearchV82211Styles')?.remove();
     const style = document.createElement('style');
-    style.id = 'pmkHeaderSearchV82211Styles';
+    style.id = 'pmkHeaderSearchV82212Styles';
     style.textContent = `
       .nav-list .nav-item[data-view="search"]{display:none!important;}
       .nav-list .nav-item[data-view="draft"],
@@ -46,72 +51,29 @@
 
       .pmk-day-heading-actions-v82-20-9{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;flex-wrap:nowrap!important;}
       .pmk-day-draft-btn-v82-20-9{
-        min-height:54px!important;height:54px!important;padding:0 18px!important;border:1px solid rgba(17,17,17,.12)!important;
+        min-height:54px!important;height:54px!important;padding:0 14px!important;border:1px solid rgba(17,17,17,.12)!important;
         border-radius:18px!important;background:#fff!important;color:#111!important;font-weight:900!important;font-size:15px!important;
         box-shadow:0 8px 20px rgba(0,0,0,.08)!important;white-space:nowrap!important;
+        display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;
       }
-      .pmk-day-draft-btn-v82-20-9:not(.has-draft){opacity:.58!important;}
+      .pmk-day-draft-btn-v82-20-9:not(.has-draft){opacity:.68!important;}
       .pmk-day-draft-btn-v82-20-9.has-draft{border-color:#f5b800!important;box-shadow:0 0 0 2px rgba(245,184,0,.16),0 8px 20px rgba(0,0,0,.08)!important;}
       .pmk-day-draft-btn-v82-20-9:active{transform:scale(.985)!important;}
+      .pmk-draft-count-v82-20-12{
+        min-width:22px!important;height:22px!important;padding:0 7px!important;border-radius:999px!important;
+        display:inline-flex!important;align-items:center!important;justify-content:center!important;
+        background:#d8d8d8!important;color:#555!important;font-size:13px!important;font-weight:950!important;line-height:1!important;
+      }
+      .pmk-day-draft-btn-v82-20-9.has-draft .pmk-draft-count-v82-20-12{background:#f5b800!important;color:#111!important;}
       #view-today .page-heading>[data-open-form]{flex:1 1 auto!important;}
 
       #todayEvents .event-card .event-actions .manage-row,
       #view-today #todayEvents .event-card .event-actions .manage-row,
       #view-day #todayEvents .event-card .event-actions .manage-row,
       .event-card.pmk-approved-card-v82-20-1 .event-actions .manage-row,
-      .event-card.pmk-card-tight-v82-43 .event-actions .manage-row{
-        align-items:stretch!important;
-      }
-      #todayEvents .event-card .event-actions .manage-row > a,
-      #todayEvents .event-card .event-actions .manage-row > button,
-      #todayEvents .event-card .event-actions .manage-row > details,
-      #todayEvents .event-card .event-actions .mini-button,
-      #todayEvents .event-card .event-actions .call-button,
-      #todayEvents .event-card .event-actions .open-button,
-      #todayEvents .event-card .event-actions .menu-button,
-      #todayEvents .event-card .event-actions .card-menu > summary,
-      #view-today #todayEvents .event-card .event-actions .manage-row > a,
-      #view-today #todayEvents .event-card .event-actions .manage-row > button,
-      #view-today #todayEvents .event-card .event-actions .manage-row > details,
-      #view-today #todayEvents .event-card .event-actions .mini-button,
-      #view-today #todayEvents .event-card .event-actions .call-button,
-      #view-today #todayEvents .event-card .event-actions .open-button,
-      #view-today #todayEvents .event-card .event-actions .menu-button,
-      #view-today #todayEvents .event-card .event-actions .card-menu > summary,
-      #view-day #todayEvents .event-card .event-actions .manage-row > a,
-      #view-day #todayEvents .event-card .event-actions .manage-row > button,
-      #view-day #todayEvents .event-card .event-actions .manage-row > details,
-      #view-day #todayEvents .event-card .event-actions .mini-button,
-      #view-day #todayEvents .event-card .event-actions .call-button,
-      #view-day #todayEvents .event-card .event-actions .open-button,
-      #view-day #todayEvents .event-card .event-actions .menu-button,
-      #view-day #todayEvents .event-card .event-actions .card-menu > summary,
-      .event-card.pmk-approved-card-v82-20-1 .event-actions .manage-row > a,
-      .event-card.pmk-approved-card-v82-20-1 .event-actions .manage-row > button,
-      .event-card.pmk-approved-card-v82-20-1 .event-actions .manage-row > details,
-      .event-card.pmk-approved-card-v82-20-1 .event-actions .mini-button,
-      .event-card.pmk-approved-card-v82-20-1 .event-actions .call-button,
-      .event-card.pmk-approved-card-v82-20-1 .event-actions .open-button,
-      .event-card.pmk-approved-card-v82-20-1 .event-actions .menu-button,
-      .event-card.pmk-approved-card-v82-20-1 .event-actions .card-menu > summary,
-      .event-card.pmk-card-tight-v82-43 .event-actions .manage-row > a,
-      .event-card.pmk-card-tight-v82-43 .event-actions .manage-row > button,
-      .event-card.pmk-card-tight-v82-43 .event-actions .manage-row > details,
-      .event-card.pmk-card-tight-v82-43 .event-actions .mini-button,
-      .event-card.pmk-card-tight-v82-43 .event-actions .call-button,
-      .event-card.pmk-card-tight-v82-43 .event-actions .open-button,
-      .event-card.pmk-card-tight-v82-43 .event-actions .menu-button,
-      .event-card.pmk-card-tight-v82-43 .event-actions .card-menu > summary{
-        min-height:36px!important;
-        height:36px!important;
-        max-height:36px!important;
-        padding-top:0!important;
-        padding-bottom:0!important;
-        display:flex!important;
-        align-items:center!important;
-        justify-content:center!important;
-        line-height:1!important;
-        box-sizing:border-box!important;
+      .event-card.pmk-card-tight-v82-43 .event-actions .manage-row{align-items:stretch!important;}
+      #todayEvents .event-card .event-actions .manage-row > a,#todayEvents .event-card .event-actions .manage-row > button,#todayEvents .event-card .event-actions .manage-row > details,#todayEvents .event-card .event-actions .mini-button,#todayEvents .event-card .event-actions .call-button,#todayEvents .event-card .event-actions .open-button,#todayEvents .event-card .event-actions .menu-button,#todayEvents .event-card .event-actions .card-menu > summary,#view-today #todayEvents .event-card .event-actions .manage-row > a,#view-today #todayEvents .event-card .event-actions .manage-row > button,#view-today #todayEvents .event-card .event-actions .manage-row > details,#view-today #todayEvents .event-card .event-actions .mini-button,#view-today #todayEvents .event-card .event-actions .call-button,#view-today #todayEvents .event-card .event-actions .open-button,#view-today #todayEvents .event-card .event-actions .menu-button,#view-today #todayEvents .event-card .event-actions .card-menu > summary,#view-day #todayEvents .event-card .event-actions .manage-row > a,#view-day #todayEvents .event-card .event-actions .manage-row > button,#view-day #todayEvents .event-card .event-actions .manage-row > details,#view-day #todayEvents .event-card .event-actions .mini-button,#view-day #todayEvents .event-card .event-actions .call-button,#view-day #todayEvents .event-card .event-actions .open-button,#view-day #todayEvents .event-card .event-actions .menu-button,#view-day #todayEvents .event-card .event-actions .card-menu > summary,.event-card.pmk-approved-card-v82-20-1 .event-actions .manage-row > a,.event-card.pmk-approved-card-v82-20-1 .event-actions .manage-row > button,.event-card.pmk-approved-card-v82-20-1 .event-actions .manage-row > details,.event-card.pmk-approved-card-v82-20-1 .event-actions .mini-button,.event-card.pmk-approved-card-v82-20-1 .event-actions .call-button,.event-card.pmk-approved-card-v82-20-1 .event-actions .open-button,.event-card.pmk-approved-card-v82-20-1 .event-actions .menu-button,.event-card.pmk-approved-card-v82-20-1 .event-actions .card-menu > summary,.event-card.pmk-card-tight-v82-43 .event-actions .manage-row > a,.event-card.pmk-card-tight-v82-43 .event-actions .manage-row > button,.event-card.pmk-card-tight-v82-43 .event-actions .manage-row > details,.event-card.pmk-card-tight-v82-43 .event-actions .mini-button,.event-card.pmk-card-tight-v82-43 .event-actions .call-button,.event-card.pmk-card-tight-v82-43 .event-actions .open-button,.event-card.pmk-card-tight-v82-43 .event-actions .menu-button,.event-card.pmk-card-tight-v82-43 .event-actions .card-menu > summary{
+        min-height:36px!important;height:36px!important;max-height:36px!important;padding-top:0!important;padding-bottom:0!important;display:flex!important;align-items:center!important;justify-content:center!important;line-height:1!important;box-sizing:border-box!important;
       }
 
       @media(max-width:760px){
@@ -120,7 +82,8 @@
         #view-today .page-heading{gap:12px!important;}
         .pmk-day-heading-actions-v82-20-9{width:100%!important;gap:8px!important;}
         #view-today .page-heading>.pmk-day-heading-actions-v82-20-9>[data-open-form]{min-width:0!important;flex:1 1 auto!important;}
-        .pmk-day-draft-btn-v82-20-9{height:52px!important;min-height:52px!important;padding:0 13px!important;border-radius:16px!important;font-size:14px!important;}
+        .pmk-day-draft-btn-v82-20-9{height:52px!important;min-height:52px!important;padding:0 12px!important;border-radius:16px!important;font-size:14px!important;gap:7px!important;}
+        .pmk-draft-count-v82-20-12{min-width:21px!important;height:21px!important;font-size:12px!important;padding:0 6px!important;}
       }
     `;
     document.head.appendChild(style);
@@ -143,10 +106,7 @@
 
   function openDrafts() {
     try {
-      if (typeof pmkDraftRestore === 'function') {
-        pmkDraftRestore();
-        return;
-      }
+      if (typeof pmkDraftRestore === 'function') { pmkDraftRestore(); return; }
       const raw = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
       if (!raw?.data) return showToast?.('Черновик не найден.', 'error');
       if (typeof fillForm === 'function') fillForm({ ...raw.data, eventId: '', pmkId: typeof makeId === 'function' ? makeId() : String(Date.now()) });
@@ -162,9 +122,10 @@
   function refreshDraftButton() {
     const button = document.getElementById('pmkDayDraftBtn');
     if (!button) return;
-    const exists = hasDraft();
-    button.classList.toggle('has-draft', exists);
-    button.title = exists ? 'Восстановить незавершённую заявку' : 'Черновиков пока нет';
+    const count = draftCount();
+    button.classList.toggle('has-draft', count > 0);
+    button.title = count > 0 ? `Черновиков: ${count}` : 'Черновиков пока нет';
+    button.innerHTML = `Черновики <span class="pmk-draft-count-v82-20-12" aria-label="${count} черновиков">${count}</span>`;
   }
 
   function mountSearchButton() {
@@ -193,7 +154,6 @@
     draft.type = 'button';
     draft.id = 'pmkDayDraftBtn';
     draft.className = 'pmk-day-draft-btn-v82-20-9';
-    draft.textContent = 'Черновики';
     draft.setAttribute('aria-label', 'Открыть сохранённые черновики');
     wrap.appendChild(draft);
     draft.addEventListener('click', openDrafts);
@@ -205,10 +165,9 @@
     hideDraftMenuItems();
     mountSearchButton();
     mountDraftButton();
-    setInterval(refreshDraftButton, 2500);
+    setInterval(refreshDraftButton, 2000);
+    window.addEventListener('storage', refreshDraftButton);
   }
 
-  document.readyState === 'loading'
-    ? document.addEventListener('DOMContentLoaded', boot, { once: true })
-    : boot();
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot, { once: true }) : boot();
 })();
