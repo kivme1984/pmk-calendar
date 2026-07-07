@@ -14,7 +14,7 @@
 <body>
   <main>
     <h1 id="title">Устанавливаем v82.20.0</h1>
-    <p id="description">Cardfix25: убраны дубли в адресном автопоиске и примеры внутри полей.</p>
+    <p id="description">Cardfix26: в адресном автопоиске один заголовок, лупа по центру поля.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -24,8 +24,8 @@
   </main>
   <script>
     const VERSION='82.20.0';
-    const BUILD='cardfix25-address-placeholders-empty';
-    const SW_FILE='./sw-cardfix25.js';
+    const BUILD='cardfix26-address-single-label-icon-center';
+    const SW_FILE='./sw-cardfix26.js';
     const params=new URLSearchParams(location.search);
     const stage=params.get('stage')||'1';
     const status=document.getElementById('status');
@@ -62,7 +62,7 @@
         }
         status.textContent='Проверяем свежие файлы v82.20.0 / '+BUILD+'...';
         await clearWorkersAndCaches();
-        await check(SW_FILE,"const BUILD='cardfix25-address-placeholders-empty'");
+        await check(SW_FILE,"const BUILD='cardfix26-address-single-label-icon-center'");
         await check('./pmk-google-auth-config.json','Постоянный вход Google');
         await check('./version.json','cardfix12-draft-counter-working');
         await check('./status-left-column-v82-2.js','PMK_STATUS_LEFT_NO_JUMP_V82_20_7');
@@ -73,10 +73,9 @@
         await check('./v50-preview-compact-fix-v82-20-16.js','PMK_V50_PREVIEW_COMPACT_FIX_V82_20_16');
         await check('./v50-editor-nav-bottom-v82-20-21.js','PMK_V50_EDITOR_NAV_BOTTOM_COMPACT_V82_20_21');
         await check('./form-title-cancel-row-v82-20-22.js','PMK_FORM_TITLE_CANCEL_ROW_V82_20_22');
-        await check('./address-search-clean-v82-20-23.js','PMK_ADDRESS_SEARCH_CLEAN_STRICT_V82_20_24');
-        await check('./form-placeholders-address-strict-v82-20-25.js','PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_25');
+        await check('./form-placeholders-address-strict-v82-20-25.js','PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_26');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
-        status.textContent='Ставим свежий service worker cardfix25...';
+        status.textContent='Ставим свежий service worker cardfix26...';
         const reg=await navigator.serviceWorker.register(SW_FILE,{scope:'./',updateViaCache:'none'});
         await reg.update();
         status.textContent='Готово. Открываем приложение...';
