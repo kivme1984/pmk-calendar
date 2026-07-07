@@ -1,5 +1,5 @@
 const VERSION='82.20.0';
-const BUILD='cardfix13-smart-paste-compact';
+const BUILD='cardfix14-form-compact';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
 const BUNDLE_JS=`./__pmk-app-v82-20-0-${BUILD}.js`;
 const BUNDLE_CSS=`./__pmk-styles-v82-20-0-${BUILD}.css`;
@@ -75,6 +75,7 @@ const JS=`
 ./event-card-status-polish-v82-20-2.js
 ./header-search-v82-20-8.js
 ./smart-paste-compact-v82-20-13.js
+./form-compact-v82-20-14.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -144,6 +145,7 @@ async function textAsset(url){
   if(url.includes('event-card-status-polish-v82-20-2.js')&&!text.includes('PMK_SUMMARY_COUNTERS_V82_20_7'))throw new Error('Не получены активные счётчики');
   if(url.includes('header-search-v82-20-8.js')&&!text.includes('PMK_DRAFT_COUNTER_V82_20_12'))throw new Error('Не получен счётчик черновиков');
   if(url.includes('smart-paste-compact-v82-20-13.js')&&!text.includes('PMK_SMART_PASTE_COMPACT_V82_20_13'))throw new Error('Не получен компактный блок быстрой вставки');
+  if(url.includes('form-compact-v82-20-14.js')&&!text.includes('PMK_FORM_COMPACT_V82_20_14'))throw new Error('Не получен компактный слой формы заявки');
   if(url.includes('event-card-approved-v82-20-1.css')&&!text.includes('event-card fixes on v82.20.0 base'))throw new Error('Не получены стили карточки v82.20.0');
   return text;
 }
