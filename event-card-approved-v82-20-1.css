@@ -184,11 +184,13 @@
 
 #view-today #todayEvents .event-card .event-time>.status-row,
 #view-day #todayEvents .event-card .event-time>.status-row,
+.event-card.pmk-card-tight-v82-43.pmk-approved-card-v82-20-1 .event-time>.status-row,
+.event-card.pmk-card-tight-v82-43.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46,
 .event-card.pmk-approved-card-v82-20-1 .event-time>.status-row,
 .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46{
   display:grid!important;
   grid-template-columns:1fr!important;
-  gap:4px!important;
+  gap:2px!important;
   margin:8px 0 0!important;
   padding:0!important;
   width:100%!important;
@@ -213,7 +215,7 @@
 #view-day #todayEvents .event-card>.event-actions,
 .event-card.pmk-approved-card-v82-20-1>.event-actions{
   grid-area:actions!important;
-  padding:0 10px 10px!important;
+  padding:0 10px 8px!important;
   margin-top:0!important;
   gap:4px!important;
 }
@@ -223,6 +225,29 @@
 .event-card.pmk-approved-card-v82-20-1 .manage-row{
   grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px!important;
   gap:6px!important;
+}
+
+#view-today #todayEvents .event-card .manage-row .mini-button,
+#view-day #todayEvents .event-card .manage-row .mini-button,
+#view-today #todayEvents .event-card .manage-row .call-button,
+#view-day #todayEvents .event-card .manage-row .call-button,
+#view-today #todayEvents .event-card .manage-row .open-button,
+#view-day #todayEvents .event-card .manage-row .open-button,
+#view-today #todayEvents .event-card .manage-row .menu-button,
+#view-day #todayEvents .event-card .manage-row .menu-button,
+#view-today #todayEvents .event-card .card-menu>summary,
+#view-day #todayEvents .event-card .card-menu>summary,
+.event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
+.event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
+.event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
+.event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
+.event-card.pmk-approved-card-v82-20-1 .card-menu>summary{
+  min-height:25px!important;
+  height:25px!important;
+  max-height:25px!important;
+  padding-top:0!important;
+  padding-bottom:0!important;
+  border-radius:9px!important;
 }
 
 .pmk-rug-dialog::backdrop{background:rgba(0,0,0,.32)!important}
@@ -269,8 +294,29 @@
   #view-today #todayEvents .event-card .pmk-event-cloud-provider-v82-19,
   #view-day #todayEvents .event-card .pmk-event-cloud-provider-v82-19,
   .event-card.pmk-approved-card-v82-20-1 .pmk-event-cloud-provider-v82-19{width:14px!important;height:17px!important;font-size:12.5px!important}
+  #view-today #todayEvents .event-card .event-time>.status-row,
+  #view-day #todayEvents .event-card .event-time>.status-row,
+  .event-card.pmk-card-tight-v82-43.pmk-approved-card-v82-20-1 .event-time>.status-row,
+  .event-card.pmk-card-tight-v82-43.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46,
+  .event-card.pmk-approved-card-v82-20-1 .event-time>.status-row,
+  .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46{gap:2px!important}
   #view-today #todayEvents .event-card .event-time>.status-row .status-action,
   #view-day #todayEvents .event-card .event-time>.status-row .status-action,
   .event-card.pmk-approved-card-v82-20-1 .event-time>.status-row .status-action,
   .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46 .status-action{min-height:31px!important;height:31px!important;font-size:9px!important}
+  #view-today #todayEvents .event-card .manage-row .mini-button,
+  #view-day #todayEvents .event-card .manage-row .mini-button,
+  #view-today #todayEvents .event-card .manage-row .call-button,
+  #view-day #todayEvents .event-card .manage-row .call-button,
+  #view-today #todayEvents .event-card .manage-row .open-button,
+  #view-day #todayEvents .event-card .manage-row .open-button,
+  #view-today #todayEvents .event-card .manage-row .menu-button,
+  #view-day #todayEvents .event-card .manage-row .menu-button,
+  #view-today #todayEvents .event-card .card-menu>summary,
+  #view-day #todayEvents .event-card .card-menu>summary,
+  .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
+  .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
+  .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
+  .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
+  .event-card.pmk-approved-card-v82-20-1 .card-menu>summary{min-height:23px!important;height:23px!important;max-height:23px!important}
 }
