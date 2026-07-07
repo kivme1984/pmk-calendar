@@ -1,4 +1,5 @@
 'use strict';
+// CSS-only to stop element jumping
 
 (() => {
   if (globalThis.PMK_EVENT_CARD_STATUS_POLISH_V82_20_2) return;
