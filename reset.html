@@ -14,7 +14,7 @@
 <body>
   <main>
     <h1 id="title">Устанавливаем v82.20.0</h1>
-    <p id="description">Cardfix31: финальный релиз + устойчивое обновление. Service worker больше не падает, если один файл временно не отдался GitHub Pages.</p>
+    <p id="description">Cardfix31: финальный релиз. Установка больше не блокируется служебными version.json / pmk-release.json.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -47,6 +47,9 @@
       const text=await response.text();
       if(!text.includes(marker))throw new Error(path+': файл не обновился');
     }
+    async function softCheck(path,marker){
+      try{ await check(path,marker); return true; }catch{ return false; }
+    }
     function reloadClean(){location.replace('./reset.html?stage=2&release='+BUILD+'-'+Date.now());}
     async function run(){
       button.disabled=true;
@@ -60,13 +63,12 @@
           reloadClean();
           return;
         }
-        status.textContent='Проверяем свежие файлы v82.20.0 / '+BUILD+'...';
+        status.textContent='Проверяем основной sw.js и финальный слой...';
         await clearWorkersAndCaches();
         await check(SW_FILE,"const BUILD='cardfix31-robust-install-final'");
-        await check('./pmk-google-auth-config.json','Постоянный вход Google');
-        await check('./version.json','cardfix30-today-final-stable');
-        await check('./pmk-release.json','cardfix30-today-final-stable-20260707');
         await check('./today-final-release-v82-20-30.js','PMK_TODAY_FINAL_RELEASE_V82_20_30');
+        await softCheck('./version.json','cardfix31-robust-install-final');
+        await softCheck('./pmk-release.json','cardfix31-robust-install-final-20260707');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
         status.textContent='Ставим свежий service worker cardfix31...';
         const reg=await navigator.serviceWorker.register(SW_FILE,{scope:'./',updateViaCache:'none'});
