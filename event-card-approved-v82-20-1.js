@@ -13,6 +13,9 @@
     return card?.querySelector?.('.event-quick-badges .rug-badge')?.textContent?.replace(/^▦\s*/, '').trim() || 'Ковры не указаны';
   }
 
+  const decorated = new WeakSet();
+  let scheduled = false;
+
   function ensureDialog(id, className) {
     let dialog = document.getElementById(id);
     if (dialog) return dialog;
@@ -51,7 +54,7 @@
       <div class="details-rug-list">${details}</div>
       <button type="button" class="pmk-dialog-close">Закрыть</button>
     </div>`;
-    dialog.querySelector('.pmk-dialog-close')?.addEventListener('click', () => closeDialog(dialog));
+    dialog.querySelector('.pmk-dialog-close')?.addEventListener('click', () => closeDialog(dialog), { once: true });
     openDialog(dialog);
   }
 
@@ -121,13 +124,23 @@
   }
 
   function applyCard(card) {
-    if (!card || card.closest('#weekEvents')) return;
+    if (!card || decorated.has(card) || card.closest('#weekEvents')) return;
     card.classList.add('pmk-approved-card-v82-20-1');
     addRugChip(card);
     addShareToMenu(card);
+    decorated.add(card);
   }
 
-  function applyAll() { document.querySelectorAll('.event-card').forEach(applyCard); }
+  function applyAll() {
+    scheduled = false;
+    document.querySelectorAll('.event-card:not(.pmk-approved-card-v82-20-1)').forEach(applyCard);
+  }
+
+  function scheduleApply(delay = 80) {
+    if (scheduled) return;
+    scheduled = true;
+    setTimeout(applyAll, delay);
+  }
 
   document.addEventListener('click', event => {
     const rug = event.target.closest('[data-rug-event]');
@@ -146,11 +159,13 @@
   }, true);
 
   function boot() {
-    applyAll();
-    const root = document.querySelector('.main-content') || document.body;
-    const observer = new MutationObserver(() => requestAnimationFrame(applyAll));
-    observer.observe(root, { childList: true, subtree: true });
-    ['pmk-calendar-sync-done', 'pmk-calendar-sync-error', 'resize', 'popstate'].forEach(name => window.addEventListener(name, applyAll));
+    scheduleApply(0);
+    const root = document.querySelector('#todayEvents') || document.querySelector('.main-content') || document.body;
+    new MutationObserver(mutations => {
+      if (!mutations.some(mutation => [...mutation.addedNodes].some(node => node.nodeType === 1 && (node.matches?.('.event-card') || node.querySelector?.('.event-card'))))) return;
+      scheduleApply(160);
+    }).observe(root, { childList: true, subtree: true });
+    ['pmk-calendar-sync-done', 'pmk-calendar-sync-error', 'popstate'].forEach(name => window.addEventListener(name, () => scheduleApply(160)));
   }
 
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', boot, { once: true }) : boot();
