@@ -1,8 +1,8 @@
 {
   "version": "82.20.0",
-  "label": "Рабочая v82.20.0 — обновление 07.07, карточки, поиск, черновики и счётчики",
+  "label": "Рабочая v82.20.0 — финальный релиз 07.07: форма, адрес, черновики, меню, скорость и скролл",
   "testUrl": "./test-v82-20.html",
-  "updateUrl": "./reset.html?release=82-20-0-cardfix12-draft-counter",
-  "publishedAt": "2026-07-07T04:30:00Z",
-  "buildToken": "cardfix12-draft-counter-working-20260707"
+  "updateUrl": "./reset.html?release=82-20-0-cardfix30-today-final-stable",
+  "publishedAt": "2026-07-07T12:20:00Z",
+  "buildToken": "cardfix30-today-final-stable-20260707"
 }
