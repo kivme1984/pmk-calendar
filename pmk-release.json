@@ -1,8 +1,8 @@
 {
-  "version": "82.20.0",
-  "label": "Рабочая v82.20.0 — финальный релиз 07.07: форма, адрес, черновики, меню, скорость, скролл и устойчивое обновление",
-  "testUrl": "./test-v82-20.html",
-  "updateUrl": "./reset.html?release=82-20-0-cardfix31-robust-install-final",
-  "publishedAt": "2026-07-07T13:55:00Z",
-  "buildToken": "cardfix31-robust-install-final-20260707"
+  "version": "82.20.1",
+  "label": "Рабочая v82.20.1 — маршруты редактируются в настройках: недельный шаблон + исключения по датам",
+  "testUrl": "./reset.html?release=82-20-1-route-calendar-settings",
+  "updateUrl": "./reset.html?release=82-20-1-route-calendar-settings",
+  "publishedAt": "2026-07-07T14:25:00Z",
+  "buildToken": "route-calendar-settings-v82-20-1"
 }
