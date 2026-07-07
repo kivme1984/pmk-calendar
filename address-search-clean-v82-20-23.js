@@ -1,20 +1,25 @@
 'use strict';
 
 (() => {
-  if (globalThis.PMK_ADDRESS_SEARCH_CLEAN_V82_20_23) return;
+  if (globalThis.PMK_ADDRESS_SEARCH_CLEAN_STRICT_V82_20_24) return;
   globalThis.PMK_ADDRESS_SEARCH_CLEAN_V82_20_23 = true;
+  globalThis.PMK_ADDRESS_SEARCH_CLEAN_STRICT_V82_20_24 = true;
 
   function injectStyle() {
-    if (document.getElementById('pmkAddressSearchCleanV822023Styles')) return;
+    if (document.getElementById('pmkAddressSearchCleanStrictV822024Styles')) return;
+    document.getElementById('pmkAddressSearchCleanV822023Styles')?.remove();
     const style = document.createElement('style');
-    style.id = 'pmkAddressSearchCleanV822023Styles';
+    style.id = 'pmkAddressSearchCleanStrictV822024Styles';
     style.textContent = `
       #addressSearchWrap.address-search-wrap{
         margin-top:4px!important;
         margin-bottom:10px!important;
       }
       #addressSearchWrap::before{
-        content:'Адрес клиента (автопоиск и вставка)';
+        content:none!important;
+        display:none!important;
+      }
+      #addressSearchWrap .pmk-address-title-v82-20-24{
         display:block!important;
         margin:0 0 7px!important;
         color:#2a2a2a!important;
@@ -23,12 +28,20 @@
         line-height:1.15!important;
       }
       #addressSearchWrap .address-search-field{
-        font-size:0!important;
+        display:block!important;
         margin:0!important;
+        padding:0!important;
+        color:transparent!important;
+        font-size:0!important;
         line-height:0!important;
       }
+      #addressSearchWrap .address-search-field > :not(.address-search-input-wrap){
+        display:none!important;
+      }
       #addressSearchWrap .address-search-input-wrap{
+        display:block!important;
         margin:0!important;
+        color:#111!important;
         line-height:normal!important;
         font-size:16px!important;
       }
@@ -36,6 +49,7 @@
         border:2px solid #ffc400!important;
         box-shadow:0 0 0 1px rgba(255,196,0,.18)!important;
         background:#fff!important;
+        color:#111!important;
       }
       #addressSearchWrap #addressSearch:focus{
         border-color:#f5b800!important;
@@ -49,7 +63,7 @@
         display:none!important;
       }
       @media(max-width:760px){
-        #addressSearchWrap::before{
+        #addressSearchWrap .pmk-address-title-v82-20-24{
           font-size:17px!important;
           margin-bottom:6px!important;
         }
@@ -66,17 +80,27 @@
     const wrap = document.getElementById('addressSearchWrap');
     if (!wrap) return;
 
+    let title = wrap.querySelector('.pmk-address-title-v82-20-24');
+    if (!title) {
+      title = document.createElement('div');
+      title.className = 'pmk-address-title-v82-20-24';
+      title.textContent = 'Адрес клиента (автопоиск и вставка)';
+      wrap.insertBefore(title, wrap.firstChild);
+    }
+
     const label = wrap.querySelector('.address-search-field');
-    if (label) {
+    const inputWrap = wrap.querySelector('.address-search-input-wrap');
+    if (label && inputWrap) {
       for (const node of Array.from(label.childNodes)) {
-        if (node.nodeType === Node.TEXT_NODE) node.textContent = '';
+        if (node !== inputWrap) node.remove();
       }
+      if (!label.contains(inputWrap)) label.appendChild(inputWrap);
     }
 
     const status = document.getElementById('addressSearchStatus');
     if (status) {
       const text = (status.textContent || '').trim().toLowerCase();
-      const isEmptyHelp = text.startsWith('введите минимум') || text.includes('минимум 3 символ');
+      const isEmptyHelp = text.startsWith('введите минимум') || text.includes('минимум 3 символ') || text.startsWith('автопоиск:') || text.includes('выберите адрес — он вставится');
       status.classList.toggle('pmk-address-empty-help-hidden', isEmptyHelp || !text);
     }
   }
@@ -89,7 +113,7 @@
     document.addEventListener('click', event => {
       if (event.target?.closest?.('#addressSearchWrap, [data-v50-open="client"]')) setTimeout(cleanAddressBlock, 80);
     }, true);
-    setInterval(cleanAddressBlock, 1000);
+    setInterval(cleanAddressBlock, 700);
   }
 
   document.readyState === 'loading'
