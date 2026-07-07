@@ -1,7 +1,7 @@
 {
   "version": "82.20.0",
-  "release": "persistent-google-auth-ready",
-  "date": "2026-07-03",
+  "release": "cardfix12-draft-counter-working",
+  "date": "2026-07-07",
   "features": [
     "all-v82-19-2-functions-preserved",
     "persistent-google-auth-client-module",
@@ -9,6 +9,13 @@
     "automatic-access-token-refresh",
     "one-time-google-account-connection",
     "feature-hidden-until-backend-enabled",
-    "event-card-approved-cardfix-added"
+    "event-card-approved-cardfix-added",
+    "cardfix12-working-release",
+    "header-search-yellow-loupe",
+    "real-drafts-moved-from-menu-to-day-header",
+    "draft-counter-badge",
+    "bottom-card-actions-height-lock",
+    "active-summary-counters",
+    "status-buttons-color-active-only"
   ]
 }
