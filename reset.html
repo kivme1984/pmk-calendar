@@ -14,7 +14,7 @@
 <body>
   <main>
     <h1 id="title">Устанавливаем v82.20.0</h1>
-    <p id="description">Cardfix29: адресный автопоиск пересобран без дублей, скролл разделов сохранён.</p>
+    <p id="description">Cardfix30: финальный сегодняшний релиз — меню, поиск, черновики, форма, адрес, скролл и скорость собраны в один стабильный слой.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -24,7 +24,7 @@
   </main>
   <script>
     const VERSION='82.20.0';
-    const BUILD='cardfix29-address-rebuilt-scroll-ok';
+    const BUILD='cardfix30-today-final-stable';
     const SW_FILE='./sw.js';
     const params=new URLSearchParams(location.search);
     const stage=params.get('stage')||'1';
@@ -62,9 +62,10 @@
         }
         status.textContent='Проверяем свежие файлы v82.20.0 / '+BUILD+'...';
         await clearWorkersAndCaches();
-        await check(SW_FILE,"const BUILD='cardfix29-address-rebuilt-scroll-ok'");
+        await check(SW_FILE,"const BUILD='cardfix30-today-final-stable'");
         await check('./pmk-google-auth-config.json','Постоянный вход Google');
-        await check('./version.json','cardfix12-draft-counter-working');
+        await check('./version.json','cardfix30-today-final-stable');
+        await check('./pmk-release.json','cardfix30-today-final-stable-20260707');
         await check('./status-left-column-v82-2.js','PMK_STATUS_LEFT_NO_JUMP_V82_20_7');
         await check('./event-card-approved-v82-20-1.js','PMK_EVENT_CARD_STABLE_RENDER_WITH_CLOUD_V82_20_7');
         await check('./event-card-status-polish-v82-20-2.js','PMK_SUMMARY_COUNTERS_V82_20_7');
@@ -76,8 +77,9 @@
         await check('./address-search-clean-v82-20-23.js','PMK_ADDRESS_SEARCH_CLEAN_DISABLED_V82_20_27');
         await check('./form-placeholders-address-strict-v82-20-25.js','PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_29');
         await check('./turbo-interactions-v82-20-27.js','PMK_TURBO_INTERACTIONS_V82_20_28');
+        await check('./today-final-release-v82-20-30.js','PMK_TODAY_FINAL_RELEASE_V82_20_30');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
-        status.textContent='Ставим свежий service worker cardfix29...';
+        status.textContent='Ставим свежий service worker cardfix30...';
         const reg=await navigator.serviceWorker.register(SW_FILE,{scope:'./',updateViaCache:'none'});
         await reg.update();
         status.textContent='Готово. Открываем приложение...';
