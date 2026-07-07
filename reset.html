@@ -25,7 +25,7 @@
   <script>
     const VERSION='82.20.0';
     const BUILD='cardfix25-address-placeholders-empty';
-    const SW_FILE='./sw-cardfix20.js';
+    const SW_FILE='./sw-cardfix25.js';
     const params=new URLSearchParams(location.search);
     const stage=params.get('stage')||'1';
     const status=document.getElementById('status');
@@ -77,7 +77,7 @@
         await check('./form-placeholders-address-strict-v82-20-25.js','PMK_FORM_PLACEHOLDERS_ADDRESS_STRICT_V82_20_25');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
         status.textContent='Ставим свежий service worker cardfix25...';
-        const reg=await navigator.serviceWorker.register(SW_FILE+'?v='+VERSION+'-'+BUILD+'-'+Date.now(),{scope:'./',updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register(SW_FILE,{scope:'./',updateViaCache:'none'});
         await reg.update();
         status.textContent='Готово. Открываем приложение...';
         location.href='./?v='+VERSION+'&cardfix='+BUILD+'&t='+Date.now();
