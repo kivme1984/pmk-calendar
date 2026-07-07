@@ -1,5 +1,5 @@
 const VERSION='82.20.0';
-const BUILD='cardfix11-bottom-actions-height-lock';
+const BUILD='cardfix12-draft-counter';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
 const BUNDLE_JS=`./__pmk-app-v82-20-0-${BUILD}.js`;
 const BUNDLE_CSS=`./__pmk-styles-v82-20-0-${BUILD}.css`;
@@ -141,7 +141,7 @@ async function textAsset(url){
   if(url.includes('status-left-column-v82-2.js')&&!text.includes('PMK_STATUS_LEFT_NO_JUMP_V82_20_7'))throw new Error('Не получен no-jump слой статусов');
   if(url.includes('event-card-approved-v82-20-1.js')&&!text.includes('PMK_EVENT_CARD_STABLE_RENDER_WITH_CLOUD_V82_20_7'))throw new Error('Не получен стабильный рендер карточки');
   if(url.includes('event-card-status-polish-v82-20-2.js')&&!text.includes('PMK_SUMMARY_COUNTERS_V82_20_7'))throw new Error('Не получены активные счётчики');
-  if(url.includes('header-search-v82-20-8.js')&&!text.includes('PMK_BOTTOM_ACTIONS_HEIGHT_LOCK_V82_20_11'))throw new Error('Не получена фиксация высоты нижних кнопок');
+  if(url.includes('header-search-v82-20-8.js')&&!text.includes('PMK_DRAFT_COUNTER_V82_20_12'))throw new Error('Не получен счётчик черновиков');
   if(url.includes('event-card-approved-v82-20-1.css')&&!text.includes('event-card fixes on v82.20.0 base'))throw new Error('Не получены стили карточки v82.20.0');
   return text;
 }
