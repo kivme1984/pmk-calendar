@@ -14,7 +14,7 @@
 <body>
   <main>
     <h1 id="title">Устанавливаем v82.20.0</h1>
-    <p id="description">База как на скрине: постоянный вход Google и исправление формы. Сверху добавлены только правки карточки события.</p>
+    <p id="description">База как на скрине. Cardfix6: стабильный рендер карточки без мигания, цвет только у активного статуса.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -24,6 +24,7 @@
   </main>
   <script>
     const VERSION='82.20.0';
+    const BUILD='cardfix6-stable-render-no-jump';
     const params=new URLSearchParams(location.search);
     const title=document.getElementById('title');
     const description=document.getElementById('description');
@@ -74,7 +75,7 @@
         const text=await response.text();
         if(!text.includes(marker))throw new Error(path+': файл не обновился');
       }
-      function reloadClean(){location.replace('./reset.html?stage=2&release=82-20-0-cardfix-'+Date.now());}
+      function reloadClean(){location.replace('./reset.html?stage=2&release='+BUILD+'-'+Date.now());}
       async function run(){
         button.disabled=true;
         status.className='status';
@@ -87,19 +88,21 @@
             reloadClean();
             return;
           }
-          status.textContent='Проверяем свежие файлы v82.20.0...';
+          status.textContent='Проверяем свежие файлы v82.20.0 / '+BUILD+'...';
           await clearWorkersAndCaches();
+          await check('./sw.js','cardfix6-stable-render-no-jump');
           await check('./sw-core-v82-48-3.js',"const VERSION='82.20.0'");
           await check('./pmk-google-auth-config.json','Постоянный вход Google');
           await check('./version.json','persistent-google-auth-ready');
-          await check('./event-card-approved-v82-20-1.js','PMK_EVENT_CARD_APPROVED_V82_20_1');
+          await check('./event-card-approved-v82-20-1.js','renderEventCardStableV82206');
+          await check('./event-card-status-polish-v82-20-2.js','CSS-only to stop element jumping');
           await check('./event-card-approved-v82-20-1.css','event-card fixes on v82.20.0 base');
           if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
           status.textContent='Ставим свежий service worker...';
-          const reg=await navigator.serviceWorker.register('./sw.js?v='+VERSION+'-'+Date.now(),{updateViaCache:'none'});
+          const reg=await navigator.serviceWorker.register('./sw.js?v='+VERSION+'-'+BUILD+'-'+Date.now(),{updateViaCache:'none'});
           await reg.update();
           status.textContent='Готово. Открываем приложение...';
-          location.href='./?v='+VERSION+'&cardfix='+Date.now();
+          location.href='./?v='+VERSION+'&cardfix='+BUILD+'&t='+Date.now();
         }catch(e){
           status.className='status error';
           status.textContent='Обновление не завершено: '+e.message;
