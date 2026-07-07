@@ -1,6 +1,6 @@
 {
   "version": "82.20.0",
-  "release": "cardfix30-today-final-stable",
+  "release": "cardfix31-robust-install-final",
   "date": "2026-07-07",
   "features": [
     "all-v82-19-2-functions-preserved",
@@ -20,6 +20,7 @@
     "address-autocomplete-single-title-yellow-field",
     "field-placeholders-hidden",
     "turbo-no-constant-address-or-draft-timers",
-    "today-final-consolidated-overrides"
+    "today-final-consolidated-overrides",
+    "robust-service-worker-install"
   ]
 }
