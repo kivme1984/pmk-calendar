@@ -1,5 +1,5 @@
 const VERSION='82.20.0';
-const BUILD='cardfix18-editor-next-prev';
+const BUILD='cardfix19-form-clicks-restored';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
 const BUNDLE_JS=`./__pmk-app-v82-20-0-${BUILD}.js`;
 const BUNDLE_CSS=`./__pmk-styles-v82-20-0-${BUILD}.css`;
@@ -76,7 +76,6 @@ const JS=`
 ./header-search-v82-20-8.js
 ./smart-paste-compact-v82-20-13.js
 ./v50-preview-compact-fix-v82-20-16.js
-./v50-editor-nav-v82-20-18.js
 `.trim().split(/\s+/);
 
 const CSS=`
@@ -147,7 +146,6 @@ async function textAsset(url){
   if(url.includes('header-search-v82-20-8.js')&&!text.includes('PMK_DRAFT_COUNTER_V82_20_12'))throw new Error('Не получен счётчик черновиков');
   if(url.includes('smart-paste-compact-v82-20-13.js')&&!text.includes('PMK_SMART_PASTE_COMPACT_V82_20_13'))throw new Error('Не получен компактный блок быстрой вставки');
   if(url.includes('v50-preview-compact-fix-v82-20-16.js')&&!text.includes('PMK_V50_PREVIEW_COMPACT_FIX_V82_20_16'))throw new Error('Не получено исправление предпросмотра v50');
-  if(url.includes('v50-editor-nav-v82-20-18.js')&&!text.includes('PMK_V50_EDITOR_NAV_V82_20_18'))throw new Error('Не получена навигация разделов формы');
   if(url.includes('event-card-approved-v82-20-1.css')&&!text.includes('event-card fixes on v82.20.0 base'))throw new Error('Не получены стили карточки v82.20.0');
   return text;
 }
