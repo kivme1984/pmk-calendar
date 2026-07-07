@@ -1,8 +1,8 @@
 {
   "version": "82.20.0",
-  "label": "Основная v82.20.0 — постоянный вход Google и исправление формы",
+  "label": "Рабочая v82.20.0 — обновление 07.07, карточки, поиск, черновики и счётчики",
   "testUrl": "./test-v82-20.html",
-  "updateUrl": "./reset.html?v=82.20.0",
-  "publishedAt": "2026-07-03T05:00:00Z",
-  "buildToken": "persistent-google-auth-ready-v82-20-cardfix1"
+  "updateUrl": "./reset.html?release=82-20-0-cardfix12-draft-counter",
+  "publishedAt": "2026-07-07T04:30:00Z",
+  "buildToken": "cardfix12-draft-counter-working-20260707"
 }
