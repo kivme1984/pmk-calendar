@@ -1,21 +1,25 @@
 {
   "version": "82.20.0",
-  "release": "cardfix12-draft-counter-working",
+  "release": "cardfix30-today-final-stable",
   "date": "2026-07-07",
   "features": [
     "all-v82-19-2-functions-preserved",
     "persistent-google-auth-client-module",
-    "cloudflare-oauth-worker-source",
-    "automatic-access-token-refresh",
-    "one-time-google-account-connection",
-    "feature-hidden-until-backend-enabled",
-    "event-card-approved-cardfix-added",
-    "cardfix12-working-release",
     "header-search-yellow-loupe",
+    "search-hidden-from-menu",
     "real-drafts-moved-from-menu-to-day-header",
     "draft-counter-badge",
     "bottom-card-actions-height-lock",
-    "active-summary-counters",
-    "status-buttons-color-active-only"
+    "quick-paste-compact-row-buttons",
+    "new-request-title-cancel-row",
+    "v50-preview-icons-aligned",
+    "rugs-number-no-circle",
+    "price-preview-compact",
+    "bottom-editor-navigation-compact",
+    "editor-scroll-restored",
+    "address-autocomplete-single-title-yellow-field",
+    "field-placeholders-hidden",
+    "turbo-no-constant-address-or-draft-timers",
+    "today-final-consolidated-overrides"
   ]
 }
