@@ -14,7 +14,7 @@
 <body>
   <main>
     <h1 id="title">Устанавливаем v82.20.0</h1>
-    <p id="description">Cardfix7: убраны повторные перестановки карточек, счётчики стали активными и цветными.</p>
+    <p id="description">Cardfix8: поиск убран из бокового меню и перенесён иконкой в шапку рядом с логотипом PMK.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -24,10 +24,8 @@
   </main>
   <script>
     const VERSION='82.20.0';
-    const BUILD='cardfix7-no-jump-active-counters';
+    const BUILD='cardfix8-header-search';
     const params=new URLSearchParams(location.search);
-    const title=document.getElementById('title');
-    const description=document.getElementById('description');
     const stage=params.get('stage')||'1';
     const status=document.getElementById('status');
     const button=document.getElementById('install');
@@ -63,14 +61,14 @@
         }
         status.textContent='Проверяем свежие файлы v82.20.0 / '+BUILD+'...';
         await clearWorkersAndCaches();
-        await check('./sw.js','cardfix7-no-jump-active-counters');
-        await check('./sw-core-v82-48-3.js',"const VERSION='82.20.0'");
+        await check('./sw.js','cardfix8-header-search');
+        await check('./sw-core-v82-48-3.js',"const BUILD='cardfix8-header-search'");
         await check('./pmk-google-auth-config.json','Постоянный вход Google');
         await check('./version.json','persistent-google-auth-ready');
         await check('./status-left-column-v82-2.js','PMK_STATUS_LEFT_NO_JUMP_V82_20_7');
         await check('./event-card-approved-v82-20-1.js','PMK_EVENT_CARD_STABLE_RENDER_WITH_CLOUD_V82_20_7');
         await check('./event-card-status-polish-v82-20-2.js','PMK_SUMMARY_COUNTERS_V82_20_7');
-        await check('./event-card-approved-v82-20-1.css','event-card fixes on v82.20.0 base');
+        await check('./header-search-v82-20-8.js','PMK_HEADER_SEARCH_V82_20_8');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
         status.textContent='Ставим свежий service worker...';
         const reg=await navigator.serviceWorker.register('./sw.js?v='+VERSION+'-'+BUILD+'-'+Date.now(),{updateViaCache:'none'});
