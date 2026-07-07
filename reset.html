@@ -14,7 +14,7 @@
 <body>
   <main>
     <h1 id="title">Устанавливаем v82.20.0</h1>
-    <p id="description">Cardfix14: компактная форма новой заявки, ковры и договорённости.</p>
+    <p id="description">Cardfix15: номер ковра без кружка и компактные заголовки формы.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -24,7 +24,7 @@
   </main>
   <script>
     const VERSION='82.20.0';
-    const BUILD='cardfix14-form-compact';
+    const BUILD='cardfix15-rug-number-no-circle';
     const params=new URLSearchParams(location.search);
     const stage=params.get('stage')||'1';
     const status=document.getElementById('status');
@@ -61,8 +61,8 @@
         }
         status.textContent='Проверяем свежие файлы v82.20.0 / '+BUILD+'...';
         await clearWorkersAndCaches();
-        await check('./sw.js','cardfix14-form-compact');
-        await check('./sw-core-v82-48-3.js',"const BUILD='cardfix14-form-compact'");
+        await check('./sw.js','cardfix15-rug-number-no-circle');
+        await check('./sw-core-v82-48-3.js',"const BUILD='cardfix15-rug-number-no-circle'");
         await check('./pmk-google-auth-config.json','Постоянный вход Google');
         await check('./version.json','cardfix12-draft-counter-working');
         await check('./status-left-column-v82-2.js','PMK_STATUS_LEFT_NO_JUMP_V82_20_7');
@@ -71,6 +71,7 @@
         await check('./header-search-v82-20-8.js','PMK_DRAFT_COUNTER_V82_20_12');
         await check('./smart-paste-compact-v82-20-13.js','PMK_SMART_PASTE_COMPACT_V82_20_13');
         await check('./form-compact-v82-20-14.js','PMK_FORM_COMPACT_V82_20_14');
+        await check('./form-rug-number-fix-v82-20-15.js','PMK_FORM_RUG_NUMBER_FIX_V82_20_15');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
         status.textContent='Ставим свежий service worker...';
         const reg=await navigator.serviceWorker.register('./sw.js?v='+VERSION+'-'+BUILD+'-'+Date.now(),{updateViaCache:'none'});
