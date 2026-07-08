@@ -1,8 +1,8 @@
 {
-  "version": "82.20.1",
-  "label": "Рабочая v82.20.1 — маршруты + финальная форма: быстрый интерфейс, DaData без задержек, скролл и все правки дня",
-  "testUrl": "./reset.html?release=82-20-1-cardfix32-fast-ui-dadata-safe",
-  "updateUrl": "./reset.html?release=82-20-1-cardfix32-fast-ui-dadata-safe",
-  "publishedAt": "2026-07-07T14:55:00Z",
-  "buildToken": "cardfix32-fast-ui-dadata-safe-20260707"
+  "version": "82.21.0",
+  "label": "Рабочая v82.21.0 — чистая стабильная сборка без конфликтующих старых слоёв",
+  "testUrl": "./reset.html?release=82-21-0-clean-stable",
+  "updateUrl": "./reset.html?release=82-21-0-clean-stable",
+  "publishedAt": "2026-07-07T15:25:00Z",
+  "buildToken": "v82.21.0-clean-stable-20260707"
 }
