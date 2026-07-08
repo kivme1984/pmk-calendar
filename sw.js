@@ -1,9 +1,9 @@
-// PMK Calendar v82.21.1 - clean stable with unpublished autosync service worker
-const VERSION='82.21.1';
-const BUILD='clean-stable-unpublished-autosync';
+// PMK Calendar v82.21.2 - clean stable card action buttons fixed
+const VERSION='82.21.2';
+const BUILD='clean-stable-card-actions-fixed';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
-const BUNDLE_JS=`./__pmk-app-v82-21-1-${BUILD}.js`;
-const BUNDLE_CSS=`./__pmk-styles-v82-21-1-${BUILD}.css`;
+const BUNDLE_JS=`./__pmk-app-v82-21-2-${BUILD}.js`;
+const BUNDLE_CSS=`./__pmk-styles-v82-21-2-${BUILD}.css`;
 
 // Clean stable: старые конфликтные cardfix-слои больше НЕ подключаются.
 // UI-правки собраны в одном финальном файле, автосинхронизация — отдельным лёгким слоем.
