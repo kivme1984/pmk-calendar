@@ -1,9 +1,9 @@
-// PMK Calendar v82.21.3 - equal third card action buttons
-const VERSION='82.21.3';
-const BUILD='equal-third-card-actions';
+// PMK Calendar v82.21.4 - safe equal card action buttons
+const VERSION='82.21.4';
+const BUILD='safe-equal-card-actions';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
-const BUNDLE_JS=`./__pmk-app-v82-21-3-${BUILD}.js`;
-const BUNDLE_CSS=`./__pmk-styles-v82-21-3-${BUILD}.css`;
+const BUNDLE_JS=`./__pmk-app-v82-21-4-${BUILD}.js`;
+const BUNDLE_CSS=`./__pmk-styles-v82-21-4-${BUILD}.css`;
 
 // Clean stable: старые конфликтные cardfix-слои больше НЕ подключаются.
 // Последний слой card-actions-equal-v82-21-3.js выравнивает Позвонить / Открыть / ⋮ в 3 одинаковые колонки.
