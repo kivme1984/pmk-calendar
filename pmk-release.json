@@ -1,8 +1,8 @@
 {
-  "version": "82.21.3",
-  "label": "Рабочая v82.21.3 — нижние кнопки карточек в 3 одинаковые колонки",
-  "testUrl": "./reset.html?release=82-21-3-equal-third-actions",
-  "updateUrl": "./reset.html?release=82-21-3-equal-third-actions",
-  "publishedAt": "2026-07-08T07:55:00Z",
-  "buildToken": "v82.21.3-equal-third-actions-20260708"
+  "version": "82.21.4",
+  "label": "Рабочая v82.21.4 — безопасная пересборка после ошибки + 3 равные нижние кнопки карточки",
+  "testUrl": "./reset.html?release=82-21-4-safe-equal-card-actions",
+  "updateUrl": "./reset.html?release=82-21-4-safe-equal-card-actions",
+  "publishedAt": "2026-07-08T08:05:00Z",
+  "buildToken": "v82.21.4-safe-equal-card-actions-20260708"
 }
