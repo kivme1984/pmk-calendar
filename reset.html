@@ -14,7 +14,7 @@
 <body>
   <main>
     <h1 id="title">Устанавливаем v82.20.1</h1>
-    <p id="description">Route Calendar: маршруты теперь редактируются в настройках как недельный шаблон и исключения на даты.</p>
+    <p id="description">Cardfix32: быстрые клики и безопасный DaData — адресный блок больше не пересобирается во время выбора.</p>
     <p id="status" class="status">Подготовка обновления.</p>
     <div class="actions">
       <button id="install" type="button">Установить</button>
@@ -24,7 +24,7 @@
   </main>
   <script>
     const VERSION='82.20.1';
-    const BUILD='route-calendar-settings-v82-20-1';
+    const BUILD='cardfix32-fast-ui-dadata-safe';
     const SW_FILE='./sw.js';
     const params=new URLSearchParams(location.search);
     const stage=params.get('stage')||'1';
@@ -47,9 +47,7 @@
       const text=await response.text();
       if(!text.includes(marker))throw new Error(path+': файл не обновился');
     }
-    async function softCheck(path,marker){
-      try{ await check(path,marker); return true; }catch{ return false; }
-    }
+    async function softCheck(path,marker){try{await check(path,marker);return true;}catch{return false;}}
     function reloadClean(){location.replace('./reset.html?stage=2&release='+BUILD+'-'+Date.now());}
     async function run(){
       button.disabled=true;
@@ -63,19 +61,20 @@
           reloadClean();
           return;
         }
-        status.textContent='Проверяем sw.js и слой маршрутов...';
+        status.textContent='Проверяем sw.js и быстрый финальный слой...';
         await clearWorkersAndCaches();
-        await check(SW_FILE,"const BUILD='route-calendar-settings-v82-20-1'");
+        await check(SW_FILE,"const BUILD='cardfix32-fast-ui-dadata-safe'");
+        await check('./today-final-release-v82-20-30.js','PMK_TODAY_FINAL_RELEASE_V82_20_32');
+        await check('./form-placeholders-address-strict-v82-20-25.js','PMK_FORM_PLACEHOLDERS_ADDRESS_DISABLED_V82_20_32');
         await check('./route-calendar-settings-v82-20-1.js','PMK_ROUTE_CALENDAR_SETTINGS_V82_20_1');
-        await check('./route-calendar-settings-v82-20-1.css','route-calendar-settings');
-        await softCheck('./version.json','route-calendar-settings-v82-20-1');
-        await softCheck('./pmk-release.json','route-calendar-settings-v82-20-1');
+        await softCheck('./version.json','cardfix32-fast-ui-dadata-safe');
+        await softCheck('./pmk-release.json','cardfix32-fast-ui-dadata-safe');
         if(!('serviceWorker' in navigator))throw new Error('Нет поддержки service worker');
-        status.textContent='Ставим свежий service worker route-calendar...';
+        status.textContent='Ставим свежий service worker cardfix32...';
         const reg=await navigator.serviceWorker.register(SW_FILE,{scope:'./',updateViaCache:'none'});
         await reg.update();
         status.textContent='Готово. Открываем приложение...';
-        location.href='./?v='+VERSION+'&routeCalendar='+BUILD+'&t='+Date.now();
+        location.href='./?v='+VERSION+'&cardfix='+BUILD+'&t='+Date.now();
       }catch(e){
         status.className='status error';
         status.textContent='Обновление не завершено: '+e.message;
