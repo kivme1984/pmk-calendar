@@ -1,12 +1,12 @@
-// PMK Calendar v82.21.0 - clean stable service worker
-const VERSION='82.21.0';
-const BUILD='clean-stable-no-conflict-layers';
+// PMK Calendar v82.21.1 - clean stable with unpublished autosync service worker
+const VERSION='82.21.1';
+const BUILD='clean-stable-unpublished-autosync';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
-const BUNDLE_JS=`./__pmk-app-v82-21-0-${BUILD}.js`;
-const BUNDLE_CSS=`./__pmk-styles-v82-21-0-${BUILD}.css`;
+const BUNDLE_JS=`./__pmk-app-v82-21-1-${BUILD}.js`;
+const BUNDLE_CSS=`./__pmk-styles-v82-21-1-${BUILD}.css`;
 
 // Clean stable: старые конфликтные cardfix-слои больше НЕ подключаются.
-// UI-правки собраны в одном финальном файле: today-final-release-v82-20-30.js
+// UI-правки собраны в одном финальном файле, автосинхронизация — отдельным лёгким слоем.
 const JS=`
 ./app.js
 ./manager-planner-core.js
@@ -78,6 +78,7 @@ const JS=`
 ./event-card-status-polish-v82-20-2.js
 ./route-calendar-settings-v82-20-1.js
 ./today-final-release-v82-20-30.js
+./unpublished-autosync-v82-21-1.js
 `.trim().split(/\s+/);
 
 const CSS=`
