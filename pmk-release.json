@@ -1,8 +1,8 @@
 {
-  "version": "82.21.1",
-  "label": "Рабочая v82.21.1 — чистая стабильная сборка + автосинхронизация неопубликованных заявок",
-  "testUrl": "./reset.html?release=82-21-1-unpublished-autosync",
-  "updateUrl": "./reset.html?release=82-21-1-unpublished-autosync",
-  "publishedAt": "2026-07-07T15:45:00Z",
-  "buildToken": "v82.21.1-unpublished-autosync-20260707"
+  "version": "82.21.2",
+  "label": "Рабочая v82.21.2 — чистая стабильная сборка + ровные нижние кнопки карточек",
+  "testUrl": "./reset.html?release=82-21-2-card-actions-fixed",
+  "updateUrl": "./reset.html?release=82-21-2-card-actions-fixed",
+  "publishedAt": "2026-07-08T07:35:00Z",
+  "buildToken": "v82.21.2-card-actions-fixed-20260708"
 }
