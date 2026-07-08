@@ -1,6 +1,6 @@
 {
-  "version": "82.21.2",
-  "release": "v82.21.2-card-actions-fixed",
+  "version": "82.21.3",
+  "release": "v82.21.3-equal-third-actions",
   "date": "2026-07-08",
   "features": [
     "clean-stable-no-conflict-layers",
@@ -24,8 +24,9 @@
     "unpublished-local-events-autosync",
     "sync-after-google-login-online-focus-and-interval",
     "duplicate-protection-by-pmk-id",
-    "card-bottom-actions-fixed-grid",
-    "call-open-menu-buttons-equal-height",
+    "card-bottom-actions-three-equal-columns",
+    "call-open-menu-buttons-equal-width-height",
+    "late-card-actions-layer-after-all-styles",
     "field-placeholders-hidden",
     "robust-service-worker-install"
   ]
