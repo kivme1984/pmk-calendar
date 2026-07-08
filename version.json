@@ -1,14 +1,17 @@
 {
-  "version": "82.20.1",
-  "release": "cardfix32-fast-ui-dadata-safe",
+  "version": "82.21.0",
+  "release": "v82.21.0-clean-stable",
   "date": "2026-07-07",
   "features": [
-    "all-v82-20-0-functions-preserved",
+    "clean-stable-no-conflict-layers",
+    "old-cardfix-ui-layers-not-loaded",
+    "single-final-ui-layer",
     "editable-route-week-template",
     "route-month-date-exceptions",
     "route-check-uses-settings-not-hardcoded-code",
     "recommended-slots-use-route-calendar",
     "search-hidden-from-menu",
+    "header-yellow-search-button",
     "drafts-moved-to-day-header-with-counter",
     "quick-paste-compact-row-buttons",
     "new-request-title-cancel-row",
@@ -17,10 +20,8 @@
     "price-preview-compact",
     "bottom-editor-navigation-compact",
     "editor-scroll-restored",
-    "address-autocomplete-single-title-yellow-field",
-    "dadata-suggestions-not-rebuilt-on-input-or-click",
-    "old-address-dom-rebuild-layer-disabled",
-    "fast-ui-no-heavy-click-rebuilds",
+    "address-autocomplete-css-only-no-dadata-rebuild",
+    "field-placeholders-hidden",
     "robust-service-worker-install"
   ]
 }
