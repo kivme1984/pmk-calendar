@@ -1,6 +1,6 @@
 {
-  "version": "82.21.3",
-  "release": "v82.21.3-equal-third-actions",
+  "version": "82.21.4",
+  "release": "v82.21.4-safe-equal-card-actions",
   "date": "2026-07-08",
   "features": [
     "clean-stable-no-conflict-layers",
@@ -27,6 +27,7 @@
     "card-bottom-actions-three-equal-columns",
     "call-open-menu-buttons-equal-width-height",
     "late-card-actions-layer-after-all-styles",
+    "safe-service-worker-build-after-error",
     "field-placeholders-hidden",
     "robust-service-worker-install"
   ]
