@@ -1,6 +1,6 @@
 {
-  "version": "82.21.0",
-  "release": "v82.21.0-clean-stable",
+  "version": "82.21.1",
+  "release": "v82.21.1-unpublished-autosync",
   "date": "2026-07-07",
   "features": [
     "clean-stable-no-conflict-layers",
@@ -21,6 +21,9 @@
     "bottom-editor-navigation-compact",
     "editor-scroll-restored",
     "address-autocomplete-css-only-no-dadata-rebuild",
+    "unpublished-local-events-autosync",
+    "sync-after-google-login-online-focus-and-interval",
+    "duplicate-protection-by-pmk-id",
     "field-placeholders-hidden",
     "robust-service-worker-install"
   ]
