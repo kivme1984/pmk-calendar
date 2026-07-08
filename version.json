@@ -1,7 +1,7 @@
 {
-  "version": "82.21.1",
-  "release": "v82.21.1-unpublished-autosync",
-  "date": "2026-07-07",
+  "version": "82.21.2",
+  "release": "v82.21.2-card-actions-fixed",
+  "date": "2026-07-08",
   "features": [
     "clean-stable-no-conflict-layers",
     "old-cardfix-ui-layers-not-loaded",
@@ -24,6 +24,8 @@
     "unpublished-local-events-autosync",
     "sync-after-google-login-online-focus-and-interval",
     "duplicate-protection-by-pmk-id",
+    "card-bottom-actions-fixed-grid",
+    "call-open-menu-buttons-equal-height",
     "field-placeholders-hidden",
     "robust-service-worker-install"
   ]
