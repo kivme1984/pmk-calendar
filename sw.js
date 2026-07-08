@@ -1,6 +1,6 @@
-// PMK Calendar v82.20.1 - editable route calendar settings service worker
+// PMK Calendar v82.20.1 - cardfix32 fast UI and DaData safe service worker
 const VERSION='82.20.1';
-const BUILD='route-calendar-settings-v82-20-1';
+const BUILD='cardfix32-fast-ui-dadata-safe';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
 const BUNDLE_JS=`./__pmk-app-v82-20-1-${BUILD}.js`;
 const BUNDLE_CSS=`./__pmk-styles-v82-20-1-${BUILD}.css`;
