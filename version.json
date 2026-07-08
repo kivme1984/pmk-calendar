@@ -1,6 +1,6 @@
 {
   "version": "82.20.1",
-  "release": "route-calendar-settings-v82-20-1",
+  "release": "cardfix32-fast-ui-dadata-safe",
   "date": "2026-07-07",
   "features": [
     "all-v82-20-0-functions-preserved",
@@ -8,7 +8,19 @@
     "route-month-date-exceptions",
     "route-check-uses-settings-not-hardcoded-code",
     "recommended-slots-use-route-calendar",
-    "installer-verifies-route-calendar-layer",
+    "search-hidden-from-menu",
+    "drafts-moved-to-day-header-with-counter",
+    "quick-paste-compact-row-buttons",
+    "new-request-title-cancel-row",
+    "preview-icons-aligned",
+    "rugs-number-no-circle",
+    "price-preview-compact",
+    "bottom-editor-navigation-compact",
+    "editor-scroll-restored",
+    "address-autocomplete-single-title-yellow-field",
+    "dadata-suggestions-not-rebuilt-on-input-or-click",
+    "old-address-dom-rebuild-layer-disabled",
+    "fast-ui-no-heavy-click-rebuilds",
     "robust-service-worker-install"
   ]
 }
