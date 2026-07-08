@@ -1,8 +1,8 @@
 {
-  "version": "82.21.0",
-  "label": "Рабочая v82.21.0 — чистая стабильная сборка без конфликтующих старых слоёв",
-  "testUrl": "./reset.html?release=82-21-0-clean-stable",
-  "updateUrl": "./reset.html?release=82-21-0-clean-stable",
-  "publishedAt": "2026-07-07T15:25:00Z",
-  "buildToken": "v82.21.0-clean-stable-20260707"
+  "version": "82.21.1",
+  "label": "Рабочая v82.21.1 — чистая стабильная сборка + автосинхронизация неопубликованных заявок",
+  "testUrl": "./reset.html?release=82-21-1-unpublished-autosync",
+  "updateUrl": "./reset.html?release=82-21-1-unpublished-autosync",
+  "publishedAt": "2026-07-07T15:45:00Z",
+  "buildToken": "v82.21.1-unpublished-autosync-20260707"
 }
