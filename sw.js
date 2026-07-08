@@ -1,10 +1,12 @@
-// PMK Calendar v82.20.1 - cardfix32 fast UI and DaData safe service worker
-const VERSION='82.20.1';
-const BUILD='cardfix32-fast-ui-dadata-safe';
+// PMK Calendar v82.21.0 - clean stable service worker
+const VERSION='82.21.0';
+const BUILD='clean-stable-no-conflict-layers';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
-const BUNDLE_JS=`./__pmk-app-v82-20-1-${BUILD}.js`;
-const BUNDLE_CSS=`./__pmk-styles-v82-20-1-${BUILD}.css`;
+const BUNDLE_JS=`./__pmk-app-v82-21-0-${BUILD}.js`;
+const BUNDLE_CSS=`./__pmk-styles-v82-21-0-${BUILD}.css`;
 
+// Clean stable: старые конфликтные cardfix-слои больше НЕ подключаются.
+// UI-правки собраны в одном финальном файле: today-final-release-v82-20-30.js
 const JS=`
 ./app.js
 ./manager-planner-core.js
@@ -74,14 +76,6 @@ const JS=`
 ./persistent-google-auth-v82-20.js
 ./event-card-approved-v82-20-1.js
 ./event-card-status-polish-v82-20-2.js
-./header-search-v82-20-8.js
-./smart-paste-compact-v82-20-13.js
-./v50-preview-compact-fix-v82-20-16.js
-./v50-editor-nav-bottom-v82-20-21.js
-./form-title-cancel-row-v82-20-22.js
-./address-search-clean-v82-20-23.js
-./form-placeholders-address-strict-v82-20-25.js
-./turbo-interactions-v82-20-27.js
 ./route-calendar-settings-v82-20-1.js
 ./today-final-release-v82-20-30.js
 `.trim().split(/\s+/);
@@ -134,52 +128,12 @@ const CSS=`
 `.trim().split(/\s+/);
 
 const OPTIONAL=['./reset.html','./recovery.html','./safe.html','./manifest.webmanifest','./version.json','./pmk-google-auth-config.json','./pmk-release.json','./icons/icon-192.png','./icons/icon-512.png'];
-
-function isSpecialNavigate(request){
-  if(request.method!=='GET'||request.mode!=='navigate')return false;
-  const pathname=new URL(request.url).pathname;
-  return pathname.endsWith('/reset.html')||pathname.endsWith('/recovery.html')||pathname.endsWith('/safe.html')||pathname.endsWith('/day-card-compact-test-v1.html')||/\/preview-[^/]+\.html$/.test(pathname)||/\/test-[^/]+\.html$/.test(pathname);
-}
-function fetchWithTimeout(url,timeout=12000){
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),timeout);
-  return fetch(url,{cache:'no-store',signal:controller.signal}).finally(()=>clearTimeout(timer));
-}
-async function textAsset(url){
-  try{
-    const response=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION+'-'+BUILD)}`);
-    if(!response.ok) return `\n/* PMK skipped missing asset ${url}: ${response.status} */\n`;
-    return await response.text();
-  }catch(error){ return `\n/* PMK skipped unavailable asset ${url}: ${error?.message||error} */\n`; }
-}
-async function put(cache,key,response){ try{ await cache.put(new Request(key,{cache:'reload'}),response); }catch{} }
-function joinSettled(results,urls){ return results.map((result,index)=>result.status==='fulfilled'?result.value:`\n/* PMK skipped rejected asset ${urls[index]} */\n`).join('\n\n'); }
-
-self.addEventListener('install',event=>event.waitUntil((async()=>{
-  const cache=await caches.open(CACHE);
-  try{
-    const index=await fetchWithTimeout(`./index.html?install=${encodeURIComponent(VERSION+'-'+BUILD)}`,9000);
-    if(index.ok){ await put(cache,'./index.html',index.clone()); await put(cache,'./',index.clone()); }
-  }catch{}
-  const [jsResults,cssResults]=await Promise.all([Promise.allSettled(JS.map(textAsset)),Promise.allSettled(CSS.map(textAsset))]);
-  await put(cache,BUNDLE_JS,new Response(joinSettled(jsResults,JS),{headers:{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION,'X-PMK-Build':BUILD}}));
-  await put(cache,BUNDLE_CSS,new Response(joinSettled(cssResults,CSS),{headers:{'Content-Type':'text/css; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION,'X-PMK-Build':BUILD}}));
-  await Promise.allSettled(OPTIONAL.map(async url=>{try{const response=await fetchWithTimeout(`${url}?install=${encodeURIComponent(VERSION+'-'+BUILD)}`,5000); if(response.ok) await put(cache,url,response);}catch{}}));
-  await self.skipWaiting();
-})()));
-self.addEventListener('activate',event=>event.waitUntil((async()=>{
-  const keys=await caches.keys();
-  await Promise.all(keys.filter(key=>key!==CACHE&&key!=='pmk-calendar-data-v68').map(key=>caches.delete(key)));
-  await self.clients.claim();
-})()));
-async function cached(key){ return (await caches.open(CACHE)).match(key); }
-self.addEventListener('fetch',event=>{
-  if(event.request.method!=='GET'||!event.request.url.startsWith(self.location.origin))return;
-  if(isSpecialNavigate(event.request))return event.respondWith(fetch(event.request,{cache:'no-store'}).catch(()=>caches.match(event.request)));
-  const url=new URL(event.request.url);
-  if(url.pathname.endsWith('/app.js'))return event.respondWith(cached(BUNDLE_JS).then(value=>value||fetch(event.request)));
-  if(url.pathname.endsWith('/styles.css'))return event.respondWith(cached(BUNDLE_CSS).then(value=>value||fetch(event.request)));
-  if(url.pathname.endsWith('/pmk-google-auth-config.json'))return event.respondWith(fetch(event.request,{cache:'no-store'}).catch(()=>cached('./pmk-google-auth-config.json')));
-  if(event.request.mode==='navigate')return event.respondWith(cached('./index.html').then(value=>value||fetch(event.request)));
-  event.respondWith(caches.match(event.request).then(value=>value||fetch(event.request)));
-});
+function isSpecialNavigate(request){if(request.method!=='GET'||request.mode!=='navigate')return false;const p=new URL(request.url).pathname;return p.endsWith('/reset.html')||p.endsWith('/recovery.html')||p.endsWith('/safe.html')||p.endsWith('/day-card-compact-test-v1.html')||/\/preview-[^/]+\.html$/.test(p)||/\/test-[^/]+\.html$/.test(p);}
+function fetchWithTimeout(url,timeout=12000){const c=new AbortController();const t=setTimeout(()=>c.abort(),timeout);return fetch(url,{cache:'no-store',signal:c.signal}).finally(()=>clearTimeout(t));}
+async function textAsset(url){try{const r=await fetchWithTimeout(`${url}${url.includes('?')?'&':'?'}build=${encodeURIComponent(VERSION+'-'+BUILD)}`);if(!r.ok)return `\n/* PMK skipped missing asset ${url}: ${r.status} */\n`;return await r.text();}catch(e){return `\n/* PMK skipped unavailable asset ${url}: ${e?.message||e} */\n`;}}
+async function put(cache,key,response){try{await cache.put(new Request(key,{cache:'reload'}),response);}catch{}}
+function joinSettled(results,urls){return results.map((r,i)=>r.status==='fulfilled'?r.value:`\n/* PMK skipped rejected asset ${urls[i]} */\n`).join('\n\n');}
+self.addEventListener('install',event=>event.waitUntil((async()=>{const cache=await caches.open(CACHE);try{const index=await fetchWithTimeout(`./index.html?install=${encodeURIComponent(VERSION+'-'+BUILD)}`,9000);if(index.ok){await put(cache,'./index.html',index.clone());await put(cache,'./',index.clone());}}catch{}const [jsResults,cssResults]=await Promise.all([Promise.allSettled(JS.map(textAsset)),Promise.allSettled(CSS.map(textAsset))]);await put(cache,BUNDLE_JS,new Response(joinSettled(jsResults,JS),{headers:{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION,'X-PMK-Build':BUILD}}));await put(cache,BUNDLE_CSS,new Response(joinSettled(cssResults,CSS),{headers:{'Content-Type':'text/css; charset=utf-8','Cache-Control':'no-store','X-PMK-Version':VERSION,'X-PMK-Build':BUILD}}));await Promise.allSettled(OPTIONAL.map(async url=>{try{const r=await fetchWithTimeout(`${url}?install=${encodeURIComponent(VERSION+'-'+BUILD)}`,5000);if(r.ok)await put(cache,url,r);}catch{}}));await self.skipWaiting();})()));
+self.addEventListener('activate',event=>event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE&&k!=='pmk-calendar-data-v68').map(k=>caches.delete(k)));await self.clients.claim();})()));
+async function cached(key){return (await caches.open(CACHE)).match(key);}
+self.addEventListener('fetch',event=>{if(event.request.method!=='GET'||!event.request.url.startsWith(self.location.origin))return;if(isSpecialNavigate(event.request))return event.respondWith(fetch(event.request,{cache:'no-store'}).catch(()=>caches.match(event.request)));const url=new URL(event.request.url);if(url.pathname.endsWith('/app.js'))return event.respondWith(cached(BUNDLE_JS).then(v=>v||fetch(event.request)));if(url.pathname.endsWith('/styles.css'))return event.respondWith(cached(BUNDLE_CSS).then(v=>v||fetch(event.request)));if(url.pathname.endsWith('/pmk-google-auth-config.json'))return event.respondWith(fetch(event.request,{cache:'no-store'}).catch(()=>cached('./pmk-google-auth-config.json')));if(event.request.mode==='navigate')return event.respondWith(cached('./index.html').then(v=>v||fetch(event.request)));event.respondWith(caches.match(event.request).then(v=>v||fetch(event.request)));});
