@@ -1,8 +1,8 @@
 'use strict';
 
 (() => {
-  if (globalThis.PMK_PERSISTENT_GOOGLE_OAUTH_V82_21_6) return;
-  globalThis.PMK_PERSISTENT_GOOGLE_OAUTH_V82_21_6 = true;
+  if (globalThis.PMK_PERSISTENT_GOOGLE_OAUTH_V82_21_7) return;
+  globalThis.PMK_PERSISTENT_GOOGLE_OAUTH_V82_21_7 = true;
   globalThis.PMK_PERSISTENT_GOOGLE_AUTH_V82_20 = true;
 
   const CONFIG_URL = './pmk-google-auth-config.json';
@@ -11,10 +11,8 @@
   const DEVICE_KEY = 'pmk-google-device-id-v1';
   const RETURN_VIEW_KEY = 'pmk-google-return-view-v1';
   const CONNECTED_KEY = 'pmk-google-connected';
-  let config = null;
-  let loadingConfig = null;
-  let refreshing = null;
-  let refreshTimer = 0;
+  const LEGACY_KEY = 'pmk_google_api_key';
+  const PROBE_TIMEOUT = 8000;
 
   const native = {
     connectGoogle: typeof connectGoogle === 'function' ? connectGoogle : null,
@@ -23,9 +21,23 @@
     refreshEvents: typeof refreshEvents === 'function' ? refreshEvents : null,
   };
 
+  let config = null;
+  let loadingConfig = null;
+  let resolvedWorkerUrl = '';
+  let resolvingWorker = null;
+  let refreshing = null;
+  let refreshTimer = 0;
+
   function toast(message, type = '') {
     if (typeof showToast === 'function') showToast(message, type);
     else console[type === 'error' ? 'error' : 'log'](message);
+  }
+
+  function normalizeApiUrl(value) {
+    try {
+      const url = new URL(String(value || '').trim());
+      return url.protocol === 'https:' ? url.origin : '';
+    } catch { return ''; }
   }
 
   function readSession() {
@@ -55,13 +67,6 @@
     }
   }
 
-  function normalizeApiUrl(value) {
-    try {
-      const url = new URL(String(value || '').trim());
-      return url.protocol === 'https:' ? url.origin : '';
-    } catch { return ''; }
-  }
-
   async function loadConfig(force = false) {
     if (config && !force) return config;
     if (loadingConfig && !force) return loadingConfig;
@@ -69,15 +74,60 @@
       .then(response => response.ok ? response.json() : {})
       .catch(() => ({}))
       .then(raw => {
+        const primary = normalizeApiUrl(raw?.apiUrl);
+        const fallbacks = Array.isArray(raw?.fallbackApiUrls)
+          ? raw.fallbackApiUrls.map(normalizeApiUrl).filter(Boolean)
+          : [];
+        if (primary.includes('pmk-google-auth-worker.')) {
+          fallbacks.push(primary.replace('pmk-google-auth-worker.', 'pmk-google-auth.'));
+        }
+        fallbacks.push('https://pmk-google-auth.standart-media.workers.dev');
         config = {
           enabled: raw?.enabled === true,
-          apiUrl: normalizeApiUrl(raw?.apiUrl),
+          apiUrl: primary,
+          candidates: [...new Set([primary, ...fallbacks].filter(Boolean))],
           label: String(raw?.label || 'Google без повторного входа'),
         };
         return config;
       })
       .finally(() => { loadingConfig = null; });
     return loadingConfig;
+  }
+
+  async function probeOAuthWorker(baseUrl) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT);
+    try {
+      const response = await fetch(`${baseUrl}/health?probe=${Date.now()}`, {
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      if (!response.ok) return false;
+      const payload = await response.json().catch(() => ({}));
+      return payload?.ok === true && payload?.service === 'pmk-google-auth' && payload?.configured === true;
+    } catch {
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function resolveWorker(force = false) {
+    if (resolvedWorkerUrl && !force) return resolvedWorkerUrl;
+    if (resolvingWorker && !force) return resolvingWorker;
+    resolvingWorker = (async () => {
+      const active = await loadConfig(force);
+      if (!active.enabled) return '';
+      for (const candidate of active.candidates) {
+        if (await probeOAuthWorker(candidate)) {
+          resolvedWorkerUrl = candidate;
+          return candidate;
+        }
+      }
+      resolvedWorkerUrl = '';
+      return '';
+    })().finally(() => { resolvingWorker = null; });
+    return resolvingWorker;
   }
 
   function parseAuthReturn() {
@@ -113,13 +163,13 @@
   }
 
   async function startAuthorization() {
-    const active = await loadConfig(true);
-    if (!active.enabled || !active.apiUrl) {
-      if (native.connectGoogle) return native.connectGoogle();
-      return toast('Сервер постоянного входа Google не настроен.', 'error');
+    const workerUrl = await resolveWorker(true);
+    if (!workerUrl) {
+      toast('Сервер постоянного входа Google пока не найден. Открываю обычное подключение Google без цикла и запроса PMK-ключа.', 'error');
+      return native.connectGoogle?.();
     }
     rememberView();
-    const target = new URL(`${active.apiUrl}/auth/start`);
+    const target = new URL(`${workerUrl}/auth/start`);
     target.searchParams.set('return_to', currentReturnUrl());
     target.searchParams.set('device_id', deviceId());
     location.assign(target.toString());
@@ -137,10 +187,13 @@
     if (!session) return false;
 
     refreshing = (async () => {
-      const active = await loadConfig(options.forceConfig === true);
-      if (!active.enabled || !active.apiUrl) return false;
+      const workerUrl = await resolveWorker(options.forceConfig === true);
+      if (!workerUrl) {
+        if (!options.quiet) toast('Постоянный Google Worker недоступен. Сессия сохранена, повторим позже.', 'error');
+        return false;
+      }
       try {
-        const response = await fetch(`${active.apiUrl}/token`, {
+        const response = await fetch(`${workerUrl}/token`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${session}`,
@@ -188,9 +241,9 @@
 
   async function disconnect() {
     const session = readSession();
-    const active = await loadConfig();
-    if (session && active.enabled && active.apiUrl) {
-      await fetch(`${active.apiUrl}/revoke`, {
+    const workerUrl = await resolveWorker();
+    if (session && workerUrl) {
+      await fetch(`${workerUrl}/revoke`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${session}` },
         cache: 'no-store',
@@ -206,10 +259,6 @@
   }
 
   function ensureSettingsCard() {
-    if (!config?.enabled || !config?.apiUrl) {
-      document.querySelector('#pmkPersistentGoogleCard')?.remove();
-      return null;
-    }
     const grid = document.querySelector('#view-settings .settings-grid');
     if (!grid) return null;
     let card = document.querySelector('#pmkPersistentGoogleCard');
@@ -221,7 +270,7 @@
         <h2>Google без повторного входа</h2>
         <p id="pmkPersistentGoogleStatus"></p>
         <div class="pmk-persistent-google-actions">
-          <button type="button" id="pmkPersistentGoogleConnect" class="button button-primary">Подключить Google один раз</button>
+          <button type="button" id="pmkPersistentGoogleConnect" class="button button-primary">Подключить Google</button>
           <button type="button" id="pmkPersistentGoogleDisconnect" class="button button-secondary">Отключить</button>
         </div>`;
       grid.prepend(card);
@@ -232,24 +281,21 @@
   function updateUi() {
     const hasSession = Boolean(readSession());
     const hasAccess = Boolean(typeof state !== 'undefined' && state.token);
-    const badge = document.querySelector('#connectionBadge');
-    if (badge && config?.enabled && config?.apiUrl) {
-      badge.textContent = hasAccess ? 'Google подключён' : (hasSession ? 'Google: восстановление…' : 'Google не подключён');
-      badge.className = `status-badge ${hasAccess ? 'online' : 'offline'}`;
-    }
-    const headerButton = document.querySelector('#connectGoogleBtn');
-    if (headerButton && config?.enabled && config?.apiUrl) {
-      headerButton.textContent = hasSession ? 'Переподключить Google' : 'Подключить Google';
-    }
     const card = ensureSettingsCard();
     if (!card) return;
     const status = card.querySelector('#pmkPersistentGoogleStatus');
     const connect = card.querySelector('#pmkPersistentGoogleConnect');
     const disconnectButton = card.querySelector('#pmkPersistentGoogleDisconnect');
-    if (status) status.textContent = hasAccess
-      ? 'Подключено постоянно. После закрытия приложения вход повторять не нужно.'
-      : (hasSession ? 'Сессия сохранена. Восстанавливаем доступ автоматически.' : 'Нажмите один раз и войдите в Google. PMK API KEY больше не нужен.');
-    if (connect) connect.textContent = hasSession ? 'Переподключить аккаунт' : 'Подключить Google один раз';
+    if (status) {
+      status.textContent = hasAccess
+        ? 'Подключено постоянно. После закрытия приложения вход повторять не нужно.'
+        : (hasSession
+          ? 'Сессия сохранена. Восстанавливаем доступ автоматически.'
+          : (resolvedWorkerUrl
+            ? 'Нажмите один раз и войдите в Google. PMK API KEY не нужен.'
+            : 'Проверяем сервер постоянного входа. Если он недоступен, откроется обычный вход Google без зацикливания.'));
+    }
+    if (connect) connect.textContent = hasSession ? 'Переподключить аккаунт' : 'Подключить Google';
     if (disconnectButton) disconnectButton.hidden = !hasSession;
     card.classList.toggle('is-connected', hasSession);
   }
@@ -269,7 +315,7 @@
   function bindClicks() {
     document.addEventListener('click', event => {
       const target = event.target.closest('#connectGoogleBtn,#pmkPersistentGoogleConnect,#pmkPersistentGoogleDisconnect');
-      if (!target || !config?.enabled || !config?.apiUrl) return;
+      if (!target) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
@@ -279,9 +325,11 @@
   }
 
   async function boot() {
+    try { localStorage.removeItem(LEGACY_KEY); } catch {}
     installOverrides();
     bindClicks();
     await loadConfig(true);
+    await resolveWorker(true);
     updateUi();
     if (readSession()) await refreshAccessToken({ quiet: !returnedWithSession, refresh: true });
     document.addEventListener('visibilitychange', () => {
@@ -300,6 +348,7 @@
     refresh: refreshAccessToken,
     disconnect,
     hasSession: () => Boolean(readSession()),
+    workerUrl: () => resolvedWorkerUrl,
   };
 
   document.readyState === 'loading'
