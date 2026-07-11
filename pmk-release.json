@@ -1,8 +1,8 @@
 {
-  "version": "82.21.7",
-  "label": "Рабочая v82.21.7 — проверка OAuth Worker без unauthorized-цикла + высокие нижние кнопки карточек",
-  "testUrl": "./reset.html?release=82-21-7-oauth-worker-detection-taller-card-actions",
-  "updateUrl": "./reset.html?release=82-21-7-oauth-worker-detection-taller-card-actions",
-  "publishedAt": "2026-07-11T20:10:00Z",
-  "buildToken": "v82.21.7-oauth-worker-detection-taller-card-actions-20260711"
+  "version": "82.21.8",
+  "label": "Рабочая v82.21.8 — реальные нижние кнопки карточек высотой 58 px во всех статусах",
+  "testUrl": "./reset.html?release=82-21-8-real-card-action-height-58",
+  "updateUrl": "./reset.html?release=82-21-8-real-card-action-height-58",
+  "publishedAt": "2026-07-11T21:00:00Z",
+  "buildToken": "v82.21.8-real-card-action-height-58-20260711"
 }
