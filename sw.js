@@ -1,12 +1,10 @@
-// PMK Calendar v82.21.4 - safe equal card action buttons
-const VERSION='82.21.4';
-const BUILD='safe-equal-card-actions';
+// PMK Calendar v82.21.5 - persistent Google Worker + taller card actions
+const VERSION='82.21.5';
+const BUILD='persistent-google-taller-card-actions';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
-const BUNDLE_JS=`./__pmk-app-v82-21-4-${BUILD}.js`;
-const BUNDLE_CSS=`./__pmk-styles-v82-21-4-${BUILD}.css`;
+const BUNDLE_JS=`./__pmk-app-v82-21-5-${BUILD}.js`;
+const BUNDLE_CSS=`./__pmk-styles-v82-21-5-${BUILD}.css`;
 
-// Clean stable: старые конфликтные cardfix-слои больше НЕ подключаются.
-// Последний слой card-actions-equal-v82-21-3.js выравнивает Позвонить / Открыть / ⋮ в 3 одинаковые колонки.
 const JS=`
 ./app.js
 ./manager-planner-core.js
@@ -73,13 +71,14 @@ const JS=`
 ./version-guard-v82.js
 ./smart-parser-feature-gate.js
 ./workflow-ui-cleanup-v82-19-2.js
+./google-worker-final-v82-48-2.js
 ./persistent-google-auth-v82-20.js
 ./event-card-approved-v82-20-1.js
 ./event-card-status-polish-v82-20-2.js
 ./route-calendar-settings-v82-20-1.js
 ./today-final-release-v82-20-30.js
 ./unpublished-autosync-v82-21-1.js
-./card-actions-equal-v82-21-3.js
+./card-actions-comfort-v82-21-5.js
 `.trim().split(/\s+/);
 
 const CSS=`
