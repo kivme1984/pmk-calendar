@@ -1,8 +1,8 @@
 {
-  "version": "82.21.4",
-  "label": "Рабочая v82.21.4 — безопасная пересборка после ошибки + 3 равные нижние кнопки карточки",
-  "testUrl": "./reset.html?release=82-21-4-safe-equal-card-actions",
-  "updateUrl": "./reset.html?release=82-21-4-safe-equal-card-actions",
-  "publishedAt": "2026-07-08T08:05:00Z",
-  "buildToken": "v82.21.4-safe-equal-card-actions-20260708"
+  "version": "82.21.5",
+  "label": "Рабочая v82.21.5 — постоянный Google Worker + более высокие нижние кнопки карточек",
+  "testUrl": "./reset.html?release=82-21-5-persistent-google-taller-card-actions",
+  "updateUrl": "./reset.html?release=82-21-5-persistent-google-taller-card-actions",
+  "publishedAt": "2026-07-11T18:30:00Z",
+  "buildToken": "v82.21.5-persistent-google-taller-card-actions-20260711"
 }
