@@ -1,9 +1,9 @@
-// PMK Calendar v82.21.6 - persistent Google OAuth + taller card actions
-const VERSION='82.21.6';
-const BUILD='persistent-oauth-taller-card-actions';
+// PMK Calendar v82.21.7 - OAuth Worker detection + safe Google fallback + taller card actions
+const VERSION='82.21.7';
+const BUILD='oauth-worker-detection-taller-card-actions';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
-const BUNDLE_JS=`./__pmk-app-v82-21-6-${BUILD}.js`;
-const BUNDLE_CSS=`./__pmk-styles-v82-21-6-${BUILD}.css`;
+const BUNDLE_JS=`./__pmk-app-v82-21-7-${BUILD}.js`;
+const BUNDLE_CSS=`./__pmk-styles-v82-21-7-${BUILD}.css`;
 
 const JS=`
 ./app.js
