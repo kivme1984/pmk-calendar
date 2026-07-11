@@ -1,6 +1,6 @@
 {
-  "version": "82.21.7",
-  "release": "v82.21.7-oauth-worker-detection-taller-card-actions",
+  "version": "82.21.8",
+  "release": "v82.21.8-real-card-action-height-58",
   "date": "2026-07-11",
   "features": [
     "clean-stable-no-conflict-layers",
@@ -9,12 +9,13 @@
     "unpublished-local-events-autosync",
     "duplicate-protection-by-pmk-id",
     "oauth-worker-health-detection",
-    "oauth-worker-fallback-url",
     "unauthorized-loop-prevention",
     "ordinary-google-login-fallback",
     "no-pmk-api-key-prompt",
-    "card-bottom-actions-three-equal-columns",
-    "call-open-menu-buttons-54px-height",
+    "real-bottom-action-selector-detection",
+    "primary-secondary-card-actions-covered",
+    "call-open-menu-buttons-58px-height",
+    "mutation-observer-reapply-after-render",
     "safe-pmk-only-reset-scope",
     "robust-service-worker-install"
   ]

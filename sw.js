@@ -1,9 +1,9 @@
-// PMK Calendar v82.21.7 - OAuth Worker detection + safe Google fallback + taller card actions
-const VERSION='82.21.7';
-const BUILD='oauth-worker-detection-taller-card-actions';
+// PMK Calendar v82.21.8 - force real card action selectors to 58px
+const VERSION='82.21.8';
+const BUILD='real-card-action-height-58';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
-const BUNDLE_JS=`./__pmk-app-v82-21-7-${BUILD}.js`;
-const BUNDLE_CSS=`./__pmk-styles-v82-21-7-${BUILD}.css`;
+const BUNDLE_JS=`./__pmk-app-v82-21-8-${BUILD}.js`;
+const BUNDLE_CSS=`./__pmk-styles-v82-21-8-${BUILD}.css`;
 
 const JS=`
 ./app.js
@@ -78,6 +78,7 @@ const JS=`
 ./today-final-release-v82-20-30.js
 ./unpublished-autosync-v82-21-1.js
 ./card-actions-comfort-v82-21-5.js
+./card-actions-force-height-v82-21-8.js
 `.trim().split(/\s+/);
 
 const CSS=`
