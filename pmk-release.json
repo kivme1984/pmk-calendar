@@ -1,8 +1,8 @@
 {
-  "version": "82.21.5",
-  "label": "Рабочая v82.21.5 — постоянный Google Worker + более высокие нижние кнопки карточек",
-  "testUrl": "./reset.html?release=82-21-5-persistent-google-taller-card-actions",
-  "updateUrl": "./reset.html?release=82-21-5-persistent-google-taller-card-actions",
-  "publishedAt": "2026-07-11T18:30:00Z",
-  "buildToken": "v82.21.5-persistent-google-taller-card-actions-20260711"
+  "version": "82.21.6",
+  "label": "Рабочая v82.21.6 — постоянный Google OAuth без PMK-ключа + высокие нижние кнопки карточек",
+  "testUrl": "./reset.html?release=82-21-6-persistent-oauth-taller-card-actions",
+  "updateUrl": "./reset.html?release=82-21-6-persistent-oauth-taller-card-actions",
+  "publishedAt": "2026-07-11T19:00:00Z",
+  "buildToken": "v82.21.6-persistent-oauth-taller-card-actions-20260711"
 }
