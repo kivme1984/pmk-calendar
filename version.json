@@ -1,6 +1,6 @@
 {
-  "version": "82.21.5",
-  "release": "v82.21.5-persistent-google-taller-card-actions",
+  "version": "82.21.6",
+  "release": "v82.21.6-persistent-oauth-taller-card-actions",
   "date": "2026-07-11",
   "features": [
     "clean-stable-no-conflict-layers",
@@ -8,9 +8,10 @@
     "route-month-date-exceptions",
     "unpublished-local-events-autosync",
     "duplicate-protection-by-pmk-id",
-    "google-worker-persistent-connection-restored",
-    "google-worker-api-key-stored-on-device",
-    "google-worker-verification-before-connected-status",
+    "persistent-google-oauth-session",
+    "google-refresh-token-via-worker",
+    "no-pmk-api-key-prompt",
+    "automatic-google-session-restore",
     "card-bottom-actions-three-equal-columns",
     "call-open-menu-buttons-54px-height",
     "safe-pmk-only-reset-scope",

@@ -1,9 +1,9 @@
-// PMK Calendar v82.21.5 - persistent Google Worker + taller card actions
-const VERSION='82.21.5';
-const BUILD='persistent-google-taller-card-actions';
+// PMK Calendar v82.21.6 - persistent Google OAuth + taller card actions
+const VERSION='82.21.6';
+const BUILD='persistent-oauth-taller-card-actions';
 const CACHE=`pmk-calendar-v${VERSION}-${BUILD}`;
-const BUNDLE_JS=`./__pmk-app-v82-21-5-${BUILD}.js`;
-const BUNDLE_CSS=`./__pmk-styles-v82-21-5-${BUILD}.css`;
+const BUNDLE_JS=`./__pmk-app-v82-21-6-${BUILD}.js`;
+const BUNDLE_CSS=`./__pmk-styles-v82-21-6-${BUILD}.css`;
 
 const JS=`
 ./app.js
@@ -71,7 +71,6 @@ const JS=`
 ./version-guard-v82.js
 ./smart-parser-feature-gate.js
 ./workflow-ui-cleanup-v82-19-2.js
-./google-worker-final-v82-48-2.js
 ./persistent-google-auth-v82-20.js
 ./event-card-approved-v82-20-1.js
 ./event-card-status-polish-v82-20-2.js

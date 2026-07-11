@@ -1,8 +1,5 @@
 {
   "enabled": true,
-  "mode": "worker",
   "apiUrl": "https://pmk-google-auth-worker.standart-media.workers.dev",
-  "apiKeyStorageKey": "pmk_google_api_key",
-  "label": "Google Calendar через Cloudflare Worker",
-  "note": "PMK API KEY хранится только на устройстве менеджера. После успешной проверки повторный вход Google не требуется."
+  "label": "Google без повторного входа"
 }
