@@ -91,6 +91,65 @@
     return `${dateKeyForDisplay(dateKey).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', weekday: 'short', timeZone: 'UTC' })} · ${range.start.slice(11, 16)}–${range.end.slice(11, 16)}`;
   }
 
+  function installSearchKeyStyles() {
+    if (document.getElementById('pmk-client-search-key-style')) return;
+    const style = document.createElement('style');
+    style.id = 'pmk-client-search-key-style';
+    style.textContent = `
+      .pmk-search-key {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        margin: 8px 0 8px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: #fff3ba;
+        color: #4b3b00;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.28;
+        overflow-wrap: anywhere;
+      }
+      .pmk-search-key b { color: #111; font-weight: 900; }
+      .pmk-search-key mark { background: #ffd400; color: #111; border-radius: 5px; padding: 0 3px; font-weight: 900; }
+    `;
+    document.head.append(style);
+  }
+
+  function escapeRegExp(value) {
+    return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function highlightMatch(text, query) {
+    const safe = escapeHtml(clean(text));
+    const needle = clean(query);
+    if (!needle) return safe;
+    return safe.replace(new RegExp(`(${escapeRegExp(needle)})`, 'ig'), '<mark>$1</mark>');
+  }
+
+  function matchedSourceText(item, query, exactContract, digits) {
+    const original = clean(query);
+    if (exactContract) {
+      const contractLine = String(item.raw || '').split(/\n|[.;]/).map(clean).find(row => normalize(row).includes(normalize(item.data.contractNumber || exactContract)));
+      return contractLine || `Договор: ${item.data.contractNumber || original || exactContract}`;
+    }
+    if (digits.length >= 5 && item.phoneDigits.includes(digits)) {
+      const phoneLine = String(item.raw || '').split(/\n|[.;]/).map(clean).find(row => row.replace(/\D/g, '').includes(digits));
+      return phoneLine || `Телефон: ${item.data.phone || original || digits}`;
+    }
+    const normalizedQuery = normalize(original);
+    const fields = [
+      item.data.customerName && `Клиент: ${item.data.customerName}`,
+      item.data.address && `Адрес: ${item.data.address}`,
+      item.data.settlement && `Населённый пункт: ${item.data.settlement}`,
+      item.data.district && `Район: ${item.data.district}`,
+      item.data.street && `Улица: ${item.data.street}`,
+      item.event.summary && `Заголовок: ${item.event.summary}`,
+      ...String(item.raw || '').split(/\n|[.;]/),
+    ].filter(Boolean).map(clean);
+    return fields.find(row => normalize(row).includes(normalizedQuery)) || original;
+  }
+
   function addDetailActions(item) {
     const content = $('#eventDetailsContent');
     if (!content) return;
@@ -112,17 +171,21 @@
   function renderResults(query = '') {
     const results = $('#clientQuickResults');
     if (!results) return;
+    installSearchKeyStyles();
     pmkLastClientQuery = query;
     const normalized = normalize(query);
     const exactContract = contractQuery(normalized);
     const digits = normalized.replace(/\D/g, '');
     if (normalized.length < 2 && !exactContract) return pmkCloseClientResults();
 
-    const matches = buildIndex().filter(item => {
-      if (exactContract) return item.contractDigits === exactContract;
-      if (digits.length >= 5 && item.phoneDigits.includes(digits)) return true;
-      return item.search.includes(normalized);
-    }).slice(0, 60);
+    const matches = buildIndex().reduce((list, item) => {
+      let matched = false;
+      if (exactContract) matched = item.contractDigits === exactContract;
+      else if (digits.length >= 5 && item.phoneDigits.includes(digits)) matched = true;
+      else matched = item.search.includes(normalized);
+      if (matched) list.push({ ...item, searchKey: matchedSourceText(item, query, exactContract, digits) });
+      return list;
+    }, []).slice(0, 60);
 
     if (!matches.length) {
       results.innerHTML = '<div class="client-quick-empty">Ничего не найдено. Для договора используйте: <b>Д453</b>, <b>договор 453</b> или <b>453</b>.</div>';
@@ -134,9 +197,11 @@
       const data = item.data;
       const address = displayAddress(data, item.event) || data.address || item.event.location || 'Адрес не указан';
       const contract = data.contractNumber ? `<span class="client-history-contract">Договор ${escapeHtml(data.contractNumber)}</span>` : '';
+      const searchKey = item.searchKey ? `<div class="pmk-search-key">🔎 Совпадение в тексте: <b>${highlightMatch(item.searchKey, query)}</b></div>` : '';
       return `<article class="client-quick-item client-history-item">
         <div class="client-quick-main">
           <div class="client-history-top"><strong>${escapeHtml(data.customerName || 'Без имени')}</strong>${contract}</div>
+          ${searchKey}
           <span>${escapeHtml(data.phone || 'Телефон не указан')}</span>
           <small>${escapeHtml(address)}</small>
           <time>${escapeHtml(formatEventDate(item))}</time>
@@ -163,6 +228,7 @@
   function install() {
     const input = $('#clientQuickSearch');
     if (!input) return false;
+    installSearchKeyStyles();
     input.placeholder = 'Имя, телефон или договор: Д453 / договор 453';
     document.querySelector('label[for="clientQuickSearch"]')?.replaceChildren(document.createTextNode('История клиента — новые заказы сверху'));
     pmkClientHistory = () => buildIndex();

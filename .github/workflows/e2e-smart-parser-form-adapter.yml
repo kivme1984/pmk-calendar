@@ -1,0 +1,47 @@
+name: Smart Parser Form Adapter Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'smart-parser-form-test.html'
+      - 'smart-parser-form-adapter.js'
+      - 'smart-parser-form-adapter.css'
+      - 'smart-parser-next-core.js'
+      - 'smart-parser-next.js'
+      - 'smart-parser-next-refinements.js'
+      - 'smart-parser-next-real-rules.js'
+      - 'smart-parser-next-scope-rules.js'
+      - 'smart-parser-next-final-rules.js'
+      - 'smart-parser-next-identical-rugs.js'
+      - 'ci-check-smart-parser-form-adapter.mjs'
+      - '.github/workflows/e2e-smart-parser-form-adapter.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  form-adapter-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --silent playwright@1.52.0
+      - run: npx playwright install --with-deps chromium >/dev/null 2>&1
+      - run: python3 -m http.server 8000 >/tmp/smart-parser-form-http.log 2>&1 &
+      - name: Run mobile form adapter test
+        shell: bash
+        run: |
+          set -o pipefail
+          sleep 2
+          node ci-check-smart-parser-form-adapter.mjs 2>&1 | tee smart-parser-form-test.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-parser-form-test-log
+          path: smart-parser-form-test.log
+          if-no-files-found: error

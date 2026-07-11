@@ -1,0 +1,13 @@
+/* Версия показывается только внутри раздела «Настройки».
+   Рабочий экран, форма заявки и шапка остаются без служебных плашек. */
+#pmkVersionIndicator,
+#pmkStableBuildBadgeV8219,
+.pmk-stable-build-badge-v82-19{
+  display:none!important;
+}
+
+/* В полной форме оставляем только одну фиксированную панель действий.
+   Штатный ряд с теми же командами больше не дублируется над ней. */
+body.v50-manager-preview #requestForm .form-actions{
+  display:none!important;
+}

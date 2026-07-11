@@ -1,0 +1,115 @@
+/* Vertical status rail for the isolated v82.2 browser candidate. */
+
+.pmk-v82-2-badge{
+  position:fixed;
+  right:8px;
+  bottom:8px;
+  z-index:50000;
+  padding:6px 9px;
+  border-radius:999px;
+  color:#171717;
+  background:#f7b500;
+  box-shadow:0 6px 18px rgba(0,0,0,.22);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.04em;
+  pointer-events:none;
+}
+
+.event-card.pmk-status-left-card-v82-2{
+  grid-template-columns:138px minmax(0,1fr)!important;
+  grid-template-areas:
+    "time main"
+    "time actions"!important;
+}
+
+.event-card.pmk-status-left-card-v82-2 .pmk-status-left-time-v82-2{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  height:100%;
+  border-right:1px solid var(--line);
+}
+
+.event-card.pmk-status-left-card-v82-2 .pmk-status-left-stack-v82-2{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-auto-rows:minmax(43px,auto);
+  gap:7px!important;
+  width:100%;
+  margin:16px 0 0!important;
+  padding:0!important;
+}
+
+.event-card.pmk-status-left-card-v82-2 .pmk-status-left-stack-v82-2 .status-action{
+  width:100%!important;
+  min-width:0!important;
+  min-height:43px!important;
+  margin:0!important;
+  padding:7px 6px!important;
+  border-radius:11px!important;
+  font-size:10px!important;
+  line-height:1.15!important;
+  text-align:center;
+  white-space:normal!important;
+  overflow-wrap:anywhere;
+}
+
+.event-card.pmk-status-left-card-v82-2 .pmk-status-left-actions-v82-2{
+  grid-area:actions;
+  padding-top:0!important;
+}
+
+.event-card.pmk-status-left-card-v82-2 .pmk-status-left-actions-v82-2>.status-row{
+  display:none!important;
+}
+
+@media(max-width:760px){
+  .event-card.pmk-status-left-card-v82-2{
+    grid-template-columns:116px minmax(0,1fr)!important;
+    grid-template-areas:
+      "time main"
+      "time actions"!important;
+  }
+
+  .event-card.pmk-status-left-card-v82-2 .pmk-status-left-time-v82-2{
+    padding:15px 9px!important;
+  }
+
+  .event-card.pmk-status-left-card-v82-2 .pmk-status-left-time-v82-2 strong{
+    margin-top:12px!important;
+    font-size:16px!important;
+  }
+
+  .event-card.pmk-status-left-card-v82-2 .pmk-status-left-stack-v82-2{
+    grid-auto-rows:minmax(44px,auto);
+    gap:7px!important;
+    margin-top:14px!important;
+  }
+
+  .event-card.pmk-status-left-card-v82-2 .pmk-status-left-stack-v82-2 .status-action{
+    min-height:44px!important;
+    padding:6px 4px!important;
+    font-size:9px!important;
+    border-radius:10px!important;
+  }
+
+  .event-card.pmk-status-left-card-v82-2 .pmk-status-left-actions-v82-2{
+    padding:0 11px 14px!important;
+  }
+}
+
+@media(max-width:390px){
+  .event-card.pmk-status-left-card-v82-2{
+    grid-template-columns:108px minmax(0,1fr)!important;
+  }
+
+  .event-card.pmk-status-left-card-v82-2 .pmk-status-left-time-v82-2{
+    padding-left:7px!important;
+    padding-right:7px!important;
+  }
+
+  .event-card.pmk-status-left-card-v82-2 .pmk-status-left-stack-v82-2 .status-action{
+    font-size:8.5px!important;
+  }
+}

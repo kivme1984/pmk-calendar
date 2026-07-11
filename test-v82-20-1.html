@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ПМК Календарь · тест v82.20.1</title>
+<style>
+body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#111}main{width:min(650px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-sizing:border-box}h1{margin:0 0 10px;font-size:25px}p{margin:0 0 8px;color:#c9c9c9;line-height:1.5}.status{margin-top:16px;color:#ffd15c}.error{color:#ff9b90}.progress{height:9px;margin-top:14px;border-radius:999px;background:#303030;overflow:hidden}.progress span{display:block;width:5%;height:100%;border-radius:inherit;background:#f7b500;transition:width .2s ease}.actions{display:grid;gap:10px;margin-top:18px}button{width:100%;min-height:48px;border:0;border-radius:12px;padding:0 16px;box-sizing:border-box;font-weight:800;font-size:15px;color:#171717;background:#f7b500}
+</style>
+</head>
+<body>
+<main>
+<h1>Тестовая v82.20.1</h1>
+<p>Версия без старого зависающего модуля маркировки.</p>
+<p>Рабочая версия приложения не изменяется.</p>
+<p id="status" class="status">Подготовка тестовой сборки…</p>
+<div class="progress"><span id="bar"></span></div>
+<div class="actions"><button id="retry" type="button" hidden>Повторить запуск</button></div>
+</main>
+<script>
+(() => {
+  const BASE_COMMIT='58f8368d6d35a007e661f28b0b46a4e3aa9824e7';
+  const BASE=`https://cdn.jsdelivr.net/gh/kivme1984/pmk-calendar@${BASE_COMMIT}/`;
+  const FIX='./';
+  const BUILD='20260702-20201';
+  const status=document.querySelector('#status');
+  const bar=document.querySelector('#bar');
+  const retry=document.querySelector('#retry');
+  const set=(text,percent)=>{status.textContent=text;bar.style.width=`${percent}%`;};
+  const live=(path)=>`${FIX}${path}?v=${BUILD}`;
+
+  const JS_BEFORE_DIRECT=[
+    'app.js','manager-planner-core.js','manager-planner-hooks.js','address-autocomplete.js','address-mobile-v46.js',
+    'stability-route.js','stability-cache.js','stability-copy.js','stability-draft.js','google-freeform-import.js',
+    'runtime-stability-v37.js','fast-calendar-sync-v68.js','returning-client-search.js','client-search-fast-v68.js',
+    'smart-paste-v38.js','smart-paste-lifecycle-v38.js','smart-parser-v45.js','voice-parser-fast-v68.js',
+    'empty-rug-dimensions-v42.js','unified-rug-services-v43.js','pricing-v48.js','pricing-settings-v67.js',
+    'manager-ui-v50-preview.js','manager-ui-v50-refinements.js','manager-ui-v51.js','manager-ui-v51-tools-stable.js',
+    'android-autofill-off-v53.js','preview-description-v53.js','edit-save-hotfix-v54.js','address-placeholders-off-v56.js',
+    'workshop-measurement-v58.js','settings-version-header-v59.js','navigation-layer-swipe-fix-v60.js','planning-refresh-remove-v62.js',
+    'header-sync-status-v65.js','reminder-save-confirm-v66.js','manager-workspace-fast-v68.js','yandex-calendar-sync-v69.js',
+    'provider-status-manager-v70.js','unlimited-overlaps-v69.js','provider-crud-any-calendar-v72.js','yandex-primary-refresh-v72.js',
+    'compact-floating-note-v73.js','status-ledger-v80.js','in-work-workflow-v73.js','status-pipeline-v81.js',
+    'archive-policy-v82.js','completed-archive-workflow-v82.js','floating-note-mobile-v82-1.js','status-left-column-v82-2.js',
+    'workflow-fast-v82-7.js','workflow-transition-fast-v82-7.js','final-ui-v82-10.js'
+  ];
+  const JS_AFTER_DIRECT=['final-hotfix-v82-11.js','final-layout-lock-v82-12.js'];
+  const CSS=[
+    'styles.css','manager-planner.css','address-autocomplete.css','mobile-rug-layout.css','manager-form-v40.css',
+    'unified-rug-services-v43.css','manager-ui-v50-preview.css','manager-ui-v50-refinements.css','manager-ui-v51.css',
+    'v51-tools-stable.css','pricing-settings-v67.css','preview-readability-v56.css','workshop-measurement-v58.css',
+    'settings-version-header-v59.css','navigation-layer-swipe-fix-v60.css','header-sync-status-v65.css',
+    'reminder-save-confirm-v66.css','client-search-workflow-v66.css','manager-workspace-v66.css','performance-fixes-v68.css',
+    'provider-status-manager-v70.css','compact-floating-note-v73.css','in-work-workflow-v73.css','light-interface-v74.css',
+    'contract-required-v75.css','instant-status-feedback-v77.css','completed-archive-workflow-v82.css',
+    'floating-note-mobile-v82-1.css','status-left-column-v82-2.css','workflow-fast-v82-7.css',
+    'workflow-transition-fast-v82-7.css','final-ui-v82-10.css','final-hotfix-v82-11.css','final-layout-lock-v82-12.css'
+  ];
+
+  async function verify(){
+    const urls=[
+      `${BASE}index.html`,`${BASE}final-layout-lock-v82-12.js`,
+      live('period-direct-v82-19.js'),live('period-direct-v82-19.css'),
+      live('event-provider-badges-v82-20.js'),live('event-provider-badges-v82-20.css'),
+      live('week-touch-scroll-v82-20.js'),live('week-touch-scroll-v82-20.css')
+    ];
+    const responses=await Promise.all(urls.map(url=>fetch(url,{cache:'no-store'})));
+    const failed=responses.find(response=>!response.ok);
+    if(failed)throw new Error(`Не загрузился ${failed.url.split('/').pop()} (${failed.status})`);
+    const card=await responses[1].text();
+    const period=await responses[2].text();
+    const providers=await responses[4].text();
+    const touch=await responses[6].text();
+    if(!card.includes('PMK_FINAL_LAYOUT_LOCK_V82_12'))throw new Error('Не получена рабочая основа');
+    if(!period.includes('PMK_PERIOD_DIRECT_V82_19'))throw new Error('Не получена навигация недели и месяца');
+    if(!providers.includes('PMK_EVENT_PROVIDER_BADGES_V82_20'))throw new Error('Не получены статусы календарей');
+    if(!touch.includes('PMK_WEEK_TOUCH_SCROLL_V82_20'))throw new Error('Не получены мобильные свайпы');
+    return responses[0].text();
+  }
+
+  async function launch(){
+    retry.hidden=true;status.className='status';
+    try{
+      set('Загружаем рабочую основу…',20);
+      let html=await verify();
+      set('Подключаем исправленную навигацию…',70);
+      const closeScript='</scr'+'ipt>';
+      const guard=`<script>window.PMK_V82_ISOLATED_TEST=true;window.PMK_TEST_VERSION='82.20.1';try{if(navigator.serviceWorker){Object.defineProperty(navigator.serviceWorker,'register',{configurable:true,value:()=>Promise.resolve({active:null})});}}catch(e){}${closeScript}`;
+      const label=`<script>(()=>{const apply=()=>{document.title='ПМК Календарь · тест v82.20.1';const el=document.querySelector('#pmkVersionIndicator');if(el){el.textContent='Тест v82.20.1';el.href='#';}};setTimeout(apply,300);setTimeout(apply,1200);})()${closeScript}`;
+      const css=CSS.map(path=>`<link rel="stylesheet" href="${BASE}${path}">`).join('')
+        +`<link rel="stylesheet" href="${live('period-direct-v82-19.css')}">`
+        +`<link rel="stylesheet" href="${live('event-provider-badges-v82-20.css')}">`
+        +`<link rel="stylesheet" href="${live('week-touch-scroll-v82-20.css')}">`;
+      const before=JS_BEFORE_DIRECT.map(path=>`<script src="${BASE}${path}" defer>${closeScript}`).join('');
+      const direct=`<script src="${live('period-direct-v82-19.js')}" defer>${closeScript}`;
+      const after=JS_AFTER_DIRECT.map(path=>`<script src="${BASE}${path}" defer>${closeScript}`).join('');
+      const additions=`<script src="${live('week-touch-scroll-v82-20.js')}" defer>${closeScript}<script src="${live('event-provider-badges-v82-20.js')}" defer>${closeScript}`;
+      html=html.replace(/<link rel="manifest"[^>]*>/i,'');
+      html=html.replace(/<link rel="stylesheet"[^>]*>/i,css);
+      html=html.replace(/<script\s+src="app\.js(?:\?[^\"]*)?"\s+defer><\/script>/i,`${guard}${before}${direct}${after}${additions}${label}`);
+      html=html.replace('<title>ПМК Календарь</title>','<title>ПМК Календарь · тест v82.20.1</title>');
+      set('Открываем тестовую версию…',100);
+      document.open();document.write(html);document.close();
+    }catch(error){
+      status.className='status error';
+      status.textContent=`Версия не запустилась: ${error.message}`;
+      bar.style.width='100%';
+      retry.hidden=false;
+    }
+  }
+
+  retry.addEventListener('click',launch);
+  launch();
+})();
+</script>
+</body>
+</html>

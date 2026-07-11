@@ -1,0 +1,8 @@
+{
+  "version": "82.21.8",
+  "label": "Рабочая v82.21.8 — реальные нижние кнопки карточек высотой 58 px во всех статусах",
+  "testUrl": "./reset.html?release=82-21-8-real-card-action-height-58",
+  "updateUrl": "./reset.html?release=82-21-8-real-card-action-height-58",
+  "publishedAt": "2026-07-11T21:00:00Z",
+  "buildToken": "v82.21.8-real-card-action-height-58-20260711"
+}

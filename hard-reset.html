@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>Жёсткий сброс ПМК Календаря</title>
+  <style>
+    body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:16px;box-sizing:border-box;font-family:Arial,sans-serif;color:#f5f5f5;background:#101010}
+    main{width:min(560px,100%);padding:24px;border:1px solid #343434;border-radius:18px;background:#1a1a1a;box-shadow:0 24px 70px rgba(0,0,0,.38)}
+    h1{margin:0 0 10px;font-size:25px;line-height:1.15}p{margin:0 0 14px;color:#c9c9c9;line-height:1.5}.status{color:#9fe0b8}.error{color:#ff9b90}.small{font-size:13px;color:#aaa}
+    .actions{display:grid;gap:10px;margin-top:18px}button,a{min-height:48px;display:grid;place-items:center;border:0;border-radius:12px;padding:0 16px;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}button{color:#fff;background:#1f7e4c}a{color:#fff;background:#303030}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Жёсткий сброс приложения</h1>
+    <p>Эта страница только удаляет старые service worker, кэши и метки обновлений. Она не проверяет старые файлы, поэтому не застрянет на ошибке reset.</p>
+    <p id="status" class="status">Готовлю очистку.</p>
+    <p class="small">Если после очистки приложение откроется не сразу — закройте вкладку и откройте приложение заново.</p>
+    <div class="actions">
+      <button id="clean" type="button">Очистить и открыть приложение</button>
+      <a href="./?hardClean=1">Открыть приложение без проверки</a>
+      <a href="./safe.html?hardClean=1">Безопасный режим</a>
+    </div>
+  </main>
+  <script>
+    const status=document.getElementById('status');
+    const button=document.getElementById('clean');
+    function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+    async function hardClean(){
+      button.disabled=true;
+      status.className='status';
+      try{
+        status.textContent='Удаляем service worker...';
+        if('serviceWorker' in navigator){
+          const regs=await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(reg=>reg.unregister().catch(()=>null)));
+        }
+        status.textContent='Удаляем кэши приложения...';
+        if(window.caches){
+          const keys=await caches.keys();
+          await Promise.all(keys.map(key=>caches.delete(key).catch(()=>null)));
+        }
+        status.textContent='Сбрасываем метки обновления...';
+        try{
+          localStorage.removeItem('pmk-installed-version');
+          localStorage.removeItem('pmk-installed-build-token');
+          localStorage.removeItem('pmk-release-dismissed');
+          sessionStorage.removeItem('pmk-update-later-token');
+        }catch{}
+        await sleep(500);
+        status.textContent='Готово. Открываем приложение без старого кэша...';
+        location.replace('./?hardClean=1&v='+Date.now());
+      }catch(e){
+        status.className='status error';
+        status.textContent='Не удалось очистить автоматически: '+e.message;
+        button.disabled=false;
+      }
+    }
+    button.addEventListener('click',hardClean);
+    hardClean();
+  </script>
+</body>
+</html>

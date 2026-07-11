@@ -1,0 +1,81 @@
+/* Per-event provider state: gray = not synchronized, blue/red = synchronized. */
+.pmk-event-provider-badges{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  flex:0 0 auto!important;
+  vertical-align:middle!important;
+}
+.pmk-event-provider-badge{
+  display:inline-grid!important;
+  place-items:center!important;
+  box-sizing:border-box!important;
+  border:1px solid rgba(0,0,0,.09)!important;
+  border-radius:7px!important;
+  color:#74787d!important;
+  background:#e5e7e9!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.65)!important;
+  font-style:normal!important;
+  font-weight:950!important;
+  line-height:1!important;
+  letter-spacing:-.02em!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+}
+.pmk-event-provider-google{
+  width:21px!important;
+  height:21px!important;
+  font-size:11px!important;
+}
+.pmk-event-provider-yandex{
+  width:24px!important;
+  height:22px!important;
+  font-size:14px!important;
+}
+.pmk-event-provider-google.is-synced{
+  color:#fff!important;
+  border-color:#2d70d6!important;
+  background:#4285f4!important;
+  box-shadow:0 3px 9px rgba(66,133,244,.24)!important;
+}
+.pmk-event-provider-yandex.is-synced{
+  color:#fff!important;
+  border-color:#d92d12!important;
+  background:#fc3f1d!important;
+  box-shadow:0 3px 9px rgba(252,63,29,.22)!important;
+}
+.pmk-event-provider-badge.is-pending{
+  outline:2px solid rgba(247,181,0,.35)!important;
+  outline-offset:1px!important;
+}
+.event-card-header>.pmk-event-provider-badges{
+  margin-right:2px!important;
+}
+#weekEvents .day-event>.pmk-event-provider-badges{
+  margin-top:8px!important;
+}
+.history-compact-title-row>.pmk-event-provider-badges{
+  margin-left:auto!important;
+}
+:root[data-theme="dark"] .pmk-event-provider-badge.is-offline{
+  color:#a6abb1!important;
+  border-color:rgba(255,255,255,.12)!important;
+  background:#34393e!important;
+  box-shadow:none!important;
+}
+@media(max-width:760px){
+  .event-card-header>.pmk-event-provider-badges{
+    order:2!important;
+  }
+  .event-card-header h3{
+    order:3!important;
+  }
+  .pmk-event-provider-google{
+    width:22px!important;
+    height:22px!important;
+  }
+  .pmk-event-provider-yandex{
+    width:25px!important;
+    height:23px!important;
+  }
+}

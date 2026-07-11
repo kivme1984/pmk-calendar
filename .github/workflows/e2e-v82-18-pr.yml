@@ -1,0 +1,120 @@
+name: E2E PMK v82.18 PR
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'test-v82-18.html'
+      - 'period-core-v82-18.js'
+      - 'period-core-v82-18.css'
+      - '.github/workflows/e2e-v82-18-pr.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Assemble exact v82.12 baseline locally
+        run: |
+          mkdir -p /tmp/pmk-site
+          git archive 58f8368d6d35a007e661f28b0b46a4e3aa9824e7 | tar -x -C /tmp/pmk-site
+          cp period-core-v82-18.js period-core-v82-18.css test-v82-18.html /tmp/pmk-site/
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('/tmp/pmk-site/test-v82-18.html')
+          text=path.read_text(encoding='utf-8')
+          text=text.replace("const BASE=`https://cdn.jsdelivr.net/gh/kivme1984/pmk-calendar@${BASE_COMMIT}/`;", "const BASE='./';")
+          text=text.replace("const FIX=`https://cdn.jsdelivr.net/gh/kivme1984/pmk-calendar@${FIX_COMMIT}/`;", "const FIX='./';")
+          path.write_text(text, encoding='utf-8')
+          PY
+      - run: npm install playwright@1.52.0
+      - run: npx playwright install --with-deps chromium
+      - name: Start exact local test server
+        run: |
+          cd /tmp/pmk-site
+          python3 -m http.server 8000 >/tmp/pmk-http.log 2>&1 &
+          sleep 2
+      - name: Verify current UI, Week and Month on mobile
+        run: |
+          cat > /tmp/check.mjs <<'JS'
+          import fs from 'node:fs';
+          import { chromium } from 'playwright';
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+          const pageErrors=[];
+          page.on('pageerror', error => pageErrors.push(error.message));
+          const snapshot=async label=>{
+            const data=await page.evaluate(label=>({
+              label,
+              url:location.href,
+              title:document.querySelector('#periodTitle')?.textContent?.trim()||'',
+              activeView:[...document.querySelectorAll('.view.active')].map(node=>node.id),
+              stateView:typeof state==='undefined'?null:state.currentView,
+              boardClass:document.querySelector('#weekEvents')?.className||'',
+              dayColumns:document.querySelectorAll('#weekEvents .day-column').length,
+              monthCounters:document.querySelectorAll('#weekEvents .pmk-month-count-v82-18').length,
+              globals:{
+                period:Boolean(window.PMK_PERIOD_CORE_V82_18),
+                ui:Boolean(window.PMK_FINAL_UI_V82_10),
+                card:Boolean(window.PMK_FINAL_LAYOUT_LOCK_V82_12)
+              },
+              actions:[...document.querySelectorAll('#pmkManagerLaunchpad [data-workspace-action]')].map(node=>node.dataset.workspaceAction),
+              hasDraft:Boolean(document.querySelector('[data-workspace-action="drafts"]')),
+              hasThreeDays:Boolean(document.querySelector('.nav-item[data-view="three-days"]')),
+              pageErrors
+            }),label);
+            fs.writeFileSync(`/tmp/${label}.json`,JSON.stringify(data,null,2));
+            await page.screenshot({path:`/tmp/${label}.png`,fullPage:true});
+            return data;
+          };
+          try{
+            await page.goto('http://127.0.0.1:8000/test-v82-18.html?ci=1', { waitUntil: 'domcontentloaded', timeout: 120000 });
+            await page.waitForFunction(() => Boolean(window.PMK_PERIOD_CORE_V82_18 && window.PMK_FINAL_UI_V82_10 && window.PMK_FINAL_LAYOUT_LOCK_V82_12), null, { timeout: 120000 });
+            await page.waitForSelector('#menuToggle', { state: 'visible' });
+            await page.waitForFunction(() => {
+              const actions=[...document.querySelectorAll('#pmkManagerLaunchpad [data-workspace-action]')].map(node=>node.dataset.workspaceAction);
+              return !document.querySelector('.nav-item[data-view="three-days"]') && !document.querySelector('[data-workspace-action="drafts"]') && ['paste','client','slots','calculate'].every(action=>actions.includes(action));
+            }, null, { timeout: 30000 });
+            await snapshot('day');
+            await page.click('#menuToggle');
+            await page.click('.nav-item[data-view="week"]');
+            await page.waitForTimeout(1200);
+            const week=await snapshot('week');
+            if(!(week.title==='Неделя'&&week.activeView.includes('view-week')&&week.boardClass.includes('pmk-week-v82-18')&&week.dayColumns===7)) throw new Error(`Week failed: ${JSON.stringify(week)}`);
+            await page.click('#menuToggle');
+            await page.click('.nav-item[data-view="month"]');
+            await page.waitForTimeout(1200);
+            const month=await snapshot('month');
+            if(!(month.title==='Месяц'&&month.boardClass.includes('pmk-month-v82-18')&&month.dayColumns>=28&&month.monthCounters===month.dayColumns)) throw new Error(`Month failed: ${JSON.stringify(month)}`);
+            await browser.close();
+          }catch(error){
+            fs.writeFileSync('/tmp/failure.txt',String(error?.stack||error));
+            await snapshot('failure').catch(()=>null);
+            await browser.close();
+            throw error;
+          }
+          JS
+          node /tmp/check.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v82-18-diagnostics
+          path: |
+            /tmp/day.json
+            /tmp/day.png
+            /tmp/week.json
+            /tmp/week.png
+            /tmp/month.json
+            /tmp/month.png
+            /tmp/failure.json
+            /tmp/failure.png
+            /tmp/failure.txt

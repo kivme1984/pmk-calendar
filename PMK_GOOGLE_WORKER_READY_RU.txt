@@ -1,0 +1,19 @@
+ПМК Календарь — сборка Google Worker Ready v82.48.0
+
+Что изменено:
+1. Включён Cloudflare Worker для Google Calendar:
+   https://pmk-google-auth-worker.standart-media.workers.dev
+2. Приложение больше не должно требовать постоянный вход в Google.
+3. При первой отправке заявки или при нажатии «Ввести PMK ключ» приложение попросит PMK API KEY.
+4. PMK API KEY нужно взять из вашего локального файла PMK_API_KEY.txt. Не загружайте этот файл в GitHub.
+5. Ключ сохраняется только на устройстве менеджера в localStorage.
+
+Как проверить:
+1. Загрузите содержимое этой папки в GitHub Pages репозиторий pmk-calendar.
+2. Откройте reset.html?release=20260705-google-worker-ready
+3. Нажмите «Подключить Google» / «Ввести PMK ключ».
+4. Введите PMK API KEY из PMK_API_KEY.txt.
+5. Создайте тестовую заявку и проверьте Google Calendar.
+
+Важно:
+- PMK_API_KEY.txt, Google Client Secret и refresh-token не должны попадать в GitHub.

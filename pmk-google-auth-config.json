@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "apiUrl": "https://pmk-google-auth-worker.standart-media.workers.dev",
+  "fallbackApiUrls": [
+    "https://pmk-google-auth.standart-media.workers.dev"
+  ],
+  "label": "Google без повторного входа"
+}

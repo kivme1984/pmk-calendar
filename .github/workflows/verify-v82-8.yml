@@ -1,0 +1,64 @@
+name: Verify full PMK v82.8
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-v82-8.yml'
+      - 'sw-core-v82-8.js'
+      - 'sw-v82-8.js'
+      - 'version-guard-v82-8.js'
+      - 'keep-worker-v82-8.js'
+      - 'workflow-fast-v82-7.js'
+      - 'workflow-transition-fast-v82-7.js'
+      - 'install-v82-8.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required files and JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s sw-core-v82-8.js
+          test -s sw-v82-8.js
+          test -s version-guard-v82-8.js
+          test -s keep-worker-v82-8.js
+          test -s workflow-fast-v82-7.js
+          test -s workflow-transition-fast-v82-7.js
+          test -s install-v82-8.html
+          node --check sw-core-v82-8.js
+          node --check sw-v82-8.js
+          node --check version-guard-v82-8.js
+          node --check keep-worker-v82-8.js
+          node --check workflow-fast-v82-7.js
+          node --check workflow-transition-fast-v82-7.js
+          grep -q "const VERSION='82.8'" sw-core-v82-8.js
+          grep -q "sw-core-v82-8.js" sw-v82-8.js
+          grep -q "PMK_WORKFLOW_FAST_V82_7" workflow-fast-v82-7.js
+          grep -q "PMK_WORKFLOW_TRANSITION_FAST_V82_7" workflow-transition-fast-v82-7.js
+      - name: Verify full bundle source list
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('sw-core-v82-8.js').read_text(encoding='utf-8')
+          blocks=re.findall(r'const (?:JS|CSS)=`\n(.*?)\n`\.trim\(\)\.split', text, re.S)
+          if len(blocks)!=2:
+              raise SystemExit('Could not parse JS/CSS source lists')
+          missing=[]
+          for block in blocks:
+              for raw in block.split():
+                  path=raw.split('?',1)[0].removeprefix('./')
+                  if not Path(path).is_file(): missing.append(path)
+          if missing:
+              raise SystemExit('Missing files: '+', '.join(sorted(set(missing))))
+          print('All v82.8 bundle files are present.')
+          PY

@@ -1,0 +1,322 @@
+/* PMK v82.20.1-cardfix — event-card fixes on v82.20.0 base. */
+
+#todayEvents,
+#view-today #todayEvents,
+#view-day #todayEvents{
+  background:transparent!important;
+}
+
+#view-today #todayEvents.event-list,
+#view-day #todayEvents.event-list{
+  gap:12px!important;
+}
+
+#view-today #todayEvents .event-card,
+#view-day #todayEvents .event-card,
+.event-card.pmk-approved-card-v82-20-1{
+  background:#fff!important;
+  border:1px solid #d8d8d8!important;
+  border-radius:18px!important;
+  box-shadow:0 8px 18px rgba(17,24,39,.14)!important;
+  overflow:hidden!important;
+  margin-bottom:14px!important;
+  grid-template-columns:90px minmax(0,1fr)!important;
+  grid-template-areas:"time main" "actions actions"!important;
+  align-items:start!important;
+  contain:layout paint!important;
+  transform:translateZ(0)!important;
+}
+
+#view-today #todayEvents .event-card>.event-time,
+#view-day #todayEvents .event-card>.event-time,
+.event-card.pmk-approved-card-v82-20-1>.event-time{
+  width:90px!important;
+  min-width:90px!important;
+  min-height:0!important;
+  height:auto!important;
+  align-content:start!important;
+  padding:10px 7px 8px!important;
+}
+
+#view-today #todayEvents .event-card .event-main,
+#view-day #todayEvents .event-card .event-main,
+.event-card.pmk-approved-card-v82-20-1 .event-main{
+  gap:5px!important;
+  padding:10px 9px 7px!important;
+  min-height:0!important;
+}
+
+#view-today #todayEvents .event-card .event-card-header,
+#view-day #todayEvents .event-card .event-card-header,
+.event-card.pmk-approved-card-v82-20-1 .event-card-header{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:max-content minmax(0,1fr)!important;
+  align-items:center!important;
+  column-gap:5px!important;
+  row-gap:4px!important;
+  margin:0 0 5px!important;
+  padding-right:32px!important;
+  min-width:0!important;
+  width:100%!important;
+}
+
+#view-today #todayEvents .event-card .event-card-header .contract-control,
+#view-day #todayEvents .event-card .event-card-header .contract-control,
+.event-card.pmk-approved-card-v82-20-1 .event-card-header .contract-control{
+  grid-column:1!important;
+  min-width:0!important;
+  max-width:94px!important;
+}
+
+#view-today #todayEvents .event-card .contract-chip,
+#view-day #todayEvents .event-card .contract-chip,
+.event-card.pmk-approved-card-v82-20-1 .contract-chip{
+  min-height:28px!important;
+  height:28px!important;
+  padding-left:8px!important;
+  padding-right:8px!important;
+  border-radius:999px!important;
+  font-size:11.8px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  max-width:94px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+#view-today #todayEvents .event-card .pmk-rug-inline-badge,
+#view-day #todayEvents .event-card .pmk-rug-inline-badge,
+.event-card.pmk-approved-card-v82-20-1 .pmk-rug-inline-badge{
+  grid-column:2!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:28px!important;
+  min-height:28px!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:#ededed!important;
+  color:#a66f00!important;
+  font-weight:950!important;
+  font-size:11.8px!important;
+  line-height:1!important;
+  padding:0 7px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  box-shadow:inset 0 -1px 0 rgba(0,0,0,.035)!important;
+}
+
+#view-today #todayEvents .event-card .pmk-event-cloud-status-v82-19,
+#view-day #todayEvents .event-card .pmk-event-cloud-status-v82-19,
+.event-card.pmk-approved-card-v82-20-1 .pmk-event-cloud-status-v82-19{
+  position:absolute!important;
+  right:0!important;
+  top:4px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:1px!important;
+  width:30px!important;
+  min-width:30px!important;
+  max-width:30px!important;
+  white-space:nowrap!important;
+  z-index:2!important;
+}
+
+#view-today #todayEvents .event-card .pmk-event-cloud-provider-v82-19,
+#view-day #todayEvents .event-card .pmk-event-cloud-provider-v82-19,
+.event-card.pmk-approved-card-v82-20-1 .pmk-event-cloud-provider-v82-19{
+  width:14px!important;
+  height:18px!important;
+  border-radius:0!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  line-height:1!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+
+#view-today #todayEvents .event-card .event-card-header h3,
+#view-day #todayEvents .event-card .event-card-header h3,
+.event-card.pmk-approved-card-v82-20-1 .event-card-header h3{
+  grid-column:1 / -1!important;
+  margin:0!important;
+  line-height:1.1!important;
+}
+
+#view-today #todayEvents .event-card .event-quick-badges,
+#view-day #todayEvents .event-card .event-quick-badges,
+.event-card.pmk-approved-card-v82-20-1 .event-quick-badges{gap:5px!important;margin:0 0 3px!important}
+
+#view-today #todayEvents .event-card .event-quick-badges .rug-badge,
+#view-day #todayEvents .event-card .event-quick-badges .rug-badge,
+.event-card.pmk-approved-card-v82-20-1 .event-quick-badges .rug-badge{display:none!important}
+
+#view-today #todayEvents .event-card .quick-badge,
+#view-day #todayEvents .event-card .quick-badge,
+.event-card.pmk-approved-card-v82-20-1 .quick-badge{
+  min-height:22px!important;
+  padding:3px 7px!important;
+  font-size:10px!important;
+  border-radius:9px!important;
+}
+
+#view-today #todayEvents .event-card .address-block,
+#view-day #todayEvents .event-card .address-block,
+.event-card.pmk-approved-card-v82-20-1 .address-block{min-height:35px!important;padding:7px 9px!important;margin:0 0 4px!important}
+
+#view-today #todayEvents .event-card .event-comment,
+#view-day #todayEvents .event-card .event-comment,
+.event-card.pmk-approved-card-v82-20-1 .event-comment{padding:7px 9px 5px!important;margin:0!important;gap:6px!important;min-height:0!important}
+
+#view-today #todayEvents .event-card .event-comment p,
+#view-day #todayEvents .event-card .event-comment p,
+.event-card.pmk-approved-card-v82-20-1 .event-comment p{line-height:1.18!important;max-height:38px!important;margin:0!important}
+
+#view-today #todayEvents .event-card .event-comment.expanded p,
+#view-day #todayEvents .event-card .event-comment.expanded p,
+.event-card.pmk-approved-card-v82-20-1 .event-comment.expanded p{max-height:none!important}
+
+#view-today #todayEvents .event-card .event-time>.status-row,
+#view-day #todayEvents .event-card .event-time>.status-row,
+.event-card.pmk-card-tight-v82-43.pmk-approved-card-v82-20-1 .event-time>.status-row,
+.event-card.pmk-card-tight-v82-43.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46,
+.event-card.pmk-approved-card-v82-20-1 .event-time>.status-row,
+.event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:2px!important;
+  margin:8px 0 0!important;
+  padding:0!important;
+  width:100%!important;
+}
+
+#view-today #todayEvents .event-card .event-time>.status-row .status-action,
+#view-day #todayEvents .event-card .event-time>.status-row .status-action,
+.event-card.pmk-approved-card-v82-20-1 .event-time>.status-row .status-action,
+.event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46 .status-action{
+  min-height:32px!important;
+  height:32px!important;
+  padding:0 5px!important;
+  border-radius:9px!important;
+  font-size:9.2px!important;
+  font-weight:900!important;
+  line-height:1.05!important;
+  text-align:center!important;
+  white-space:normal!important;
+}
+
+#view-today #todayEvents .event-card>.event-actions,
+#view-day #todayEvents .event-card>.event-actions,
+.event-card.pmk-approved-card-v82-20-1>.event-actions{
+  grid-area:actions!important;
+  padding:0 10px 8px!important;
+  margin-top:0!important;
+  gap:4px!important;
+}
+
+#view-today #todayEvents .event-card .manage-row,
+#view-day #todayEvents .event-card .manage-row,
+.event-card.pmk-approved-card-v82-20-1 .manage-row{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px!important;
+  gap:6px!important;
+}
+
+#view-today #todayEvents .event-card .manage-row .mini-button,
+#view-day #todayEvents .event-card .manage-row .mini-button,
+#view-today #todayEvents .event-card .manage-row .call-button,
+#view-day #todayEvents .event-card .manage-row .call-button,
+#view-today #todayEvents .event-card .manage-row .open-button,
+#view-day #todayEvents .event-card .manage-row .open-button,
+#view-today #todayEvents .event-card .manage-row .menu-button,
+#view-day #todayEvents .event-card .manage-row .menu-button,
+#view-today #todayEvents .event-card .card-menu>summary,
+#view-day #todayEvents .event-card .card-menu>summary,
+.event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
+.event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
+.event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
+.event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
+.event-card.pmk-approved-card-v82-20-1 .card-menu>summary{
+  min-height:25px!important;
+  height:25px!important;
+  max-height:25px!important;
+  padding-top:0!important;
+  padding-bottom:0!important;
+  border-radius:9px!important;
+}
+
+.pmk-rug-dialog::backdrop{background:rgba(0,0,0,.32)!important}
+.pmk-rug-dialog{width:min(420px,calc(100vw - 24px))!important;border:0!important;border-radius:20px!important;padding:0!important;box-shadow:0 12px 30px rgba(0,0,0,.26)!important}
+.pmk-rug-dialog-card{padding:16px!important;background:#fff!important;color:#111!important}
+.pmk-rug-dialog-card h2{margin:0 0 8px!important;font-size:21px!important;line-height:1.15!important}
+.pmk-rug-dialog-card p{margin:0 0 12px!important;color:#555!important;line-height:1.35!important}
+.pmk-dialog-close{width:100%!important;min-height:46px!important;border:0!important;border-radius:13px!important;background:#111!important;color:#fff!important;font-weight:900!important;font-size:15px!important;margin-top:8px!important}
+.card-menu-popover .pmk-share-event{color:#111!important}
+
+@media(max-width:760px){
+  #view-today #todayEvents .event-card,
+  #view-day #todayEvents .event-card,
+  .event-card.pmk-approved-card-v82-20-1{
+    grid-template-columns:84px minmax(0,1fr)!important;
+    margin-bottom:12px!important;
+    box-shadow:0 6px 14px rgba(17,24,39,.13)!important;
+  }
+  #view-today #todayEvents .event-card>.event-time,
+  #view-day #todayEvents .event-card>.event-time,
+  .event-card.pmk-approved-card-v82-20-1>.event-time{
+    width:84px!important;
+    min-width:84px!important;
+    padding:9px 7px 8px!important;
+  }
+  #view-today #todayEvents .event-card .event-card-header,
+  #view-day #todayEvents .event-card .event-card-header,
+  .event-card.pmk-approved-card-v82-20-1 .event-card-header{
+    column-gap:4px!important;
+    padding-right:31px!important;
+  }
+  #view-today #todayEvents .event-card .event-card-header .contract-control,
+  #view-day #todayEvents .event-card .event-card-header .contract-control,
+  .event-card.pmk-approved-card-v82-20-1 .event-card-header .contract-control{max-width:88px!important}
+  #view-today #todayEvents .event-card .contract-chip,
+  #view-day #todayEvents .event-card .contract-chip,
+  .event-card.pmk-approved-card-v82-20-1 .contract-chip{font-size:11.2px!important;padding-left:7px!important;padding-right:7px!important;max-width:88px!important;height:27px!important;min-height:27px!important}
+  #view-today #todayEvents .event-card .pmk-rug-inline-badge,
+  #view-day #todayEvents .event-card .pmk-rug-inline-badge,
+  .event-card.pmk-approved-card-v82-20-1 .pmk-rug-inline-badge{font-size:11.4px!important;padding:0 6px!important;height:27px!important;min-height:27px!important}
+  #view-today #todayEvents .event-card .pmk-event-cloud-status-v82-19,
+  #view-day #todayEvents .event-card .pmk-event-cloud-status-v82-19,
+  .event-card.pmk-approved-card-v82-20-1 .pmk-event-cloud-status-v82-19{width:29px!important;min-width:29px!important;max-width:29px!important;gap:1px!important;right:0!important;top:4px!important}
+  #view-today #todayEvents .event-card .pmk-event-cloud-provider-v82-19,
+  #view-day #todayEvents .event-card .pmk-event-cloud-provider-v82-19,
+  .event-card.pmk-approved-card-v82-20-1 .pmk-event-cloud-provider-v82-19{width:14px!important;height:17px!important;font-size:12.5px!important}
+  #view-today #todayEvents .event-card .event-time>.status-row,
+  #view-day #todayEvents .event-card .event-time>.status-row,
+  .event-card.pmk-card-tight-v82-43.pmk-approved-card-v82-20-1 .event-time>.status-row,
+  .event-card.pmk-card-tight-v82-43.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46,
+  .event-card.pmk-approved-card-v82-20-1 .event-time>.status-row,
+  .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46{gap:2px!important}
+  #view-today #todayEvents .event-card .event-time>.status-row .status-action,
+  #view-day #todayEvents .event-card .event-time>.status-row .status-action,
+  .event-card.pmk-approved-card-v82-20-1 .event-time>.status-row .status-action,
+  .event-card.pmk-approved-card-v82-20-1 .pmk-status-in-date-row-v82-46 .status-action{min-height:31px!important;height:31px!important;font-size:9px!important}
+  #view-today #todayEvents .event-card .manage-row .mini-button,
+  #view-day #todayEvents .event-card .manage-row .mini-button,
+  #view-today #todayEvents .event-card .manage-row .call-button,
+  #view-day #todayEvents .event-card .manage-row .call-button,
+  #view-today #todayEvents .event-card .manage-row .open-button,
+  #view-day #todayEvents .event-card .manage-row .open-button,
+  #view-today #todayEvents .event-card .manage-row .menu-button,
+  #view-day #todayEvents .event-card .manage-row .menu-button,
+  #view-today #todayEvents .event-card .card-menu>summary,
+  #view-day #todayEvents .event-card .card-menu>summary,
+  .event-card.pmk-approved-card-v82-20-1 .manage-row .mini-button,
+  .event-card.pmk-approved-card-v82-20-1 .manage-row .call-button,
+  .event-card.pmk-approved-card-v82-20-1 .manage-row .open-button,
+  .event-card.pmk-approved-card-v82-20-1 .manage-row .menu-button,
+  .event-card.pmk-approved-card-v82-20-1 .card-menu>summary{min-height:23px!important;height:23px!important;max-height:23px!important}
+}

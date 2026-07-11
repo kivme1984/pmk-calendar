@@ -1,0 +1,50 @@
+name: Smart Parser Lab Mobile Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'smart-parser-lab.html'
+      - 'smart-parser-lab.css'
+      - 'smart-parser-lab.js'
+      - 'smart-parser-next-core.js'
+      - 'smart-parser-next.js'
+      - 'smart-parser-next-refinements.js'
+      - 'smart-parser-next-real-rules.js'
+      - 'smart-parser-next-scope-rules.js'
+      - 'smart-parser-next-final-rules.js'
+      - 'smart-parser-next-identical-rugs.js'
+      - 'ci-check-smart-parser-lab.mjs'
+      - '.github/workflows/e2e-smart-parser-lab.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lab-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --silent playwright@1.52.0
+      - run: npx playwright install --with-deps chromium >/dev/null 2>&1
+      - name: Start local server
+        shell: bash
+        run: |
+          python3 -m http.server 8000 >/tmp/smart-parser-lab-http.log 2>&1 &
+      - name: Run lab mobile test
+        shell: bash
+        run: |
+          set -o pipefail
+          sleep 2
+          node ci-check-smart-parser-lab.mjs 2>&1 | tee smart-parser-lab-test.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-parser-lab-test-log
+          path: smart-parser-lab-test.log
+          if-no-files-found: error

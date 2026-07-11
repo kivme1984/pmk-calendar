@@ -1,0 +1,39 @@
+@media (max-width:760px){
+  body.pmk-sidebar-open::before{
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+    background:rgba(0,0,0,.38)!important;
+  }
+
+  body.pmk-sidebar-open{
+    overflow:hidden!important;
+    overscroll-behavior:none!important;
+  }
+
+  #sidebar{
+    contain:layout paint!important;
+    backface-visibility:hidden!important;
+    -webkit-backface-visibility:hidden!important;
+    will-change:transform!important;
+    transition:transform .14s ease-out!important;
+    box-shadow:12px 0 28px rgba(0,0,0,.22)!important;
+  }
+
+  #sidebar.open{
+    transform:translate3d(0,0,0)!important;
+  }
+
+  #sidebar:not(.open){
+    transform:translate3d(-102%,0,0)!important;
+  }
+
+  html.pmk-menu-active-v82-19 .main-content,
+  html.pmk-menu-active-v82-19 .app-header{
+    pointer-events:none;
+  }
+
+  html.pmk-menu-active-v82-19 #menuToggle,
+  html.pmk-menu-active-v82-19 #sidebar{
+    pointer-events:auto;
+  }
+}

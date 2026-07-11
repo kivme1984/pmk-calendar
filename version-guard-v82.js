@@ -2,8 +2,10 @@
 
 (() => {
   const VERSION = '82';
-  window.PMK_APP_VERSION = VERSION;
-  document.documentElement.dataset.pmkVersion = VERSION;
+  const RELEASE = '82.20.0';
+  const BRANCH = '82';
+  window.PMK_APP_VERSION = RELEASE;
+  document.documentElement.dataset.pmkVersion = RELEASE;
 
   function applyVersion() {
     const heading = document.querySelector('#view-settings > .page-heading');
@@ -16,9 +18,9 @@
       panel.innerHTML = '<div class="settings-version-info"><span class="settings-version-label">Версия приложения</span><strong id="settingsVersionValue"></strong><small id="settingsVersionRelease"></small></div><a id="settingsUpdateButton" class="button button-primary settings-update-button">Обновить приложение</a>';
       heading.insertAdjacentElement('afterend', panel);
     }
-    panel.querySelector('#settingsVersionValue').textContent = 'v82';
-    panel.querySelector('#settingsVersionRelease').textContent = 'Выполнено + автоархив · 2026-07-01';
-    panel.querySelector('#settingsUpdateButton').href = './reset.html?v=82-settings';
+    panel.querySelector('#settingsVersionValue').textContent = `v${RELEASE}`;
+    panel.querySelector('#settingsVersionRelease').textContent = 'Постоянный вход Google и исправление формы · 2026-07-03';
+    panel.querySelector('#settingsUpdateButton').href = `./reset.html?v=${RELEASE}-settings`;
     return true;
   }
 
@@ -28,9 +30,9 @@
       if (!event.target.closest('[data-view="settings"], .nav-settings')) return;
       requestAnimationFrame(applyVersion);
     }, true);
-    window.dispatchEvent(new CustomEvent('pmk-version-ready', { detail:{ version:'82' } }));
+    window.dispatchEvent(new CustomEvent('pmk-version-ready', { detail: { version: RELEASE, branch: BRANCH } }));
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once:true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
 })();

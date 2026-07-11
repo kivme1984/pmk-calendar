@@ -1,0 +1,32 @@
+name: E2E PMK v82.18 Proof
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'period-core-v82-18.js'
+      - 'period-core-v82-18.css'
+      - 'test-v82-18.html'
+      - 'ci-check-v82-18.mjs'
+      - 'ci-assemble-v82-18.py'
+      - '.github/workflows/e2e-v82-18-proof.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: python3 ci-assemble-v82-18.py
+      - run: npm install --silent playwright@1.52.0
+      - run: npx playwright install --with-deps chromium >/dev/null 2>&1
+      - run: cd /tmp/pmk-site && python3 -m http.server 8000 >/tmp/pmk-http.log 2>&1 &
+      - run: sleep 2 && node ci-check-v82-18.mjs
